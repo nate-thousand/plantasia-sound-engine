@@ -1,0 +1,15 @@
+{
+  "id": "mutation",
+  "name": "Mutation",
+  "species": "Alien",
+  "description": "A disrupted state for variation and unexpected growth.",
+  "mood": "variation / disruption / discovery",
+  "asciiState": "mutation",
+  "category": "textures",
+  "synth": {
+    "oscillator": "square",
+    "filterHz": 3200,
+    "envelope": { "attack": 0.04, "release": 0.9 },
+    "effects": { "delay": 0.3, "reverb": 0.28 }
+  }
+}

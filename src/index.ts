@@ -1,4 +1,4 @@
-export { PlantasiaEngine } from './plantasiaEngine.js';
+export { PlantasiaEngine } from './engine/plantasiaEngine.js';
 
 export {
   initAudio,
@@ -11,26 +11,26 @@ export {
   getLevel,
   updateParameter,
   defaultNotePool,
-} from './audio/audioEngine.js';
+} from './engine/audioEngine.js';
 
-export { presets } from './data/presets.js';
+export { presets } from './presets/loader.js';
 
 export {
   junoFlowersPreset,
   JUNO_FLOWERS_BOTANICAL,
   JUNO_FLOWERS_GROWTH,
   JUNO_FLOWERS_SCALE,
-} from './species/junoFlowers.js';
+} from './synths/junoFlowers.js';
 
 export type {
   BotanicalControlKey,
   BotanicalControls,
   SpeciesName,
   OrganismState,
-} from './types/botanical.js';
+} from './utils/types/botanical.js';
 
-export { initialBotanicalControls } from './types/botanical.js';
+export { initialBotanicalControls } from './utils/types/botanical.js';
 
-export type { SynthSettings, PlantasiaPreset } from './types/presets.js';
+export type { SynthSettings, PlantasiaPreset } from './utils/types/presets.js';
 
-export type { JunoBotanicalConfig, JunoGrowthConfig } from './types/junoFlowers.js';
+export type { JunoBotanicalConfig, JunoGrowthConfig } from './utils/types/junoFlowers.js';

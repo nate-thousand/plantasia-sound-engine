@@ -26,6 +26,7 @@ npm install
 
 Build
 
+npm run sync-presets   # optional if presets/*.json changed
 npm run build
 
 Expected result:
@@ -197,3 +198,16 @@ Current Known Good State
 * Status panel functioning
 * Console logging enabled
 * Ready for integration into Plantasia 2.0
+
+⸻
+
+Examples
+
+Run any example after building:
+
+npm run example:basic
+npm run example:presets
+npm run example:effects
+npm run example:midi
+npm run example:sequencing
+npm run example:generative

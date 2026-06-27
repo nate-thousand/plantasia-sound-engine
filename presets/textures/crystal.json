@@ -1,0 +1,15 @@
+{
+  "id": "crystal",
+  "name": "Crystal",
+  "species": "Crystal",
+  "description": "Angular harmonic growth with clean reflective edges.",
+  "mood": "facets / resonance / clarity",
+  "asciiState": "bloom",
+  "category": "textures",
+  "synth": {
+    "oscillator": "square",
+    "filterHz": 3600,
+    "envelope": { "attack": 0.05, "release": 1.2 },
+    "effects": { "delay": 0.22, "reverb": 0.64 }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "defaultPresetId": "seed",
+  "categories": {
+    "flora": ["seed", "root", "bloom", "fern", "vine", "juno-flowers"],
+    "ambient": ["coral", "mycelium"],
+    "textures": ["mutation", "crystal"],
+    "drones": [],
+    "percussion": []
+  }
+}

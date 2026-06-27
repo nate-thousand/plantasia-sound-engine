@@ -1,0 +1,15 @@
+{
+  "id": "root",
+  "name": "Root",
+  "species": "Tree",
+  "description": "Grounded tones for stable growth and low movement.",
+  "mood": "foundation / bass / stability",
+  "asciiState": "growth",
+  "category": "flora",
+  "synth": {
+    "oscillator": "triangle",
+    "filterHz": 1200,
+    "envelope": { "attack": 0.34, "release": 1.8 },
+    "effects": { "delay": 0.2, "reverb": 0.32 }
+  }
+}

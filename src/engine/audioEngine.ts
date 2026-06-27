@@ -1,11 +1,11 @@
 import * as Tone from 'tone';
-import type { PlantasiaPreset, SynthSettings } from '../types/presets.js';
-import type { BotanicalControls } from '../types/botanical.js';
+import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
+import type { BotanicalControls } from '../utils/types/botanical.js';
 import {
   playJunoFlowersPreset,
   setJunoModeActive,
   stopAllJunoVoices,
-} from '../species/junoFlowersAudio.js';
+} from '../synths/junoFlowersAudio.js';
 
 /**
  * Botanical -> synthesis mapping. The UI only ever speaks in botanical terms;

@@ -16,19 +16,28 @@
   },
   "files": [
     "dist",
+    "presets",
     "LICENSE",
     "README.md",
     "CHANGELOG.md"
   ],
   "scripts": {
     "clean": "rm -rf dist",
+    "sync-presets": "node scripts/sync-presets.mjs",
     "build": "tsc -p tsconfig.json",
+    "postbuild": "cp -r src/presets/bundled dist/presets/bundled",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prebuild": "npm run clean",
+    "prebuild": "npm run clean && npm run sync-presets",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build",
     "dev": "vite --config vite.config.ts",
-    "demo": "vite --config vite.demo.config.ts"
+    "demo": "vite --config vite.demo.config.ts",
+    "example:basic": "EXAMPLE_DIR=examples/basic vite --config vite.example.config.ts",
+    "example:presets": "EXAMPLE_DIR=examples/presets vite --config vite.example.config.ts",
+    "example:effects": "EXAMPLE_DIR=examples/effects vite --config vite.example.config.ts",
+    "example:midi": "EXAMPLE_DIR=examples/midi vite --config vite.example.config.ts",
+    "example:sequencing": "EXAMPLE_DIR=examples/sequencing vite --config vite.example.config.ts",
+    "example:generative": "EXAMPLE_DIR=examples/generative vite --config vite.example.config.ts"
   },
   "keywords": [
     "audio",

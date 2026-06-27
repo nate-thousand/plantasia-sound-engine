@@ -1,0 +1,15 @@
+{
+  "id": "bloom",
+  "name": "Bloom",
+  "species": "Flower",
+  "description": "A full, open organism state with brighter harmonics.",
+  "mood": "resolution / harmony / expression",
+  "asciiState": "bloom",
+  "category": "flora",
+  "synth": {
+    "oscillator": "sawtooth",
+    "filterHz": 2600,
+    "envelope": { "attack": 0.12, "release": 2.4 },
+    "effects": { "delay": 0.36, "reverb": 0.58 }
+  }
+}

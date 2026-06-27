@@ -1,6 +1,6 @@
 import * as Tone from 'tone';
-import type { JunoBotanicalConfig, JunoGrowthConfig } from '../types/junoFlowers.js';
-import type { PlantasiaPreset, SynthSettings } from '../types/presets.js';
+import type { JunoBotanicalConfig, JunoGrowthConfig } from '../utils/types/junoFlowers.js';
+import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
 
 /** Internal synth state passed to syncBotanical (mirrors juno-flowers index.html). */
 export type JunoSynthState = {

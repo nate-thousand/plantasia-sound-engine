@@ -1,0 +1,15 @@
+{
+  "id": "vine",
+  "name": "Vine",
+  "species": "Vine",
+  "description": "A connected climber for winding rhythmic signals.",
+  "mood": "tendrils / motion / connection",
+  "asciiState": "mycelium",
+  "category": "flora",
+  "synth": {
+    "oscillator": "sawtooth",
+    "filterHz": 3000,
+    "envelope": { "attack": 0.08, "release": 1.6 },
+    "effects": { "delay": 0.52, "reverb": 0.38 }
+  }
+}

@@ -1,18 +1,14 @@
 # Plantasia Sound Engine
 
-Reusable botanical synthesis engine for Plantasia applications. Maps botanical control parameters to a Tone.js synth graph — no UI, React, or visualization code.
+Reusable botanical synthesis engine for Plantasia applications — including Plantasia 2.0. Maps botanical control parameters to a Tone.js synth graph with no UI, React, or visualization dependencies.
 
-## Signal flow
+## Overview
 
-```
-PolySynth → Filter → Delay → Reverb → destination
-                ↑
-               LFO
-```
+The engine provides a stable public API (`PlantasiaEngine` + functional exports), ten built-in presets (JSON-serializable), botanical live controls, and a Juno Flowers signature synth path. Future subsystems (MIDI, modulation matrix, effect rack, sequencing) have scaffold folders ready for incremental development.
 
 ## Installation
 
-Install from a local path while developing across Plantasia apps:
+**Local path (monorepo / adjacent apps):**
 
 ```json
 {
@@ -22,163 +18,121 @@ Install from a local path while developing across Plantasia apps:
 }
 ```
 
-Then run `npm install` in the consuming project. The `prepare` script builds `dist/` automatically.
+**From GitHub:**
 
-For local development without publishing:
-
-```bash
-npm install
-npm link
-# In the consuming app:
-npm link plantasia-sound-engine
+```json
+{
+  "dependencies": {
+    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#v0.1.0"
+  }
+}
 ```
 
-## Usage
-
-### Class API (recommended)
-
-```typescript
-import { PlantasiaEngine } from 'plantasia-sound-engine';
-
-const engine = new PlantasiaEngine();
-
-// Must be called from a user gesture (click / keypress)
-await engine.init();
-
-engine.applyBotanicalControls(engine.initialBotanicalControls);
-engine.playPreset(engine.presets[0]);
-engine.triggerChord(['C3', 'E3', 'G3']);
-```
-
-### Functional API
-
-The original function exports remain available for backward compatibility:
-
-```typescript
-import {
-  initAudio,
-  playPreset,
-  applyBotanicalControls,
-  triggerChord,
-  presets,
-  initialBotanicalControls,
-} from 'plantasia-sound-engine';
-
-await initAudio();
-applyBotanicalControls(initialBotanicalControls);
-playPreset(presets[0]);
-triggerChord(['C3', 'E3', 'G3']);
-```
-
-## Public API
-
-| Export | Description |
-|--------|-------------|
-| `PlantasiaEngine` | Primary facade class wrapping all engine methods |
-| `initAudio()` | Start the Tone.js AudioContext (requires user gesture) |
-| `playPreset(preset)` | Apply preset synth settings and trigger a chord |
-| `stopAudio()` | Release all active voices |
-| `applyBotanicalControls(controls)` | Map botanical knobs to synth parameters |
-| `triggerChord(notes?)` | Play a short chord (defaults to first three notes in the pool) |
-| `setTempo(bpm)` | Set transport tempo |
-| `getWaveform()` | Read analyser waveform data |
-| `getLevel()` | Normalized output level (0–1) |
-| `updateParameter(key, value)` | Update a single synth setting |
-| `defaultNotePool` | Default note pool used by `triggerChord` |
-| `presets` | All nine Plantasia preset definitions |
-| `initialBotanicalControls` | Default botanical control values |
-
-### Types
-
-| Type | Description |
-|------|-------------|
-| `PlantasiaPreset` | Preset definition with synth settings |
-| `SynthSettings` | Oscillator, filter, envelope, and effects config |
-| `BotanicalControls` | Live botanical knob values (0–100) |
-| `BotanicalControlKey` | Keys for individual botanical controls |
-| `SpeciesName` | Preset species identifier |
-| `OrganismState` | Lifecycle state metadata on presets |
-
-## Botanical → synthesis mapping
-
-| Control | Synth parameter |
-|---------|-----------------|
-| Energy | Oscillator volume |
-| Growth | Envelope attack / release |
-| Life | LFO frequency |
-| Space | Delay & reverb wet |
-| Texture | Filter cutoff (brightness) |
-| Resonance | Filter Q |
-
-## Project structure
-
-```
-src/
-  index.ts              Public API barrel
-  plantasiaEngine.ts    PlantasiaEngine class
-  audio/
-    audioEngine.ts      Tone.js graph and synthesis logic
-  data/
-    presets.ts          Built-in preset definitions
-  types/
-    botanical.ts        Botanical control types
-    presets.ts          Preset and synth setting types
-demo/
-  index.html            Browser smoke test
-  main.js               Demo wiring for built dist/
-```
+Then run `npm install`. The `prepare` script builds `dist/` automatically.
 
 ## Development
 
 ```bash
 npm install
-npm run build      # Compile to dist/
-npm run typecheck  # Type-check without emitting
-npm run clean      # Remove dist/
-npm run demo       # Browser test page (requires build first)
+npm run sync-presets   # Copy presets/ -> src/presets/bundled/
+npm run build          # Compile TypeScript + copy bundled presets to dist/
+npm run typecheck      # Type-check without emitting
+npm run demo           # Browser demo (requires build)
+npm run dev            # Legacy basic example via Vite
 ```
 
-This package is ESM-only (`"type": "module"`). TypeScript source uses `.js` extensions in relative imports so emitted `dist/` files resolve correctly under Node and browser ESM. `tsconfig.json` uses `"module": "NodeNext"` and `"moduleResolution": "NodeNext"`.
+Run any example (requires build first):
 
-## Testing
+```bash
+npm run example:basic
+npm run example:presets
+npm run example:effects
+npm run example:midi
+npm run example:sequencing
+npm run example:generative
+```
 
-### 1. Build
+## Build
 
 ```bash
 npm run build
-```
-
-### 2. Node import smoke test
-
-From the package root, verify the built entry point loads:
-
-```bash
 node -e "import('./dist/index.js').then(m => console.log(Object.keys(m)))"
 ```
 
-Expected output includes `PlantasiaEngine`, `initAudio`, `playPreset`, `presets`, and the other public exports.
+This package is ESM-only (`"type": "module"`). Source uses `.js` extensions in relative imports; `tsconfig.json` uses `"module": "NodeNext"`.
 
-### 3. Browser demo
-
-Build first, then start the demo server:
+## Demo
 
 ```bash
 npm run build
 npm run demo
 ```
 
-Vite opens `demo/index.html`, which imports the built package from `dist/index.js` (via the Vite alias in `vite.demo.config.ts`). In the browser:
+Open the Vite URL, click **Start Audio**, select a preset, **Play Note**, **Stop Note**. See [TESTING.md](./TESTING.md) for full verification steps.
 
-1. Click **Start Audio** (required user gesture for Web Audio).
-2. Choose a preset from the dropdown.
-3. Click **Play Preset**.
-4. Click **Stop** to release voices.
+## Repository structure
 
-The demo lives in `demo/index.html` and `demo/main.js`.
+```
+plantasia-sound-engine/
+├── src/
+│   ├── engine/          Core audio engine + PlantasiaEngine facade
+│   ├── synths/          Species-specific synth implementations (Juno Flowers)
+│   ├── effects/         Effect rack scaffold (future)
+│   ├── modulation/      Modulation matrix scaffold (future)
+│   ├── presets/         Preset loader, serialization, bundled JSON
+│   ├── midi/            Web MIDI scaffold (future)
+│   ├── sequencing/      Sequencer scaffold (future)
+│   ├── utils/           Shared types and helpers
+│   └── index.ts         Public API barrel
+├── presets/             Source-of-truth preset JSON by category
+├── samples/             Sample assets (future)
+├── assets/              IRs, wavetables, images (future)
+├── examples/            Runnable browser examples
+├── demo/                Primary browser smoke test
+├── docs/                Architecture and API documentation
+├── README.md
+├── ROADMAP.md
+├── CHANGELOG.md
+└── TESTING.md
+```
 
-## Dependencies
+## Public API
 
-- [Tone.js](https://tonejs.github.io/) — Web Audio synthesis framework
+| Export | Description |
+|--------|-------------|
+| `PlantasiaEngine` | Primary facade class |
+| `initAudio()` | Start Tone.js AudioContext (user gesture required) |
+| `playPreset(preset)` | Apply preset and trigger audio |
+| `stopAudio()` | Release all voices |
+| `applyBotanicalControls(controls)` | Map botanical knobs to synth |
+| `triggerChord(notes?)` | Play a short chord |
+| `setTempo(bpm)` | Set transport tempo |
+| `getWaveform()` | Analyser waveform data |
+| `getLevel()` | Normalized output level (0–1) |
+| `updateParameter(key, value)` | Update a synth setting |
+| `defaultNotePool` | Default note pool |
+| `presets` | All built-in presets |
+| `initialBotanicalControls` | Default botanical values |
+| `junoFlowersPreset`, `JUNO_FLOWERS_*` | Juno Flowers preset + constants |
+
+See [docs/API.md](./docs/API.md) for full reference.
+
+## Example usage
+
+```typescript
+import { PlantasiaEngine } from 'plantasia-sound-engine';
+
+const engine = new PlantasiaEngine();
+await engine.init(); // user gesture required
+engine.applyBotanicalControls(engine.initialBotanicalControls);
+engine.playPreset(engine.presets[0]);
+engine.triggerChord(['C3', 'E3', 'G3']);
+engine.stop();
+```
+
+## Roadmap summary
+
+See [ROADMAP.md](./ROADMAP.md) for milestones: preset browser, effect rack, modulation matrix, MIDI/MPE, sequencing, and performance optimizations.
 
 ## License
 

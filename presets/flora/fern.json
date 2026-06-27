@@ -1,0 +1,15 @@
+{
+  "id": "fern",
+  "name": "Fern",
+  "species": "Fern",
+  "description": "A soft recursive canopy with bright leaf shimmer.",
+  "mood": "fronds / shimmer / recursion",
+  "asciiState": "growth",
+  "category": "flora",
+  "synth": {
+    "oscillator": "triangle",
+    "filterHz": 2100,
+    "envelope": { "attack": 0.22, "release": 2.2 },
+    "effects": { "delay": 0.28, "reverb": 0.46 }
+  }
+}

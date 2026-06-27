@@ -9,11 +9,11 @@ import {
   getLevel,
   updateParameter,
   defaultNotePool,
-} from './audio/audioEngine.js';
-import { presets } from './data/presets.js';
-import { initialBotanicalControls } from './types/botanical.js';
-import type { BotanicalControls } from './types/botanical.js';
-import type { PlantasiaPreset, SynthSettings } from './types/presets.js';
+} from './audioEngine.js';
+import { presets } from '../presets/loader.js';
+import { initialBotanicalControls } from '../utils/types/botanical.js';
+import type { BotanicalControls } from '../utils/types/botanical.js';
+import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
 
 /**
  * Public facade for the Plantasia botanical synthesis engine.
