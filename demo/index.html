@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plantasia Sound Engine — Demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 36rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        margin: 1rem 0 0.25rem;
+        font-weight: 600;
+      }
+      select,
+      button {
+        font: inherit;
+      }
+      select {
+        width: 100%;
+        padding: 0.35rem 0.5rem;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      button {
+        padding: 0.45rem 0.85rem;
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+      #status {
+        margin-top: 1.25rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid #8884;
+        border-radius: 0.5rem;
+        background: #8881;
+      }
+      #status[data-kind='ok'] {
+        border-color: #2a7a3a66;
+        background: #2a7a3a18;
+      }
+      #status[data-kind='error'] {
+        border-color: #b33a3a66;
+        background: #b33a3a18;
+      }
+      #status-label {
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.7;
+        margin-bottom: 0.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Plantasia Sound Engine</h1>
+    <p>Browser smoke test for the built ESM package. Audio starts only after you click <strong>Start Audio</strong>.</p>
+
+    <label for="preset-select">Preset</label>
+    <select id="preset-select" aria-label="Preset selector"></select>
+
+    <div class="controls">
+      <button type="button" id="btn-start">Start Audio</button>
+      <button type="button" id="btn-play" disabled>Play Note</button>
+      <button type="button" id="btn-stop" disabled>Stop Note</button>
+    </div>
+
+    <div id="status" data-kind="ok" role="status" aria-live="polite">
+      <span id="status-label">Status</span>
+      <span id="status-text">Loading engine…</span>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

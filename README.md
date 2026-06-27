@@ -123,6 +123,9 @@ src/
   types/
     botanical.ts        Botanical control types
     presets.ts          Preset and synth setting types
+demo/
+  index.html            Browser smoke test
+  main.js               Demo wiring for built dist/
 ```
 
 ## Development
@@ -132,7 +135,46 @@ npm install
 npm run build      # Compile to dist/
 npm run typecheck  # Type-check without emitting
 npm run clean      # Remove dist/
+npm run demo       # Browser test page (requires build first)
 ```
+
+This package is ESM-only (`"type": "module"`). TypeScript source uses `.js` extensions in relative imports so emitted `dist/` files resolve correctly under Node and browser ESM. `tsconfig.json` uses `"module": "NodeNext"` and `"moduleResolution": "NodeNext"`.
+
+## Testing
+
+### 1. Build
+
+```bash
+npm run build
+```
+
+### 2. Node import smoke test
+
+From the package root, verify the built entry point loads:
+
+```bash
+node -e "import('./dist/index.js').then(m => console.log(Object.keys(m)))"
+```
+
+Expected output includes `PlantasiaEngine`, `initAudio`, `playPreset`, `presets`, and the other public exports.
+
+### 3. Browser demo
+
+Build first, then start the demo server:
+
+```bash
+npm run build
+npm run demo
+```
+
+Vite opens `demo/index.html`, which imports the built package from `dist/index.js` (via the Vite alias in `vite.demo.config.ts`). In the browser:
+
+1. Click **Start Audio** (required user gesture for Web Audio).
+2. Choose a preset from the dropdown.
+3. Click **Play Preset**.
+4. Click **Stop** to release voices.
+
+The demo lives in `demo/index.html` and `demo/main.js`.
 
 ## Dependencies
 
