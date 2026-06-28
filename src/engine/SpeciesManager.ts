@@ -1,5 +1,12 @@
 import type { EcologicalControl, SpeciesId, SoundWorld, SoundWorldMetadata } from './SoundWorld.js';
 import { EcologyControls, toSpeciesControlValue } from './EcologyControls.js';
+import { assertNormalizedEcologyValue } from './EcologyControlScaleError.js';
+import {
+  assertEngineRunning,
+  assertNotDisposed,
+  assertSpeciesLoaded,
+  type EngineState,
+} from './EngineLifecycle.js';
 import { SpeciesLoader } from './registry/SpeciesLoader.js';
 import { SpeciesRegistry } from './registry/SpeciesRegistry.js';
 
@@ -10,10 +17,16 @@ export class SpeciesManager {
   private readonly registry: SpeciesRegistry;
   private readonly loader: SpeciesLoader;
   private readonly ecologyControls = new EcologyControls();
+  private state: EngineState = 'idle';
 
   constructor(registry?: SpeciesRegistry) {
     this.registry = registry ?? new SpeciesRegistry();
     this.loader = new SpeciesLoader(this.registry);
+  }
+
+  /** Current lifecycle state (`idle` → `loaded` → `running`; `disposed` is terminal). */
+  getState(): EngineState {
+    return this.state;
   }
 
   /** Access the underlying species registry (plugin discovery). */
@@ -36,19 +49,24 @@ export class SpeciesManager {
     this.registry.register({ factory });
   }
 
-  /** All registered species (including coming_soon). */
+  /** Playable species only (status `active`). Default host-facing discovery list. */
   getAvailableSpecies(): SoundWorldMetadata[] {
-    return this.registry.list();
-  }
-
-  /** Only loadable active species. */
-  getActiveSpecies(): SoundWorldMetadata[] {
     return this.registry.listActive();
   }
 
-  /** Coming soon / disabled species. */
+  /** Alias for {@link getAvailableSpecies}. */
+  getActiveSpecies(): SoundWorldMetadata[] {
+    return this.getAvailableSpecies();
+  }
+
+  /** Coming soon / disabled species registered on this manager (empty unless future species were registered). */
   getUpcomingSpecies(): SoundWorldMetadata[] {
     return this.registry.listUpcoming();
+  }
+
+  /** All registered species metadata, including upcoming placeholders when registered. */
+  getAllRegisteredSpecies(): SoundWorldMetadata[] {
+    return this.registry.list();
   }
 
   getCurrentSpecies(): SoundWorldMetadata | null {
@@ -66,38 +84,62 @@ export class SpeciesManager {
   }
 
   async loadSpecies(id: SpeciesId, context?: unknown): Promise<void> {
+    assertNotDisposed(this.state, 'loadSpecies()');
+
+    if (this.state === 'running') {
+      this.loader.getCurrent()?.stop();
+      this.state = 'loaded';
+    }
+
     await this.loader.load(id, context);
     const active = this.loader.getCurrent();
     if (active) {
       this.ecologyControls.applyTo(active);
+      this.state = 'loaded';
     }
   }
 
   start(): void {
+    assertSpeciesLoaded(this.state, 'start()');
+    if (this.state === 'running') {
+      return;
+    }
     this.loader.getCurrent()?.start();
+    this.state = 'running';
   }
 
   stop(): void {
+    if (this.state !== 'running') {
+      return;
+    }
     this.loader.getCurrent()?.stop();
+    this.state = 'loaded';
   }
 
   noteOn(note: string, velocity = 1): void {
+    assertEngineRunning(this.state, 'noteOn()');
     this.loader.getCurrent()?.noteOn(note, velocity);
   }
 
   noteOff(note: string): void {
+    assertSpeciesLoaded(this.state, 'noteOff()');
     this.loader.getCurrent()?.noteOff(note);
   }
 
   allNotesOff(): void {
+    if (this.state === 'idle' || this.state === 'disposed') {
+      return;
+    }
     this.loader.getCurrent()?.allNotesOff();
   }
 
   /**
    * Set an ecological control (normalized 0–1).
    * Stored centrally and routed to the active species when present.
+   * @throws EcologyControlScaleError when value is outside 0–1
    */
   setControl(control: EcologicalControl, value: number): void {
+    assertNormalizedEcologyValue(value, control);
     this.ecologyControls.set(control, value);
     const active = this.loader.getCurrent();
     if (active) {
@@ -106,8 +148,12 @@ export class SpeciesManager {
   }
 
   dispose(): void {
+    if (this.state === 'disposed') {
+      return;
+    }
     this.loader.disposeCurrent();
     this.registry.clear();
     this.ecologyControls.reset();
+    this.state = 'disposed';
   }
 }

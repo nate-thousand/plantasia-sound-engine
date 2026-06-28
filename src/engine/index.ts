@@ -34,8 +34,24 @@ export {
   type DensityState,
 } from './performance/index.js';
 export { SpeciesManager, DEFAULT_SPECIES_ID } from './SpeciesManager.js';
-export { createSpeciesManager, loadDefaultSpecies } from './createSpeciesManager.js';
-export { createSpeciesRegistry } from './createSpeciesRegistry.js';
+export {
+  EngineLifecycleError,
+  type EngineState,
+  type EngineLifecycleErrorCode,
+} from './EngineLifecycle.js';
+export {
+  EcologyControlScaleError,
+  assertNormalizedEcologyValue,
+} from './EcologyControlScaleError.js';
+export {
+  ReservedSpeciesIdError,
+  RESERVED_BUILTIN_SPECIES_IDS,
+  RECOMMENDED_SPECIES_ID_PREFIXES,
+  isReservedBuiltinSpeciesId,
+  assertCustomSpeciesId,
+} from './reservedSpeciesIds.js';
+export { createSpeciesManager, loadDefaultSpecies, type CreateSpeciesManagerOptions } from './createSpeciesManager.js';
+export { createSpeciesRegistry, type CreateSpeciesRegistryOptions } from './createSpeciesRegistry.js';
 export {
   SpeciesRegistry,
   SpeciesLoader,
@@ -51,5 +67,5 @@ export {
   type SpeciesFactory,
   type SpeciesRegistration,
 } from './registry/index.js';
-export { registerBuiltinSpecies } from '../species/registerBuiltinSpecies.js';
+export { registerBuiltinSpecies, registerFutureSpecies } from '../species/registerBuiltinSpecies.js';
 export { FUTURE_SPECIES_METADATA } from '../species/future/metadata.js';

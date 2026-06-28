@@ -16,9 +16,13 @@ document.getElementById('btn-start')?.addEventListener('click', async () => {
 });
 
 document.getElementById('btn-note')?.addEventListener('click', () => {
-  manager.noteOn('C4', 0.82);
-  setTimeout(() => manager.noteOff('C4'), 1200);
-  log('Note C4');
+  try {
+    manager.noteOn('C4', 0.82);
+    setTimeout(() => manager.noteOff('C4'), 1200);
+    log('Note C4');
+  } catch (error) {
+    log(error.message ?? String(error));
+  }
 });
 
 document.getElementById('btn-stop')?.addEventListener('click', () => {

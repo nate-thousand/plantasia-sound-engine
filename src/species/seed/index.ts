@@ -226,7 +226,7 @@ export function createSeedSoundWorld(): SoundWorld {
   return new SeedSoundWorld();
 }
 
-/** Singleton Seed species registered with {@link SpeciesManager}. */
-export const seedSpecies = createSeedSoundWorld();
+/** @deprecated Use {@link createSeedSoundWorld} for runtime audio — metadata only, not a live instance. */
+export const seedSpecies = { metadata: SEED_SOUND_WORLD_METADATA } as const;
 
 export { SEED_SUPPORTED_CONTROLS, SEED_DEFAULT_TEMPO, SEED_DEFAULT_SCALE, SEED_SOUND_WORLD_METADATA };

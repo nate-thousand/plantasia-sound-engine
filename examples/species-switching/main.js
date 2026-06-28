@@ -1,6 +1,6 @@
 import { createSpeciesManager } from 'plantasia-sound-engine';
 
-const manager = createSpeciesManager();
+const manager = createSpeciesManager({ includeFuture: true });
 const status = document.getElementById('status');
 const activeEl = document.getElementById('active-species');
 const upcomingEl = document.getElementById('upcoming');

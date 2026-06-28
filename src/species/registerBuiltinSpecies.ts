@@ -6,16 +6,19 @@ import { createBacteriaSoundWorld } from './bacteria/index.js';
 import { FUTURE_SPECIES_METADATA } from './future/metadata.js';
 
 /**
- * Register all built-in Sound Worlds with the species registry.
- * Add new active species here — the engine core stays unchanged.
+ * Register the four playable built-in Sound Worlds.
+ * Does not register `coming_soon` placeholders — use {@link registerFutureSpecies} for discovery docs.
  */
 export function registerBuiltinSpecies(registry: SpeciesRegistry): void {
-  registry.register({ factory: createSeedSoundWorld });
-  registry.register({ factory: createFlowersSoundWorld });
-  registry.register({ factory: createMoldSoundWorld });
-  registry.register({ factory: createBacteriaSoundWorld });
+  registry.register({ factory: createSeedSoundWorld, builtin: true });
+  registry.register({ factory: createFlowersSoundWorld, builtin: true });
+  registry.register({ factory: createMoldSoundWorld, builtin: true });
+  registry.register({ factory: createBacteriaSoundWorld, builtin: true });
+}
 
+/** Opt-in registration of future / coming_soon species metadata for discovery UIs. */
+export function registerFutureSpecies(registry: SpeciesRegistry): void {
   for (const metadata of FUTURE_SPECIES_METADATA) {
-    registry.registerPlaceholder(metadata);
+    registry.registerPlaceholder(metadata, undefined, true);
   }
 }

@@ -25,6 +25,9 @@ async function main() {
     'createSpeciesRegistry',
     'PlantasiaEngine',
     'SpeciesManager',
+    'EngineLifecycleError',
+    'EcologyControlScaleError',
+    'ReservedSpeciesIdError',
     'seedSpecies',
     'flowersSpecies',
     'moldSpecies',
@@ -34,6 +37,7 @@ async function main() {
     'PerformanceEngine',
     'SpeciesRegistry',
     'registerBuiltinSpecies',
+    'registerFutureSpecies',
   ];
   for (const name of requiredExports) {
     assert(typeof pkg[name] !== 'undefined', `export missing: ${name}`);
@@ -45,24 +49,35 @@ async function main() {
   assert(typeof v1.init === 'function', 'v1 init');
   assert(typeof v1.playPreset === 'function', 'v1 playPreset');
 
-  // --- Registry ---
+  // --- Registry (playable default; future opt-in) ---
   const registry = pkg.createSpeciesRegistry();
-  assert(registry.listActive().length === 4, 'four active in registry');
-  assert(registry.list().length >= 12, 'includes coming_soon placeholders');
-  assert(registry.has('tundra'), 'future species registered');
+  assert(registry.listActive().length === 4, 'four active in default registry');
+  assert(registry.list().length === 4, 'default registry excludes coming_soon');
+
+  const registryWithFuture = pkg.createSpeciesRegistry({ includeFuture: true });
+  assert(registryWithFuture.list().length >= 12, 'includeFuture adds placeholders');
+  assert(registryWithFuture.has('tundra'), 'future species when opted in');
 
   // --- Species manager init + switching ---
-  const manager = pkg.createSpeciesManager();
+  const manager = pkg.createSpeciesManager({ includeFuture: true });
   assert(manager.getActiveSpecies().length === 4, 'manager active list');
+  assert(manager.getAvailableSpecies().length === 4, 'available is playable-only');
 
   for (const id of ACTIVE) {
     await manager.loadSpecies(id);
     assert(manager.getCurrentSpecies()?.id === id, `loaded ${id}`);
+    assert(manager.getState() === 'loaded', `${id} loaded state`);
     manager.setControl('growth', 0.5);
     manager.setControl('bloom', 0.55);
-    // noteOn is safe without audio context — no-op until browser start()
-    manager.noteOn('C4', 0.75);
-    manager.noteOff('C4');
+
+    // Lifecycle enforced — noteOn before start throws (Tone start requires browser audio context).
+    let noteBeforeStart = false;
+    try {
+      manager.noteOn('C4', 0.75);
+    } catch (error) {
+      noteBeforeStart = error?.name === 'EngineLifecycleError';
+    }
+    assert(noteBeforeStart, `noteOn before start throws for ${id}`);
   }
 
   // --- Invalid species ---
@@ -82,17 +97,29 @@ async function main() {
   }
   assert(notLoadable, 'coming_soon species rejected');
 
+  // --- Lifecycle throws ---
+  const lifecycleManager = pkg.createSpeciesManager();
+  let noteBeforeStart = false;
+  await lifecycleManager.loadSpecies('seed');
+  try {
+    lifecycleManager.noteOn('C4');
+  } catch (error) {
+    noteBeforeStart = error?.name === 'EngineLifecycleError';
+  }
+  assert(noteBeforeStart, 'noteOn before start throws');
+
   // --- Ecology persistence across switch ---
   manager.setControl('mold', 0.88);
   await manager.loadSpecies('seed');
   await manager.loadSpecies('mold');
   manager.setControl('bacteria', 0.6);
 
-  // --- Singleton metadata ---
+  // --- Singleton metadata (deprecated, metadata-only) ---
   assert(pkg.seedSpecies.metadata.id === 'seed', 'seedSpecies metadata');
   assert(pkg.flowersSpecies.metadata.id === 'flowers', 'flowersSpecies metadata');
   assert(pkg.moldSpecies.metadata.id === 'mold', 'moldSpecies metadata');
   assert(pkg.bacteriaSpecies.metadata.id === 'bacteria', 'bacteriaSpecies metadata');
+  assert(typeof pkg.seedSpecies.noteOn !== 'function', 'seedSpecies is not a live instance');
 
   // --- Generative engine ---
   const { Generator } = pkg;
@@ -142,6 +169,7 @@ async function main() {
 
   // --- Dispose cleanup ---
   manager.dispose();
+  assert(manager.getState() === 'disposed', 'dispose sets disposed state');
   assert(manager.getCurrentSpecies() === null, 'dispose clears active species');
 
   const manager2 = pkg.createSpeciesManager();

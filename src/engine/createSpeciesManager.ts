@@ -1,12 +1,24 @@
 import { SpeciesManager, DEFAULT_SPECIES_ID } from './SpeciesManager.js';
-import { registerBuiltinSpecies } from '../species/registerBuiltinSpecies.js';
+import {
+  registerBuiltinSpecies,
+  registerFutureSpecies,
+} from '../species/registerBuiltinSpecies.js';
 
 export { DEFAULT_SPECIES_ID };
 
-/** Create a SpeciesManager with all built-in and placeholder species registered. */
-export function createSpeciesManager(): SpeciesManager {
+export type CreateSpeciesManagerOptions = {
+  /** Register coming_soon placeholder metadata (default: false). */
+  includeFuture?: boolean;
+};
+
+/** Create a SpeciesManager with built-in playable species registered. */
+export function createSpeciesManager(options: CreateSpeciesManagerOptions = {}): SpeciesManager {
+  const { includeFuture = false } = options;
   const manager = new SpeciesManager();
   registerBuiltinSpecies(manager.getRegistry());
+  if (includeFuture) {
+    registerFutureSpecies(manager.getRegistry());
+  }
   return manager;
 }
 

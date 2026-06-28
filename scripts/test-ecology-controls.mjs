@@ -95,19 +95,19 @@ async function main() {
 
   // SpeciesManager: persist state when switching species
   const manager = new SpeciesManager();
-  const seed = createMockSoundWorld('seed');
-  const flowers = createMockSoundWorld('flowers');
+  const seed = createMockSoundWorld('custom.ecology-seed');
+  const flowers = createMockSoundWorld('custom.ecology-flowers');
   manager.register(seed);
   manager.register(flowers);
 
   manager.setControl('growth', 0.65);
   manager.setControl('bacteria', 0.8);
 
-  await manager.loadSpecies('seed');
+  await manager.loadSpecies('custom.ecology-seed');
   assertClose(seed.applied.growth, 65, 'seed loaded with persisted growth');
   assertClose(seed.applied.bacteria, 80, 'seed loaded with persisted bacteria');
 
-  await manager.loadSpecies('flowers');
+  await manager.loadSpecies('custom.ecology-flowers');
   assertClose(flowers.applied.growth, 65, 'flowers loaded with persisted growth');
   assertClose(flowers.applied.bacteria, 80, 'flowers loaded with persisted bacteria');
 
@@ -116,11 +116,21 @@ async function main() {
 
   // Store when no species active — set before first load
   const manager2 = new SpeciesManager();
-  const mold = createMockSoundWorld('mold');
+  const mold = createMockSoundWorld('custom.ecology-mold');
   manager2.register(mold);
   manager2.setControl('mold', 0.9);
-  await manager2.loadSpecies('mold');
+  await manager2.loadSpecies('custom.ecology-mold');
   assertClose(mold.applied.mold, 90, 'deferred apply on first load');
+
+  // Host boundary rejects 0–100 scale
+  const { EcologyControlScaleError } = await import(join(root, 'dist/engine/EcologyControlScaleError.js'));
+  let scaleRejected = false;
+  try {
+    manager2.setControl('growth', 75);
+  } catch (error) {
+    scaleRejected = error instanceof EcologyControlScaleError;
+  }
+  assert(scaleRejected, 'SpeciesManager rejects 0–100 control values');
 
   manager.dispose();
   manager2.dispose();

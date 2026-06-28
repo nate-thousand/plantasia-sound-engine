@@ -19,7 +19,11 @@ export {
   SpeciesNotLoadableError,
   SpeciesLoadError,
   DuplicateSpeciesError,
+  EngineLifecycleError,
+  EcologyControlScaleError,
+  ReservedSpeciesIdError,
   registerBuiltinSpecies,
+  registerFutureSpecies,
   Generator,
   PerformanceEngine,
 } from './engine/index.js';

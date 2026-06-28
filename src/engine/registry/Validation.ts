@@ -51,16 +51,21 @@ function isStringArray(value: unknown): value is string[] {
   );
 }
 
-/** Validate species ID format (lowercase alphanumeric + hyphens). */
+/** Validate species ID format (lowercase alphanumeric, hyphens, optional dot namespaces). */
 export function validateSpeciesId(id: unknown): string[] {
   const issues: string[] = [];
   if (!isNonEmptyString(id)) {
     issues.push('metadata.id must be a non-empty string');
     return issues;
   }
-  if (!/^[a-z][a-z0-9-]*$/.test(id)) {
+  const valid =
+    /^[a-z][a-z0-9.-]*$/.test(id) &&
+    !id.includes('..') &&
+    !id.startsWith('.') &&
+    !id.endsWith('.');
+  if (!valid) {
     issues.push(
-      `metadata.id "${id}" must be lowercase alphanumeric with optional hyphens (e.g. "seed", "night-bloom")`,
+      `metadata.id "${id}" must be lowercase alphanumeric with optional hyphens and dot namespaces (e.g. "seed", "night-bloom", "plantasonic.my-species")`,
     );
   }
   return issues;

@@ -98,7 +98,7 @@ These must ship before **Phase 21 Plantasonic integration**:
   - [docs/SPECIES.md](./docs/SPECIES.md) — species reference
 - [x] **Phase 7** — Species registration and smoke tests *(superseded by Phases 8–11)*
   - `src/engine/createSpeciesManager.ts` — factory with all four species pre-registered
-  - `scripts/validate-species.mjs` — registration and load smoke test (`npm run test:species`)
+  - `scripts/validate-species-api.mjs` — registration and load smoke test (`npm run test:species`)
   - All four species now live with full audio graphs; still not wired to `PlantasiaEngine` or browser demo
 - [x] **Phase 8** — Seed Sound World (reference implementation)
   - `src/species/seed/` — `synth.ts`, `effects.ts`, `generator.ts`, `metadata.ts`, live `SoundWorld`
@@ -150,9 +150,9 @@ These must ship before **Phase 21 Plantasonic integration**:
   - v2 exports from root; examples; documentation pass
   - **Note:** tagged `v2.0.0` prematurely — treat as architecture beta, not integration release
   - See [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md)
-- [ ] **Phase 17** — Lifecycle contract **(blocker)**
+- [x] **Phase 17** — Lifecycle contract **(blocker)**
   - Explicit engine states; throw on `noteOn` / `start` / `loadSpecies` when invalid
-  - `docs/LIFECYCLE.md`
+  - [docs/LIFECYCLE.md](./docs/LIFECYCLE.md)
   - Playable-only default registry; remove `coming_soon` from host-facing list
   - Rename `validate-species.mjs` → `validate-species-api.mjs`
   - 0–1 control scale enforced at boundary
@@ -189,6 +189,7 @@ Full checklist: [docs/ENGINE_AUDIT.md](./docs/ENGINE_AUDIT.md) §8.
 | [PERFORMANCE_ENGINE.md](./docs/PERFORMANCE_ENGINE.md) | Expressive performance routing and macros |
 | [PLUGIN_ARCHITECTURE.md](./docs/PLUGIN_ARCHITECTURE.md) | Species registry, loader, plugin lifecycle |
 | [CREATING_A_SPECIES.md](./docs/CREATING_A_SPECIES.md) | Contributor guide for new Sound Worlds |
+| [LIFECYCLE.md](./docs/LIFECYCLE.md) | Engine state machine and host integration contract |
 | [MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) | v1 presets → v2 species migration |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | v1 subsystem layout |
 | [PRESETS.md](./docs/PRESETS.md) | Sound World JSON schema |

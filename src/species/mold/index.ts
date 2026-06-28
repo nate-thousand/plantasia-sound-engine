@@ -272,7 +272,8 @@ export function createMoldSoundWorld(): SoundWorld {
   return new MoldSoundWorld();
 }
 
-export const moldSpecies = createMoldSoundWorld();
+/** @deprecated Use {@link createMoldSoundWorld} for runtime audio — metadata only, not a live instance. */
+export const moldSpecies = { metadata: MOLD_SOUND_WORLD_METADATA } as const;
 
 export {
   MOLD_SUPPORTED_CONTROLS,

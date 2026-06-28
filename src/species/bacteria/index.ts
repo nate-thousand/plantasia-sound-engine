@@ -250,7 +250,8 @@ export function createBacteriaSoundWorld(): SoundWorld {
   return new BacteriaSoundWorld();
 }
 
-export const bacteriaSpecies = createBacteriaSoundWorld();
+/** @deprecated Use {@link createBacteriaSoundWorld} for runtime audio — metadata only, not a live instance. */
+export const bacteriaSpecies = { metadata: BACTERIA_SOUND_WORLD_METADATA } as const;
 
 export {
   BACTERIA_SUPPORTED_CONTROLS,

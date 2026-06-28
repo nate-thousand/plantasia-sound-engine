@@ -241,7 +241,8 @@ export function createFlowersSoundWorld(): SoundWorld {
   return new FlowersSoundWorld();
 }
 
-export const flowersSpecies = createFlowersSoundWorld();
+/** @deprecated Use {@link createFlowersSoundWorld} for runtime audio — metadata only, not a live instance. */
+export const flowersSpecies = { metadata: FLOWERS_SOUND_WORLD_METADATA } as const;
 
 export {
   FLOWERS_SUPPORTED_CONTROLS,

@@ -1,5 +1,6 @@
 import type { SoundWorld, SoundWorldMetadata, SpeciesId } from '../SoundWorld.js';
 import { isSpeciesLoadable } from '../SoundWorld.js';
+import { assertCustomSpeciesId } from '../reservedSpeciesIds.js';
 import {
   assertValidPlaceholderMetadata,
   assertValidSpecies,
@@ -13,6 +14,8 @@ export type SpeciesRegistration = {
   factory: SpeciesFactory;
   /** When true, skip full SoundWorld validation (metadata-only placeholders). */
   placeholder?: boolean;
+  /** Engine bootstrap only — allows reserved built-in IDs. */
+  builtin?: boolean;
 };
 
 export class DuplicateSpeciesError extends Error {
@@ -39,16 +42,19 @@ export class SpeciesRegistry {
   register(world: SoundWorld): void;
   register(input: SpeciesRegistration | SoundWorld): void {
     if ('metadata' in input && typeof input.initialize === 'function') {
-      this.registerInstance(input as SoundWorld);
+      this.registerInstance(input as SoundWorld, false);
       return;
     }
 
-    const { factory, placeholder = false } = input as SpeciesRegistration;
-    this.registerFactory(factory, placeholder);
+    const { factory, placeholder = false, builtin = false } = input as SpeciesRegistration;
+    this.registerFactory(factory, placeholder, builtin);
   }
 
-  private registerInstance(world: SoundWorld): void {
+  private registerInstance(world: SoundWorld, builtin: boolean): void {
     const id = world.metadata.id;
+    if (!builtin) {
+      assertCustomSpeciesId(id);
+    }
     if (this.factories.has(id)) {
       throw new DuplicateSpeciesError(id);
     }
@@ -64,7 +70,7 @@ export class SpeciesRegistry {
     this.metadataCache.set(id, { ...world.metadata });
   }
 
-  private registerFactory(factory: SpeciesFactory, placeholder: boolean): void {
+  private registerFactory(factory: SpeciesFactory, placeholder: boolean, builtin: boolean): void {
     let preview: SoundWorld;
     try {
       preview = factory();
@@ -83,6 +89,9 @@ export class SpeciesRegistry {
       ]);
     }
 
+    if (!builtin) {
+      assertCustomSpeciesId(id);
+    }
     if (this.factories.has(id)) {
       throw new DuplicateSpeciesError(id);
     }
@@ -101,8 +110,11 @@ export class SpeciesRegistry {
   }
 
   /** Register metadata-only placeholder without a full SoundWorld factory. */
-  registerPlaceholder(metadata: SoundWorldMetadata, factory?: SpeciesFactory): void {
+  registerPlaceholder(metadata: SoundWorldMetadata, factory?: SpeciesFactory, builtin = false): void {
     assertValidPlaceholderMetadata(metadata);
+    if (!builtin) {
+      assertCustomSpeciesId(metadata.id);
+    }
 
     if (this.factories.has(metadata.id)) {
       throw new DuplicateSpeciesError(metadata.id);

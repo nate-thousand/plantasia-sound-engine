@@ -14,10 +14,11 @@ async function main() {
   const { SpeciesRegistry, SpeciesValidationError, SpeciesNotLoadableError } = await import(
     join(root, 'dist/engine/registry/index.js')
   );
+  const { ReservedSpeciesIdError } = await import(join(root, 'dist/engine/reservedSpeciesIds.js'));
   const { createStubSoundWorld } = await import(
     join(root, 'dist/engine/registry/SpeciesRegistry.js')
   );
-  const { registerBuiltinSpecies } = await import(
+  const { registerBuiltinSpecies, registerFutureSpecies } = await import(
     join(root, 'dist/species/registerBuiltinSpecies.js')
   );
   const { FUTURE_SPECIES_METADATA } = await import(
@@ -29,6 +30,7 @@ async function main() {
 
   const registry = new SpeciesRegistry();
   registerBuiltinSpecies(registry);
+  registerFutureSpecies(registry);
 
   assert(registry.has('seed'), 'seed registered');
   assert(registry.has('canopy'), 'future canopy registered');
@@ -41,10 +43,21 @@ async function main() {
   const upcoming = registry.listUpcoming();
   assert(upcoming.length === FUTURE_SPECIES_METADATA.length, 'future placeholders listed');
 
+  const stubMetadata = (id) => ({
+    id,
+    name: 'Stub',
+    concept: 'x',
+    description: 'x',
+    inspiration: ['x'],
+    character: ['x'],
+    status: 'coming_soon',
+  });
+
   // Duplicate registration
+  registry.register({ factory: () => createStubSoundWorld(stubMetadata('custom.duplicate-test')) });
   let duplicateCaught = false;
   try {
-    registry.register({ factory: () => createStubSoundWorld(upcoming[0]) });
+    registry.register({ factory: () => createStubSoundWorld(stubMetadata('custom.duplicate-test')) });
   } catch (error) {
     duplicateCaught = error.name === 'DuplicateSpeciesError';
   }
@@ -71,12 +84,25 @@ async function main() {
   }
   assert(invalidCaught, 'invalid ID rejected');
 
+  // Reserved built-in ID
+  let reservedCaught = false;
+  try {
+    registry.register({
+      factory: () => createStubSoundWorld(stubMetadata('seed')),
+    });
+  } catch (error) {
+    reservedCaught = error instanceof ReservedSpeciesIdError;
+  }
+  assert(reservedCaught, 'reserved built-in ID rejected for custom registration');
+
   // Manager loads active species
-  const manager = createSpeciesManager();
-  assert(manager.getAvailableSpecies().length === 4 + FUTURE_SPECIES_METADATA.length, 'manager list');
+  const manager = createSpeciesManager({ includeFuture: true });
+  assert(manager.getAvailableSpecies().length === 4, 'manager playable list');
+  assert(manager.getAllRegisteredSpecies().length === 4 + FUTURE_SPECIES_METADATA.length, 'manager full list');
 
   await manager.loadSpecies('flowers');
   assert(manager.getCurrentSpecies()?.id === 'flowers', 'flowers loaded');
+  assert(manager.getState() === 'loaded', 'loaded state after loadSpecies');
 
   // coming_soon not loadable
   let notLoadable = false;

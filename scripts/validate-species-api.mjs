@@ -8,6 +8,9 @@ async function main() {
   const { createSpeciesManager } = await import(
     join(root, 'dist/engine/createSpeciesManager.js')
   );
+  const { EngineLifecycleError } = await import(
+    join(root, 'dist/engine/EngineLifecycle.js')
+  );
 
   const manager = createSpeciesManager();
   const available = manager.getAvailableSpecies();
@@ -25,8 +28,8 @@ async function main() {
     throw new Error(`Active species ids mismatch: got [${activeIds}], expected [${expected}]`);
   }
 
-  if (available.length <= active.length) {
-    throw new Error('Expected upcoming species in full registry list');
+  if (available.length !== active.length) {
+    throw new Error('Default manager should expose playable species only');
   }
 
   for (const id of EXPECTED_IDS) {
@@ -42,22 +45,29 @@ async function main() {
     if (id === 'mold') {
       manager.setControl('mold', 0.9);
       manager.setControl('bacteria', 0.5);
-      manager.noteOn('C3', 0.7);
-      manager.noteOff('C3');
     }
     if (id === 'bacteria') {
       manager.setControl('bacteria', 1.0);
       manager.setControl('growth', 0.7);
     }
-    manager.noteOn('C4', 0.8);
-    manager.noteOff('C4');
+
+    // Structural lifecycle check — noteOn before start must throw (no Tone graph in Node CI).
+    let lifecycleEnforced = false;
+    try {
+      manager.noteOn('C4', 0.8);
+    } catch (error) {
+      lifecycleEnforced = error instanceof EngineLifecycleError;
+    }
+    if (!lifecycleEnforced) {
+      throw new Error(`noteOn before start should throw EngineLifecycleError for "${id}"`);
+    }
   }
 
   manager.dispose();
-  console.info('[validate-species] OK — 4 active species registered and loadable');
+  console.info('[validate-species-api] OK — 4 active species registered and loadable');
 }
 
 main().catch((error) => {
-  console.error('[validate-species]', error.message ?? error);
+  console.error('[validate-species-api]', error.message ?? error);
   process.exit(1);
 });
