@@ -9,11 +9,15 @@ import {
   getLevel,
   updateParameter,
   defaultNotePool,
+  setMold,
+  getMoldValue,
 } from './audioEngine.js';
 import { presets } from '../presets/loader.js';
 import { initialBotanicalControls } from '../utils/types/botanical.js';
 import type { BotanicalControls } from '../utils/types/botanical.js';
 import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
+import { ENGINE_PARAMETER_METADATA } from '../mold/parameterMetadata.js';
+import type { EngineParameterMeta } from '../mold/types.js';
 
 /**
  * Public facade for the Plantasia botanical synthesis engine.
@@ -75,5 +79,20 @@ export class PlantasiaEngine {
     value: string | number,
   ): void {
     updateParameter(parameter, value);
+  }
+
+  /** Set Mold macro (0–100). */
+  setMold(value: number): void {
+    setMold(value);
+  }
+
+  /** Read current Mold value (0–100). */
+  getMold(): number {
+    return getMoldValue();
+  }
+
+  /** Exported parameter metadata for hosts, MIDI, and automation. */
+  getParameterMetadata(): EngineParameterMeta[] {
+    return ENGINE_PARAMETER_METADATA;
   }
 }

@@ -4,6 +4,11 @@ import type {
   PlantasonicEvolutionConfig,
 } from '../utils/types/plantasonic.js';
 import type { PlantasiaPreset } from '../utils/types/presets.js';
+import { resolveMoldParameters } from '../mold/moldMacro.js';
+import { applySignatureMold } from '../mold/applySignatureMold.js';
+
+/** Fixed internal master level — loudness is OS / browser controlled. */
+const INTERNAL_MASTER_LEVEL = 0.78;
 
 /** Runtime performance state for Plantasonic MIDI mappings. */
 export type PlantasonicPerformanceState = {
@@ -731,11 +736,43 @@ export async function ensurePlantasonicRuntime(): Promise<PlantasonicGraph> {
   return plantasonicGraph;
 }
 
-export function setPlantasonicModeActive(active: boolean, volume = 60): void {
+export function setPlantasonicModeActive(active: boolean, _volume = INTERNAL_MASTER_LEVEL * 100): void {
   plantasonicModeActive = active;
   if (plantasonicGraph) {
-    plantasonicGraph.masterGain.gain.value = active ? Math.min(1, volume / 100) : 0;
+    plantasonicGraph.masterGain.gain.value = active ? INTERNAL_MASTER_LEVEL : 0;
   }
+}
+
+/** Apply Mold macro degradation to the active Plantasonic graph. */
+export function applyPlantasonicMold(mold: number): void {
+  if (!plantasonicGraph) {
+    return;
+  }
+
+  const params = resolveMoldParameters(mold);
+  const t = plantasonicGraph.audioCtx.currentTime;
+  const smooth = 0.045;
+
+  applySignatureMold(
+    {
+      delayFeedback: (v) => plantasonicGraph!.fxDelayFb.gain.setTargetAtTime(v, t, smooth),
+      delayTime: (v) => plantasonicGraph!.fxDelay.delayTime.setTargetAtTime(v, t, smooth),
+      delayWet: (v) => plantasonicGraph!.fxDelayWet.gain.setTargetAtTime(v * 0.55, t, smooth),
+      filterQ: (v) => {
+        plantasonicGraph!.filterA.Q.setTargetAtTime(v, t, smooth);
+        plantasonicGraph!.filterB.Q.setTargetAtTime(v, t, smooth);
+      },
+      chorusRate: (v) => plantasonicGraph!.chorusLfo.frequency.setTargetAtTime(v, t, smooth),
+      stereoDepth: (v) => plantasonicGraph!.widthLfoGain.gain.setTargetAtTime(v * 0.42, t, smooth),
+      stereoRate: (v) => plantasonicGraph!.widthLfo.frequency.setTargetAtTime(v, t, smooth),
+      saturation: (v) => {
+        plantasonicGraph!.tapeSat.curve = getPlantasonicSaturationCurve(v) as Float32Array<ArrayBuffer>;
+      },
+      texture: (v) => plantasonicGraph!.textureGain.gain.setTargetAtTime(v, t, smooth),
+      reverbSend: (v) => plantasonicGraph!.hallWet.gain.setTargetAtTime(v * 0.62, t, smooth),
+    },
+    params,
+  );
 }
 
 /** Update live performance controllers (mod wheel = growth, expression, aftertouch). */

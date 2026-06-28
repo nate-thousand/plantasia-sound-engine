@@ -5,7 +5,7 @@
  */
 export type RampParam = {
   value: unknown;
-  linearRampTo: (value: number, time: number) => unknown;
+  linearRampTo?: (value: number, time: number) => unknown;
 };
 
 export function setRampParam(
@@ -14,9 +14,12 @@ export function setRampParam(
   value: number,
   time = 0.2,
 ): void {
-  if (started) {
+  if (started && typeof param.linearRampTo === 'function') {
     param.linearRampTo(value, time);
-  } else {
+    return;
+  }
+
+  if ('value' in param && param.value !== undefined) {
     (param as { value: number }).value = value;
   }
 }

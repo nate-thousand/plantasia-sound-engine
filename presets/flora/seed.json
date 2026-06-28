@@ -1,15 +1,48 @@
 {
   "id": "seed",
-  "name": "Seed",
+  "name": "Moss",
   "species": "Moss",
-  "description": "A quiet starting point with small harmonic potential.",
-  "mood": "origin / silence / potential",
+  "description": "Soft, intimate, damp textures. Muted warmth with gentle saturation and close ambience.",
+  "mood": "soft / intimate / damp / creeping",
   "asciiState": "seed",
-  "category": "flora",
+  "category": "soundWorlds",
+  "tags": ["moss", "soft", "intimate", "damp", "clusters"],
+  "visual": {
+    "asciiTheme": "moss",
+    "motionStyle": "breathing",
+    "colorPalette": ["#3a5a3a", "#5a7a52", "#7a9a6a", "#2a4028"],
+    "visualIntensity": 0.38,
+    "animationStyle": "slow"
+  },
+  "midi": {
+    "program": 1,
+    "modWheel": 28,
+    "expression": 55,
+    "pitchBendRange": 1,
+    "velocityCurve": "soft"
+  },
   "synth": {
     "oscillator": "sine",
     "filterHz": 900,
-    "envelope": { "attack": 0.2, "release": 1.4 },
-    "effects": { "delay": 0.12, "reverb": 0.24 }
+    "filterQ": 0.6,
+    "saturation": 0.18,
+    "envelope": {
+      "attack": 0.32,
+      "release": 2.2
+    },
+    "effects": {
+      "delay": 0.1,
+      "reverb": 0.42
+    }
+  },
+  "controls": {
+    "mold": 8,
+    "tone": 32,
+    "texture": 24,
+    "bloom": 28,
+    "growthRate": 36,
+    "drift": 22,
+    "mutation": 10,
+    "energy": 38
   }
 }

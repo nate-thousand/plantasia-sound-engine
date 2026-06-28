@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Mold** creative macro — living degradation engine with multi-stage tape wear, granular mutation, delay corruption, spectral decay, and preset-specific personalities (`src/mold/`).
+- `mold` as a first-class `BotanicalControls` key with MIDI-learnable parameter metadata export.
+- `PresetControlDefaults.controls.mold` on all bundled presets (Plantasonic ships with subtle default `12`).
+- `PlantasiaEngine.setMold()`, `getMold()`, and `getParameterMetadata()` public API.
+- `getPresetMold()` helper for preset default lookup.
+
+### Changed
+
+- **Mold macro redesigned** as Plantasia's signature living degradation engine — multi-stage behavior across eight internal modules with preset-specific personalities. White noise is no longer the primary effect.
+- Removed user-facing volume control from the creative parameter surface; internal master gain is fixed (OS / browser controls loudness).
+- **Energy** no longer maps to oscillator output level in `applyBotanicalControls`.
+
+### Added (prior unreleased work)
+
 - Scalable repository architecture: `src/engine`, `src/synths`, `src/effects`, `src/modulation`, `src/midi`, `src/sequencing`, `src/presets`, `src/utils`.
 - JSON preset catalog in `presets/` with category folders (flora, ambient, textures, drones, percussion).
 - Preset loader, serialization utilities, and `scripts/sync-presets.mjs` build step.

@@ -3,9 +3,10 @@
   "defaultPresetId": "seed",
   "categories": {
     "signature": ["plantasonic"],
-    "flora": ["seed", "root", "bloom", "fern", "vine", "juno-flowers"],
-    "ambient": ["coral", "mycelium"],
-    "textures": ["mutation", "crystal"],
+    "soundWorlds": ["seed", "root", "bloom", "fern", "vine", "coral", "crystal", "juno-flowers"],
+    "flora": [],
+    "ambient": ["mycelium"],
+    "textures": ["mutation"],
     "drones": [],
     "percussion": []
   }

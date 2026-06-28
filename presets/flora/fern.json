@@ -1,15 +1,50 @@
 {
   "id": "fern",
-  "name": "Fern",
+  "name": "Canopy",
   "species": "Fern",
-  "description": "A soft recursive canopy with bright leaf shimmer.",
-  "mood": "fronds / shimmer / recursion",
+  "description": "Wide, airy, spacious tree canopy. Large pads, moving air, open harmonics, and gentle chorus sway.",
+  "mood": "wide / airy / spacious / swaying",
   "asciiState": "growth",
-  "category": "flora",
+  "category": "soundWorlds",
+  "tags": ["canopy", "trees", "leaves", "wind", "branches"],
+  "visual": {
+    "asciiTheme": "canopy",
+    "motionStyle": "horizon-wave",
+    "colorPalette": ["#4a7a48", "#6a9a62", "#8aba82", "#3a5a38"],
+    "visualIntensity": 0.52,
+    "animationStyle": "slow"
+  },
+  "midi": {
+    "program": 4,
+    "modWheel": 52,
+    "expression": 68,
+    "pitchBendRange": 2,
+    "velocityCurve": "soft"
+  },
   "synth": {
     "oscillator": "triangle",
-    "filterHz": 2100,
-    "envelope": { "attack": 0.22, "release": 2.2 },
-    "effects": { "delay": 0.28, "reverb": 0.46 }
+    "filterHz": 2400,
+    "filterQ": 0.7,
+    "chorus": 0.42,
+    "drift": 0.45,
+    "stereoWidth": 0.72,
+    "envelope": {
+      "attack": 0.28,
+      "release": 3.4
+    },
+    "effects": {
+      "delay": 0.22,
+      "reverb": 0.58
+    }
+  },
+  "controls": {
+    "mold": 10,
+    "tone": 40,
+    "texture": 52,
+    "bloom": 55,
+    "growthRate": 48,
+    "drift": 52,
+    "mutation": 14,
+    "energy": 50
   }
 }

@@ -8,7 +8,8 @@ export type BotanicalControlKey =
   | 'space'
   | 'texture'
   | 'harmony'
-  | 'resonance';
+  | 'resonance'
+  | 'mold';
 
 export type BotanicalControls = Record<BotanicalControlKey, number>;
 
@@ -45,4 +46,5 @@ export const initialBotanicalControls: BotanicalControls = {
   texture: 57,
   harmony: 72,
   resonance: 46,
+  mold: 0,
 };

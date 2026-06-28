@@ -12,9 +12,28 @@ export {
   updateParameter,
   defaultNotePool,
   setPlantasonicPerformance,
+  setMold,
+  getMoldValue,
 } from './engine/audioEngine.js';
 
-export { presets } from './presets/loader.js';
+export { presets, presetManifest, getPresetById, getPresetsByCategory } from './presets/loader.js';
+export { getPresetMold, getPresetControls } from './presets/moldDefaults.js';
+
+export {
+  ENGINE_PARAMETER_METADATA,
+  MOLD_PARAMETER_META,
+  MOLD_PROFILES,
+  resolveMoldParameters,
+  resolveMoldProfile,
+  normalizeMold,
+} from './mold/index.js';
+
+export type {
+  MoldEffectParams,
+  MoldProfile,
+  MoldModuleId,
+  EngineParameterMeta,
+} from './mold/types.js';
 
 export {
   junoFlowersPreset,
@@ -38,10 +57,55 @@ export type {
 
 export { initialBotanicalControls } from './utils/types/botanical.js';
 
-export type { SynthSettings, PlantasiaPreset } from './utils/types/presets.js';
+export type {
+  SynthSettings,
+  PlantasiaPreset,
+  PresetControlDefaults,
+  PresetVisualConfig,
+  PresetMidiConfig,
+  SoundWorldControlSurface,
+} from './utils/types/presets.js';
 
 export type { JunoBotanicalConfig, JunoGrowthConfig } from './utils/types/junoFlowers.js';
 
 export type { PlantasonicConfig } from './utils/types/plantasonic.js';
 
 export type { PlantasonicPerformanceState } from './synths/plantasonicAudio.js';
+
+export {
+  buildJunoSynthState,
+  createJunoLiveVoice,
+  ensureJunoRuntime,
+  releaseJunoVoice,
+  setJunoModeActive,
+  stopAllJunoVoices,
+  syncJunoBotanical,
+  tickJunoLivingVoice,
+  toJunoEnginePreset,
+} from './synths/junoFlowersAudio.js';
+
+export type {
+  JunoBotanicalGraph,
+  JunoEnginePreset,
+  JunoLiveVoice,
+  JunoSynthState,
+} from './synths/junoFlowersAudio.js';
+
+export {
+  applyPlantasonicMold,
+  buildPlantasonicPerformanceState,
+  createPlantasonicLiveVoice,
+  ensurePlantasonicRuntime,
+  releasePlantasonicVoice,
+  setPlantasonicModeActive,
+  stopAllPlantasonicVoices,
+  syncPlantasonicGraph,
+  tickPlantasonicLivingVoice,
+  toPlantasonicEnginePreset,
+} from './synths/plantasonicAudio.js';
+
+export type {
+  PlantasonicEnginePreset,
+  PlantasonicGraph,
+  PlantasonicLiveVoice,
+} from './synths/plantasonicAudio.js';

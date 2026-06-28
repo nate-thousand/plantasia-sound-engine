@@ -26,6 +26,23 @@ Species-specific synthesis paths that extend or bypass the default PolySynth gra
 
 **Scaffold only.** Defines `ModulationMatrix` and route types. Basic LFO→filter modulation lives in `audioEngine.ts` today.
 
+### Mold macro (`src/mold/`)
+
+Plantasia's signature **living degradation engine**. A single 0–100 Mold control drives eight internal modules across five behavioral stages (aging → overgrowth). Preset-specific personalities via `MOLD_PROFILES` and `resolveMoldProfile()`.
+
+| File | Role |
+|------|------|
+| `types.ts` | `MoldEffectParams`, `MoldProfile`, module/stage types |
+| `stages.ts` | Multi-stage blend (0–20%, 20–40%, …) |
+| `modules.ts` | Per-module parameter resolution |
+| `profiles.ts` | Sound World mold personalities |
+| `moldMacro.ts` | Public resolver (`resolveMoldParameters`) |
+| `applyMold.ts` | Standard PolySynth graph wiring |
+| `applySignatureMold.ts` | Juno Flowers / Plantasonic graph wiring |
+| `parameterMetadata.ts` | MIDI / automation metadata |
+
+Wired into `audioEngine.ts`, Juno Flowers, and Plantasonic graphs.
+
 ### Presets (`src/presets/` + `presets/`)
 
 - Root `presets/` — human-editable JSON source of truth by category

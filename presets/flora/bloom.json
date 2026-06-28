@@ -2,14 +2,47 @@
   "id": "bloom",
   "name": "Bloom",
   "species": "Flower",
-  "description": "A full, open organism state with brighter harmonics.",
-  "mood": "resolution / harmony / expression",
+  "description": "Bright, delicate, harmonic flowering. Soft bells, glass shimmer, and gentle pads opening toward sunlight.",
+  "mood": "bright / delicate / harmonic / blossoming",
   "asciiState": "bloom",
-  "category": "flora",
+  "category": "soundWorlds",
+  "tags": ["bloom", "flowers", "petals", "bells", "shimmer"],
+  "visual": {
+    "asciiTheme": "bloom",
+    "motionStyle": "burst-rhythm",
+    "colorPalette": ["#ffb8d0", "#ff8cb0", "#ffd0e8", "#ffe8f4"],
+    "visualIntensity": 0.62,
+    "animationStyle": "normal"
+  },
+  "midi": {
+    "program": 3,
+    "modWheel": 55,
+    "expression": 70,
+    "pitchBendRange": 2,
+    "velocityCurve": "bright"
+  },
   "synth": {
-    "oscillator": "sawtooth",
-    "filterHz": 2600,
-    "envelope": { "attack": 0.12, "release": 2.4 },
-    "effects": { "delay": 0.36, "reverb": 0.58 }
+    "oscillator": "sine",
+    "filterHz": 3200,
+    "filterQ": 0.8,
+    "chorus": 0.35,
+    "envelope": {
+      "attack": 0.08,
+      "release": 3.2
+    },
+    "effects": {
+      "delay": 0.32,
+      "reverb": 0.62
+    }
+  },
+  "controls": {
+    "mold": 6,
+    "tone": 45,
+    "texture": 58,
+    "bloom": 68,
+    "growthRate": 72,
+    "drift": 38,
+    "mutation": 12,
+    "energy": 58
   }
 }

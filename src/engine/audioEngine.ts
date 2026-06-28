@@ -5,13 +5,25 @@ import {
   playJunoFlowersPreset,
   setJunoModeActive,
   stopAllJunoVoices,
+  applyJunoMold,
 } from '../synths/junoFlowersAudio.js';
 import {
   playPlantasonicPreset,
   setPlantasonicModeActive,
   setPlantasonicPerformance,
   stopAllPlantasonicVoices,
+  applyPlantasonicMold,
 } from '../synths/plantasonicAudio.js';
+import {
+  applyMold,
+  createMoldNodes,
+  getMoldValue,
+  setActiveMoldProfile,
+  wireMoldChain,
+  type MoldHost,
+} from '../mold/index.js';
+import { getPresetMold } from '../presets/moldDefaults.js';
+import { setRampParam, type RampParam } from '../utils/ramp.js';
 
 /**
  * Botanical -> synthesis mapping. The UI only ever speaks in botanical terms;
@@ -25,7 +37,11 @@ import {
  *   Texture  = brightness/grain          Sunlight= brightness
  *   Harmony  = chord consonance          Wind    = LFO
  *   Resonance= filter resonance
+ *   Mold     = living degradation macro (tape wear, mutation, corruption)
  */
+
+/** Private master level — loudness is OS / browser controlled. */
+const INTERNAL_MASTER_DB = -12;
 
 type EngineNodes = {
   synth: Tone.PolySynth;
@@ -35,6 +51,7 @@ type EngineNodes = {
   lfo: Tone.LFO;
   analyser: Tone.Analyser;
   meter: Tone.Meter;
+  moldNodes: ReturnType<typeof createMoldNodes>;
 };
 
 let nodes: EngineNodes | null = null;
@@ -42,26 +59,6 @@ let started = false;
 let lastSettings: SynthSettings | null = null;
 
 const NOTE_POOL = ['C3', 'E3', 'G3', 'B3', 'D4', 'A3'];
-
-/**
- * Tone params throw on exponential ramps before the AudioContext is running
- * (their valid range is [0, 0] while suspended). Until the user starts audio we
- * set values immediately; afterwards we ramp smoothly.
- */
-type RampParam = {
-  value: unknown;
-  linearRampTo: (value: number, time: number) => unknown;
-};
-
-function setParam(param: RampParam, value: number, time = 0.2): void {
-  if (started) {
-    // Linear (not exponential) ramps so values of 0 — common for wet/mix
-    // params — don't throw the "Value must be within [0, 0]" range error.
-    param.linearRampTo(value, time);
-  } else {
-    (param as { value: number }).value = value;
-  }
-}
 
 function buildOscillatorSettings(
   settings: SynthSettings,
@@ -90,9 +87,10 @@ function ensureNodes(): EngineNodes {
     envelope: { attack: 0.2, decay: 0.2, sustain: 0.6, release: 1.5 },
   });
   const lfo = new Tone.LFO({ frequency: 0.3, min: 800, max: 2400 });
+  const moldNodes = createMoldNodes();
 
   synth.connect(filter);
-  filter.connect(delay);
+  wireMoldChain(filter, delay, moldNodes);
   delay.connect(reverb);
   reverb.toDestination();
   reverb.connect(analyser);
@@ -100,8 +98,19 @@ function ensureNodes(): EngineNodes {
   lfo.connect(filter.frequency);
   lfo.start();
 
-  nodes = { synth, filter, delay, reverb, lfo, analyser, meter };
+  nodes = { synth, filter, delay, reverb, lfo, analyser, meter, moldNodes };
   return nodes;
+}
+
+function moldHost(): MoldHost {
+  const engine = ensureNodes();
+  return {
+    delay: engine.delay,
+    filter: engine.filter,
+    lfo: engine.lfo,
+    started,
+    moldNodes: engine.moldNodes,
+  };
 }
 
 function isJunoPreset(preset: PlantasiaPreset): boolean {
@@ -134,28 +143,29 @@ function applySettings(settings: SynthSettings): void {
     envelope: { attack: settings.envelope.attack, release: settings.envelope.release },
   });
 
-  setParam(engine.filter.frequency, settings.filterHz);
-  setParam(engine.filter.Q, settings.filterQ ?? 1);
-  setParam(engine.delay.wet, settings.effects.delay);
+  setRampParam(started, engine.filter.frequency as unknown as RampParam, settings.filterHz);
+  setRampParam(started, engine.filter.Q as unknown as RampParam, settings.filterQ ?? 1);
+  setRampParam(started, engine.delay.wet as unknown as RampParam, settings.effects.delay);
   if (settings.effects.echo != null) {
-    setParam(engine.delay.feedback as unknown as RampParam, settings.effects.echo);
+    setRampParam(started, engine.delay.feedback as unknown as RampParam, settings.effects.echo);
   }
-  setParam(engine.reverb.wet, settings.effects.reverb);
+  setRampParam(started, engine.reverb.wet as unknown as RampParam, settings.effects.reverb);
 
   if (settings.drift != null) {
-    setParam(engine.lfo.frequency, 0.04 + settings.drift * 0.08);
+    setRampParam(started, engine.lfo.frequency as unknown as RampParam, 0.04 + settings.drift * 0.08);
     const hfCap = settings.hfRolloff ?? 8000;
     engine.lfo.min = Math.max(400, settings.filterHz * (0.6 - settings.drift * 0.1));
     engine.lfo.max = Math.min(hfCap, settings.filterHz * (1.2 + settings.drift * 0.4));
   } else {
     engine.lfo.min = 800;
     engine.lfo.max = 2400;
-    setParam(engine.lfo.frequency, 0.3);
+    setRampParam(started, engine.lfo.frequency as unknown as RampParam, 0.3);
   }
 }
 
 export function playPreset(preset: PlantasiaPreset): void {
   ensureNodes();
+  setActiveMoldProfile(preset);
 
   if (isPlantasonicPreset(preset)) {
     if (!started) {
@@ -166,6 +176,7 @@ export function playPreset(preset: PlantasiaPreset): void {
     engine.synth.volume.value = -100;
     setJunoModeActive(false);
     void playPlantasonicPreset(preset);
+    applyMold(moldHost(), getPresetMold(preset));
     return;
   }
 
@@ -178,6 +189,7 @@ export function playPreset(preset: PlantasiaPreset): void {
     engine.synth.volume.value = -100;
     setPlantasonicModeActive(false);
     void playJunoFlowersPreset(preset);
+    applyMold(moldHost(), getPresetMold(preset));
     return;
   }
 
@@ -186,6 +198,7 @@ export function playPreset(preset: PlantasiaPreset): void {
   const engine = ensureNodes();
   engine.synth.volume.value = 0;
   applySettings(preset.synth);
+  applyMold(moldHost(), getPresetMold(preset));
   if (!started) {
     console.info('[Plantasia audio] preset staged (awaiting user gesture)', preset.name);
     return;
@@ -213,19 +226,32 @@ export function stopAudio(): void {
 export function applyBotanicalControls(controls: BotanicalControls): void {
   const engine = ensureNodes();
   const brightness = 600 + (controls.texture / 100) * 6000;
-  setParam(engine.filter.frequency, brightness, 0.15);
-  setParam(engine.filter.Q, 0.5 + (controls.resonance / 100) * 12, 0.15);
-  setParam(engine.delay.wet, (controls.space / 100) * 0.6);
-  setParam(engine.reverb.wet, (controls.space / 100) * 0.7);
-  setParam(engine.lfo.frequency, 0.05 + (controls.life / 100) * 4);
+  setRampParam(started, engine.filter.frequency as unknown as RampParam, brightness, 0.15);
+  setRampParam(started, engine.filter.Q as unknown as RampParam, 0.5 + (controls.resonance / 100) * 12, 0.15);
+  setRampParam(started, engine.delay.wet as unknown as RampParam, (controls.space / 100) * 0.6);
+  setRampParam(started, engine.reverb.wet as unknown as RampParam, (controls.space / 100) * 0.7);
+  setRampParam(started, engine.lfo.frequency as unknown as RampParam, 0.05 + (controls.life / 100) * 4);
   engine.synth.set({
-    volume: -18 + (controls.energy / 100) * 14,
+    volume: INTERNAL_MASTER_DB,
     envelope: {
       attack: 0.02 + (1 - controls.growth / 100) * 0.6,
       release: 0.6 + (controls.growth / 100) * 3,
     },
   });
+
+  applyMold(moldHost(), controls.mold);
+  applyJunoMold(controls.mold);
+  applyPlantasonicMold(controls.mold);
 }
+
+/** Set Mold macro (0–100). Drives simultaneous degradation processes. */
+export function setMold(mold: number): void {
+  applyMold(moldHost(), mold);
+  applyJunoMold(mold);
+  applyPlantasonicMold(mold);
+}
+
+export { getMoldValue };
 
 export function triggerChord(notes: string[] = NOTE_POOL.slice(0, 3)): void {
   const engine = ensureNodes();

@@ -17,8 +17,10 @@ Design goals:
 Default engine path:
 
 ```
-PolySynth → Filter → Delay → Reverb → destination
-                ↑
+PolySynth → Filter → [Mold chain] → Delay → Reverb → destination
+                         ↑
+              tape wear → harmonic distortion → spectral decay → micro-delay
+                         ↑
                LFO (filter frequency)
 ```
 
@@ -38,7 +40,42 @@ Default: lowpass filter with preset-specific `filterHz` and optional `filterQ`. 
 
 ## Envelopes
 
-ADSR simplified to attack/release on the PolySynth envelope. Botanical **Growth** lengthens attack and release; **Energy** adjusts volume.
+ADSR simplified to attack/release on the PolySynth envelope. Botanical **Growth** lengthens attack and release. Output level is fixed internally — loudness is controlled by the OS / browser.
+
+## Mold macro
+
+**Mold** is Plantasia's signature living degradation macro. A single 0–100 control drives a multi-stage engine that makes sound feel organically consumed, mutated, aged, and transformed — without relying on white noise as the primary effect.
+
+### Multi-stage behavior
+
+| Range | Character | Processes |
+|-------|-----------|-----------|
+| 0–20% | Aging | Analog drift, tape saturation, wow/flutter, filter instability, stereo movement |
+| 20–40% | Decay | Harmonic distortion, soft crackle, pitch slips, delay instability, transient dropouts |
+| 40–60% | Mutation | Granular micro-stutter, buffer repeats, delay blooms, resonant bursts |
+| 60–80% | Corruption | Bit/sample-rate reduction, spectral smear, ring modulation, buffer scrambling |
+| 80–100% | Overgrowth | Controlled glitch bursts, tape chew, reverse echoes, self-oscillating delay, harmonic bloom |
+
+### Internal modules
+
+`src/mold/` resolves Mold into eight modular processes:
+
+- **Tape Wear** — saturation, wow, flutter
+- **Harmonic Distortion** — warm drive and bloom
+- **Delay Corruption** — feedback instability, blooms, reverse echoes
+- **Granular Mutation** — micro-stutter, grain density, buffer repeats
+- **Buffer Glitch** — controlled bursts, tape chew, scrambling
+- **Spectral Decay** — bit depth, sample-rate reduction, smearing
+- **Pitch Instability** — drift, slips, random offsets
+- **Texture Engine** — subtle crackle and air (not dominant noise)
+
+### Preset-specific personalities
+
+Each Sound World scales module weights via a **Mold profile** (`MOLD_PROFILES`, `resolveMoldProfile()`). Plantasonic emphasizes tape wear; Bloom emphasizes granular petals; Roots emphasizes earthy distortion; Rainforest emphasizes delay blooms; Winter emphasizes spectral decay; Night Bloom emphasizes haunted delays.
+
+Presets may override with `"moldProfile": "winter"` in JSON.
+
+Mold is stored on presets via `controls.mold`, exposed through `setMold()` / `getMold()`, and included in `ENGINE_PARAMETER_METADATA`. The public API label remains **Mold**.
 
 ## Effects routing
 
@@ -56,12 +93,13 @@ Future effect rack (`src/effects/`) will formalize insert order without changing
 
 | Botanical control | Synth parameter |
 |-------------------|-----------------|
-| Energy | Oscillator volume |
+| Mold | Living degradation macro (tape wear, mutation, corruption, spectral decay) |
 | Growth | Envelope attack / release |
 | Life | LFO frequency |
 | Space | Delay & reverb wet |
 | Texture | Filter cutoff |
 | Resonance | Filter Q |
+| Energy | Voice density / expressiveness (modulation path) |
 
 ## Preset design
 

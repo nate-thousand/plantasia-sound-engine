@@ -4,7 +4,7 @@ Reusable botanical synthesis engine for Plantasia applications — including Pla
 
 ## Overview
 
-The engine provides a stable public API (`PlantasiaEngine` + functional exports), ten built-in presets (JSON-serializable), botanical live controls, and a Juno Flowers signature synth path. Future subsystems (MIDI, modulation matrix, effect rack, sequencing) have scaffold folders ready for incremental development.
+The engine provides a stable public API (`PlantasiaEngine` + functional exports), eleven built-in presets (JSON-serializable), botanical live controls, the **Mold** living degradation macro, and signature synth paths (Plantasonic, Juno Flowers).
 
 ## Installation
 
@@ -78,7 +78,7 @@ plantasia-sound-engine/
 │   ├── engine/          Core audio engine + PlantasiaEngine facade
 │   ├── synths/          Species-specific synth implementations (Juno Flowers)
 │   ├── effects/         Effect rack scaffold (future)
-│   ├── modulation/      Modulation matrix scaffold (future)
+│   ├── mold/            Living degradation macro (Mold)
 │   ├── presets/         Preset loader, serialization, bundled JSON
 │   ├── midi/            Web MIDI scaffold (future)
 │   ├── sequencing/      Sequencer scaffold (future)
@@ -113,9 +113,17 @@ plantasia-sound-engine/
 | `defaultNotePool` | Default note pool |
 | `presets` | All built-in presets |
 | `initialBotanicalControls` | Default botanical values |
+| `setMold(mold)` | Set Mold living degradation macro (0–100) |
+| `getMoldValue()` | Read current Mold value |
+| `getPresetMold(preset)` | Read preset default Mold |
+| `resolveMoldParameters(mold)` | Resolve macro → module targets |
+| `resolveMoldProfile(preset)` | Get Sound World mold personality |
+| `MOLD_PROFILES` | Built-in mold profile registry |
+| `ENGINE_PARAMETER_METADATA` | MIDI / automation parameter metadata |
+| `plantasonicPreset`, `PLANTASONIC_*` | Plantasonic flagship preset + constants |
 | `junoFlowersPreset`, `JUNO_FLOWERS_*` | Juno Flowers preset + constants |
 
-See [docs/API.md](./docs/API.md) for full reference.
+See [docs/API.md](./docs/API.md) for full reference. See [docs/PRESETS.md](./docs/PRESETS.md) for preset and Mold profile documentation.
 
 ## Example usage
 

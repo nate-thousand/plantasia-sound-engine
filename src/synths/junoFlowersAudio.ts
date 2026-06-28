@@ -1,6 +1,11 @@
 import * as Tone from 'tone';
 import type { JunoBotanicalConfig, JunoGrowthConfig } from '../utils/types/junoFlowers.js';
 import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
+import { resolveMoldParameters } from '../mold/moldMacro.js';
+import { applySignatureMold } from '../mold/applySignatureMold.js';
+
+/** Fixed internal master level — loudness is OS / browser controlled. */
+const INTERNAL_MASTER_LEVEL = 0.78;
 
 /** Internal synth state passed to syncBotanical (mirrors juno-flowers index.html). */
 export type JunoSynthState = {
@@ -692,11 +697,37 @@ export async function ensureJunoRuntime(): Promise<JunoBotanicalGraph> {
   return junoGraph;
 }
 
-export function setJunoModeActive(active: boolean, volume = 60): void {
+export function setJunoModeActive(active: boolean, _volume = INTERNAL_MASTER_LEVEL * 100): void {
   junoModeActive = active;
   if (junoMasterGain) {
-    junoMasterGain.gain.value = active ? Math.min(1, volume / 100) : 0;
+    junoMasterGain.gain.value = active ? INTERNAL_MASTER_LEVEL : 0;
   }
+}
+
+/** Apply Mold macro degradation to the active Juno Flowers graph. */
+export function applyJunoMold(mold: number): void {
+  if (!junoGraph) {
+    return;
+  }
+
+  const params = resolveMoldParameters(mold);
+  const t = junoGraph.audioCtx.currentTime;
+  const smooth = JUNO_SYNTH_SMOOTH;
+
+  applySignatureMold(
+    {
+      delayFeedback: (v) => junoGraph!.fxDelayFb.gain.setTargetAtTime(v, t, smooth),
+      delayTime: (v) => junoGraph!.fxDelay.delayTime.setTargetAtTime(v, t, smooth),
+      filterQ: (v) => junoGraph!.liveFilter.Q.setTargetAtTime(v, t, smooth),
+      stereoDepth: (v) => junoGraph!.windGain.gain.setTargetAtTime(v * 0.45, t, smooth),
+      stereoRate: (v) => junoGraph!.windLfo.frequency.setTargetAtTime(v, t, smooth),
+      saturation: (v) => {
+        junoGraph!.photoShaper.curve = getJunoShaperCurve(v) as Float32Array<ArrayBuffer>;
+      },
+      reverbSend: (v) => junoGraph!.morningMistWet.gain.setTargetAtTime(v * 0.55, t, smooth),
+    },
+    params,
+  );
 }
 
 function startJunoTickLoop(): void {

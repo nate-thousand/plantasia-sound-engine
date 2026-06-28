@@ -1,15 +1,48 @@
 {
   "id": "root",
-  "name": "Root",
+  "name": "Roots",
   "species": "Tree",
-  "description": "Grounded tones for stable growth and low movement.",
-  "mood": "foundation / bass / stability",
+  "description": "Deep, earthy, grounded tones. Dark drones, wooden resonance, and organic bass movement.",
+  "mood": "deep / earthy / grounded / branching",
   "asciiState": "growth",
-  "category": "flora",
+  "category": "soundWorlds",
+  "tags": ["roots", "bass", "earth", "fractal", "underground"],
+  "visual": {
+    "asciiTheme": "roots",
+    "motionStyle": "heavy-pulse",
+    "colorPalette": ["#3a2a20", "#5a4030", "#7a5840", "#2a1a12"],
+    "visualIntensity": 0.72,
+    "animationStyle": "slow"
+  },
+  "midi": {
+    "program": 2,
+    "modWheel": 40,
+    "expression": 60,
+    "pitchBendRange": 2,
+    "velocityCurve": "normal"
+  },
   "synth": {
     "oscillator": "triangle",
-    "filterHz": 1200,
-    "envelope": { "attack": 0.34, "release": 1.8 },
-    "effects": { "delay": 0.2, "reverb": 0.32 }
+    "filterHz": 680,
+    "filterQ": 1.2,
+    "subAmount": 0.42,
+    "envelope": {
+      "attack": 0.48,
+      "release": 2.8
+    },
+    "effects": {
+      "delay": 0.14,
+      "reverb": 0.38
+    }
+  },
+  "controls": {
+    "mold": 22,
+    "tone": 38,
+    "texture": 18,
+    "bloom": 24,
+    "growthRate": 28,
+    "drift": 18,
+    "mutation": 16,
+    "energy": 42
   }
 }

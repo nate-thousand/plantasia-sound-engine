@@ -50,6 +50,7 @@ Map live botanical knobs onto the synth graph.
 ```typescript
 engine.applyBotanicalControls({
   ...engine.initialBotanicalControls,
+  mold: 18,
   space: 80,
   texture: 70,
 });
@@ -79,6 +80,48 @@ Read analyser waveform data for visualization.
 
 Normalized output level (0–1).
 
+#### `setMold(value: number): void`
+
+Set the Mold macro (0–100). Drives the living degradation engine: tape wear, harmonic distortion, granular mutation, delay corruption, spectral decay, pitch instability, and subtle texture — scaled by the active Sound World's mold profile.
+
+```typescript
+engine.setMold(24);
+```
+
+#### `resolveMoldParameters(mold, profile?)`
+
+Resolve Mold into all internal module targets. Optional `MoldProfile` override; defaults to the active preset profile.
+
+```typescript
+import { resolveMoldParameters, MOLD_PROFILES } from 'plantasia-sound-engine';
+
+const params = resolveMoldParameters(60, MOLD_PROFILES.plantasonic);
+```
+
+#### `resolveMoldProfile(preset)`
+
+Get the mold personality for a preset.
+
+```typescript
+import { resolveMoldProfile, plantasonicPreset } from 'plantasia-sound-engine';
+
+const profile = resolveMoldProfile(plantasonicPreset);
+// { id: 'plantasonic', weights: { tapeWear: 1.35, ... } }
+```
+
+#### `getMold(): number`
+
+Read the current Mold value (0–100).
+
+#### `getParameterMetadata(): EngineParameterMeta[]`
+
+Exported parameter metadata for hosts, MIDI Learn, automation, and preset storage.
+
+```typescript
+const meta = engine.getParameterMetadata();
+// [{ id: 'mold', name: 'Mold', automatable: true, ... }]
+```
+
 #### `updateParameter(parameter, value): void`
 
 Update a single synth setting from the active preset.
@@ -101,7 +144,14 @@ Equivalent to calling methods on `PlantasiaEngine`:
 | `initAudio()` | Start audio context |
 | `playPreset(preset)` | Play a preset |
 | `stopAudio()` | Stop all voices |
-| `applyBotanicalControls(controls)` | Apply botanical mapping |
+| `applyBotanicalControls(controls)` | Apply botanical mapping (includes `mold`) |
+| `setMold(mold)` | Set Mold macro (0–100) |
+| `getMoldValue()` | Read current Mold value |
+| `getPresetMold(preset)` | Read preset default Mold |
+| `ENGINE_PARAMETER_METADATA` | Parameter metadata export |
+| `resolveMoldParameters(mold, profile?)` | Resolve macro → all module targets |
+| `resolveMoldProfile(preset)` | Get Sound World mold personality |
+| `MOLD_PROFILES` | Built-in mold profile registry |
 | `triggerChord(notes?)` | Trigger chord |
 | `setTempo(bpm)` | Set tempo |
 | `getWaveform()` | Waveform data |

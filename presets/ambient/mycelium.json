@@ -2,14 +2,45 @@
   "id": "mycelium",
   "name": "Mycelium",
   "species": "Mushroom",
-  "description": "A connected modulation network for shared intelligence.",
-  "mood": "network / signal / communication",
+  "description": "A connected underground network. Shared intelligence, spore drift, and filament communication.",
+  "mood": "network / signal / spore / communication",
   "asciiState": "mycelium",
   "category": "ambient",
+  "tags": ["mycelium", "network", "spores", "filaments", "underground"],
+  "visual": {
+    "asciiTheme": "mycelium",
+    "motionStyle": "swarm-drift",
+    "colorPalette": ["#b8b8a0", "#989880", "#d8d8c0", "#888870"],
+    "visualIntensity": 0.68,
+    "animationStyle": "normal"
+  },
+  "midi": {
+    "program": 8,
+    "modWheel": 48,
+    "expression": 62,
+    "pitchBendRange": 2,
+    "velocityCurve": "normal"
+  },
   "synth": {
     "oscillator": "triangle",
     "filterHz": 1800,
-    "envelope": { "attack": 0.28, "release": 2 },
-    "effects": { "delay": 0.44, "reverb": 0.5 }
+    "envelope": {
+      "attack": 0.28,
+      "release": 2
+    },
+    "effects": {
+      "delay": 0.44,
+      "reverb": 0.5
+    }
+  },
+  "controls": {
+    "mold": 32,
+    "tone": 44,
+    "texture": 38,
+    "bloom": 52,
+    "growthRate": 42,
+    "drift": 48,
+    "mutation": 28,
+    "energy": 48
   }
 }

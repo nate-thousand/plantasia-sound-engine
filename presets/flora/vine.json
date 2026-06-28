@@ -1,15 +1,49 @@
 {
   "id": "vine",
-  "name": "Vine",
+  "name": "Rainforest",
   "species": "Vine",
-  "description": "A connected climber for winding rhythmic signals.",
-  "mood": "tendrils / motion / connection",
+  "description": "Dense, humid, complex vegetation. Layered ambience, organic movement, rich modulation, and spatial depth.",
+  "mood": "dense / humid / layered / flowing",
   "asciiState": "mycelium",
-  "category": "flora",
+  "category": "soundWorlds",
+  "tags": ["rainforest", "vines", "leaves", "rain", "humid"],
+  "visual": {
+    "asciiTheme": "rainforest",
+    "motionStyle": "swarm-drift",
+    "colorPalette": ["#2a5a32", "#3a7a42", "#5a9a52", "#1a4020"],
+    "visualIntensity": 0.78,
+    "animationStyle": "fast"
+  },
+  "midi": {
+    "program": 5,
+    "modWheel": 62,
+    "expression": 75,
+    "pitchBendRange": 2,
+    "velocityCurve": "normal"
+  },
   "synth": {
     "oscillator": "sawtooth",
-    "filterHz": 3000,
-    "envelope": { "attack": 0.08, "release": 1.6 },
-    "effects": { "delay": 0.52, "reverb": 0.38 }
+    "filterHz": 2800,
+    "filterQ": 1.1,
+    "drift": 0.55,
+    "chorus": 0.38,
+    "envelope": {
+      "attack": 0.12,
+      "release": 2.4
+    },
+    "effects": {
+      "delay": 0.48,
+      "reverb": 0.55
+    }
+  },
+  "controls": {
+    "mold": 16,
+    "tone": 48,
+    "texture": 55,
+    "bloom": 58,
+    "growthRate": 62,
+    "drift": 58,
+    "mutation": 22,
+    "energy": 65
   }
 }

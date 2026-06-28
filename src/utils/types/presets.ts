@@ -1,6 +1,18 @@
 import type { OrganismState, SpeciesName } from './botanical.js';
 import type { JunoBotanicalConfig, JunoGrowthConfig } from './junoFlowers.js';
 import type { PlantasonicConfig } from './plantasonic.js';
+import type {
+  PresetControlDefaults,
+  PresetMidiConfig,
+  PresetVisualConfig,
+} from './soundWorld.js';
+
+export type {
+  PresetControlDefaults,
+  PresetMidiConfig,
+  PresetVisualConfig,
+  SoundWorldControlSurface,
+} from './soundWorld.js';
 
 export type SynthSettings = {
   oscillator: 'sine' | 'triangle' | 'sawtooth' | 'square';
@@ -39,6 +51,10 @@ export type PlantasiaPreset = {
   description: string;
   mood: string;
   asciiState: OrganismState;
+  /** Manifest category (signature, soundWorlds, ambient, textures, …). */
+  category?: string;
+  /** Explicit taxonomy tags for UI and discovery. */
+  tags?: string[];
   synth: SynthSettings;
   /** Optional scale frequencies (Hz) for species-aware apps. */
   scale?: number[];
@@ -48,4 +64,12 @@ export type PlantasiaPreset = {
   growth?: JunoGrowthConfig;
   /** Plantasonic flagship sound-world routing. */
   plantasonic?: PlantasonicConfig;
+  /** Sound World visual identity — ASCII theme, palette, motion. */
+  visual?: PresetVisualConfig;
+  /** Per-preset MIDI performance defaults. */
+  midi?: PresetMidiConfig;
+  /** Intentional macro defaults for all creative controls. */
+  controls?: PresetControlDefaults;
+  /** Optional mold personality override (see MOLD_PROFILES). */
+  moldProfile?: string;
 };
