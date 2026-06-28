@@ -9,16 +9,18 @@ The v1 preset path (`PlantasiaEngine`, JSON presets, Plantasonic / Juno graphs) 
 ## Quick start (v2 — prototype only)
 
 ```typescript
-import { createSpeciesManager, loadDefaultSpecies } from 'plantasia-sound-engine';
+import { createPlantasiaEngine } from 'plantasia-sound-engine';
 
-const manager = createSpeciesManager();
-await loadDefaultSpecies(manager);
+const engine = createPlantasiaEngine();
+await engine.initialize();
+await engine.loadSpecies('seed');
+await engine.start();
 
-// Requires user gesture + manager.start() before noteOn produces audio
-manager.setControl('bloom', 0.65); // 0–1 only
-manager.start();
-manager.noteOn('C4', 0.8);
+engine.setControl('bloom', 0.65); // 0–1 only
+engine.noteOn('C4', 0.8);
 ```
+
+Slim imports: `import { createPlantasiaEngine } from 'plantasia-sound-engine/public'`
 
 ```bash
 npm install

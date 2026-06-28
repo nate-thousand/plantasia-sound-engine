@@ -19,7 +19,7 @@ document.getElementById('btn-start')?.addEventListener('click', async () => {
   const id = speciesSelect.value;
   await manager.loadSpecies(id);
   applyControls();
-  manager.start();
+  await manager.start();
   log(`Generative ${id} running — adjust growth/bacteria`);
 });
 

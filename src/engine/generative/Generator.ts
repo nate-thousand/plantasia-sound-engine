@@ -1,4 +1,6 @@
 import { DEFAULT_ECOLOGY_STATE } from '../EcologyControls.js';
+import type { EngineScheduler } from '../scheduler/EngineScheduler.js';
+import { createEngineScheduler } from '../scheduler/EngineScheduler.js';
 import { HarmonyEngine } from './HarmonyEngine.js';
 import { MemoryEngine } from './MemoryEngine.js';
 import { PhraseEngine } from './PhraseEngine.js';
@@ -7,9 +9,14 @@ import { RhythmEngine } from './RhythmEngine.js';
 import type {
   GenerativeCallbacks,
   GenerativeEcology,
+  GenerativeEventKind,
   GenerativeNoteEmit,
   GenerativePreferences,
 } from './types.js';
+
+export type GeneratorOptions = {
+  scheduler?: EngineScheduler;
+};
 
 /**
  * Central generative orchestration — schedules composition events without
@@ -21,17 +28,21 @@ export class Generator {
   private readonly probability = new ProbabilityEngine();
   private readonly memory = new MemoryEngine();
   private readonly phraseEngine = new PhraseEngine();
+  private readonly scheduler: EngineScheduler;
 
   private ecology: GenerativeEcology = { ...DEFAULT_ECOLOGY_STATE };
   private running = false;
-  private timerId: ReturnType<typeof setTimeout> | null = null;
-  private backgroundId: ReturnType<typeof setInterval> | null = null;
-  private releaseTimers = new Set<ReturnType<typeof setTimeout>>();
+  private tickTimerId: number | null = null;
+  private backgroundTimerId: number | null = null;
+  private releaseTimerIds = new Set<number>();
 
   constructor(
     private readonly preferences: GenerativePreferences,
     private readonly callbacks: GenerativeCallbacks,
-  ) {}
+    options: GeneratorOptions = {},
+  ) {
+    this.scheduler = options.scheduler ?? createEngineScheduler();
+  }
 
   setEcology(partial: Partial<GenerativeEcology>): void {
     this.ecology = { ...this.ecology, ...partial };
@@ -65,29 +76,29 @@ export class Generator {
     this.scheduleTick();
 
     if (this.preferences.rhythmStyle === 'swarm' || this.ecology.bacteria > 0.25) {
-      this.backgroundId = setInterval(() => {
+      this.backgroundTimerId = this.scheduler.setInterval(() => {
         if (!this.running) {
           return;
         }
         this.backgroundMicroTick();
-      }, 240);
+      }, 240, 'generator-background');
     }
   }
 
   stop(): void {
     this.running = false;
-    if (this.timerId != null) {
-      clearTimeout(this.timerId);
-      this.timerId = null;
+    if (this.tickTimerId != null) {
+      this.scheduler.clearTimeout(this.tickTimerId);
+      this.tickTimerId = null;
     }
-    if (this.backgroundId != null) {
-      clearInterval(this.backgroundId);
-      this.backgroundId = null;
+    if (this.backgroundTimerId != null) {
+      this.scheduler.clearInterval(this.backgroundTimerId);
+      this.backgroundTimerId = null;
     }
-    for (const id of this.releaseTimers) {
-      clearTimeout(id);
+    for (const id of this.releaseTimerIds) {
+      this.scheduler.clearTimeout(id);
     }
-    this.releaseTimers.clear();
+    this.releaseTimerIds.clear();
   }
 
   dispose(): void {
@@ -97,21 +108,28 @@ export class Generator {
     this.probability.reset();
   }
 
+  private emitGeneratorEvent(
+    kind: GenerativeEventKind,
+    extra?: { note?: string; velocity?: number; intensity?: number },
+  ): void {
+    this.callbacks.onGeneratorEvent?.({ kind, ...extra });
+  }
+
   private scheduleTick(): void {
     if (!this.running) {
       return;
     }
 
     const plan = this.rhythm.nextPlan(this.ecology, this.preferences);
-    this.timerId = setTimeout(() => {
-      this.timerId = null;
+    this.tickTimerId = this.scheduler.setTimeout(() => {
+      this.tickTimerId = null;
       if (!this.running) {
         return;
       }
       this.probability.advanceTick();
       this.compose(plan);
       this.scheduleTick();
-    }, plan.intervalMs);
+    }, plan.intervalMs, 'generator-tick');
   }
 
   private backgroundMicroTick(): void {
@@ -138,10 +156,13 @@ export class Generator {
     const { ecology, preferences: prefs, memory, harmony, probability, phraseEngine } = this;
 
     if (probability.roll('glitch', ecology, prefs, memory)) {
-      this.callbacks.onGlitch?.(ecology.mold * 0.5 + ecology.bacteria * 0.35);
+      const intensity = ecology.mold * 0.5 + ecology.bacteria * 0.35;
+      this.callbacks.onGlitch?.(intensity);
+      this.emitGeneratorEvent('glitch', { intensity });
     }
 
     if (probability.roll('silence', ecology, prefs, memory)) {
+      this.emitGeneratorEvent('silence');
       return;
     }
 
@@ -212,15 +233,16 @@ export class Generator {
           return;
         }
         this.callbacks.noteOn(emit.note, emit.velocity);
-        const releaseId = setTimeout(() => {
-          this.releaseTimers.delete(releaseId);
+        this.emitGeneratorEvent(emit.kind, { note: emit.note, velocity: emit.velocity });
+        const releaseId = this.scheduler.setTimeout(() => {
+          this.releaseTimerIds.delete(releaseId);
           this.callbacks.noteOff(emit.note);
-        }, emit.holdMs);
-        this.releaseTimers.add(releaseId);
+        }, emit.holdMs, 'generator-release');
+        this.releaseTimerIds.add(releaseId);
       };
 
       if (emit.delayMs && emit.delayMs > 0) {
-        setTimeout(play, emit.delayMs);
+        this.scheduler.setTimeout(play, emit.delayMs, 'generator-delay');
       } else {
         play();
       }

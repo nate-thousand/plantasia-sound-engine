@@ -32,6 +32,10 @@ import {
   applyFlowersPerformance,
   type FlowersPerformanceBase,
 } from './performanceApply.js';
+import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
+import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
+import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
 
 type FlowersControlState = Record<EcologicalControl, number>;
 
@@ -61,15 +65,20 @@ export class FlowersSoundWorld implements SoundWorld {
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: FlowersPerformanceBase | null = null;
+  private eventSink?: EngineEventSink;
+  private scheduler?: EngineScheduler;
 
-  async initialize(_context?: unknown): Promise<void> {
+  async initialize(context?: unknown): Promise<void> {
+    const ctx = readSoundWorldContext(context);
+    this.eventSink = ctx.events;
+    this.scheduler = ctx.scheduler;
     this.teardownGraph();
     this.controls = { ...DEFAULT_CONTROLS };
     this.audioStarted = false;
   }
 
-  start(): void {
-    void this.ensureAudioStarted().then(() => {
+  start(): Promise<void> {
+    return this.ensureAudioStarted().then(() => {
       syncGeneratorEcology(this.generator, this.controls);
       this.generator?.start(FLOWERS_DEFAULT_TEMPO);
     });
@@ -88,6 +97,9 @@ export class FlowersSoundWorld implements SoundWorld {
     }
     const ctx = this.performance?.noteOn(note, velocity);
     this.applyPerformanceModulation();
+    this.eventSink?.emitDensityChanged({
+      density: this.performance?.getDensityEngine().getState().averageDensity ?? 0,
+    });
     triggerFlowersAttack(this.synth, note, ctx?.shapedVelocity ?? velocity);
   }
 
@@ -144,13 +156,19 @@ export class FlowersSoundWorld implements SoundWorld {
     this.effects = createFlowersEffects();
     connectFlowersEffects(this.synth.filter, this.effects);
 
-    this.generator = new FlowersGenerator({
-      noteOn: (note, velocity) => {
-        this.performance?.recordGenerativeActivity('chord');
-        this.noteOn(note, velocity);
-      },
-      noteOff: (note) => this.noteOff(note),
-    });
+    this.generator = new FlowersGenerator(
+      buildGenerativeCallbacks(
+        {
+          noteOn: (note, velocity) => {
+            this.performance?.recordGenerativeActivity('chord');
+            this.noteOn(note, velocity);
+          },
+          noteOff: (note) => this.noteOff(note),
+        },
+        this.eventSink,
+      ),
+      { scheduler: this.scheduler },
+    );
 
     this.performance = new PerformanceEngine(FLOWERS_EXPRESSION_PROFILE);
     syncPerformanceEcology(this.performance, this.controls);

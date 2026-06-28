@@ -25,7 +25,7 @@ async function ensureStarted() {
   const id = speciesSelect.value;
   if (manager.getCurrentSpecies()?.id !== id) {
     await manager.loadSpecies(id);
-    manager.start();
+    await manager.start();
     log(`Loaded ${id}`);
   }
 }

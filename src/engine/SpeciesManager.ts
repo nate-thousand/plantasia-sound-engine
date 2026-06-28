@@ -9,19 +9,32 @@ import {
 } from './EngineLifecycle.js';
 import { SpeciesLoader } from './registry/SpeciesLoader.js';
 import { SpeciesRegistry } from './registry/SpeciesRegistry.js';
+import type { EngineEventBus } from './events/EngineEventBus.js';
+import { readSoundWorldContext, type SoundWorldContext } from './SoundWorldContext.js';
+import { createEngineScheduler, type EngineScheduler } from './scheduler/EngineScheduler.js';
 
 /** Default species loaded by {@link createSpeciesManager} integrations. */
 export const DEFAULT_SPECIES_ID: SpeciesId = 'seed';
+
+export type SpeciesManagerOptions = {
+  events?: EngineEventBus;
+  scheduler?: EngineScheduler;
+};
 
 export class SpeciesManager {
   private readonly registry: SpeciesRegistry;
   private readonly loader: SpeciesLoader;
   private readonly ecologyControls = new EcologyControls();
+  private readonly events?: EngineEventBus;
+  private readonly rootScheduler?: EngineScheduler;
+  private speciesScheduler: EngineScheduler | null = null;
   private state: EngineState = 'idle';
 
-  constructor(registry?: SpeciesRegistry) {
+  constructor(registry?: SpeciesRegistry, options: SpeciesManagerOptions = {}) {
     this.registry = registry ?? new SpeciesRegistry();
     this.loader = new SpeciesLoader(this.registry);
+    this.events = options.events;
+    this.rootScheduler = options.scheduler;
   }
 
   /** Current lifecycle state (`idle` → `loaded` → `running`; `disposed` is terminal). */
@@ -37,6 +50,11 @@ export class SpeciesManager {
   /** Access the species loader (lifecycle). */
   getLoader(): SpeciesLoader {
     return this.loader;
+  }
+
+  /** Per-species scheduler scope (cleared on species switch). */
+  getSpeciesScheduler(): EngineScheduler | null {
+    return this.speciesScheduler;
   }
 
   /** Register a Sound World plugin. Validates before accepting. */
@@ -83,7 +101,7 @@ export class SpeciesManager {
     await this.loadSpecies(DEFAULT_SPECIES_ID, context);
   }
 
-  async loadSpecies(id: SpeciesId, context?: unknown): Promise<void> {
+  async loadSpecies(id: SpeciesId, context?: unknown, emitOptions?: { presetId?: string }): Promise<void> {
     assertNotDisposed(this.state, 'loadSpecies()');
 
     if (this.state === 'running') {
@@ -91,20 +109,33 @@ export class SpeciesManager {
       this.state = 'loaded';
     }
 
-    await this.loader.load(id, context);
+    const previousSpeciesId = this.loader.getCurrentMetadata()?.id ?? null;
+    this.resetSpeciesScheduler();
+
+    const mergedContext = this.mergeLoadContext(context);
+    await this.loader.load(id, mergedContext);
     const active = this.loader.getCurrent();
     if (active) {
       this.ecologyControls.applyTo(active);
       this.state = 'loaded';
+      this.events?.emit('speciesChanged', {
+        speciesId: id,
+        previousSpeciesId,
+        presetId: emitOptions?.presetId,
+      });
     }
   }
 
-  start(): void {
+  /** Awaits species audio readiness before transitioning to `running`. */
+  async start(): Promise<void> {
     assertSpeciesLoaded(this.state, 'start()');
     if (this.state === 'running') {
       return;
     }
-    this.loader.getCurrent()?.start();
+    const current = this.loader.getCurrent();
+    if (current) {
+      await Promise.resolve(current.start());
+    }
     this.state = 'running';
   }
 
@@ -118,6 +149,8 @@ export class SpeciesManager {
 
   noteOn(note: string, velocity = 1): void {
     assertEngineRunning(this.state, 'noteOn()');
+    const speciesId = this.loader.getCurrentMetadata()?.id ?? null;
+    this.events?.emit('notePlayed', { note, velocity, source: 'host', speciesId });
     this.loader.getCurrent()?.noteOn(note, velocity);
   }
 
@@ -145,15 +178,36 @@ export class SpeciesManager {
     if (active) {
       active.setControl(control, toSpeciesControlValue(this.ecologyControls.get(control)));
     }
+    this.events?.emit('controlChanged', {
+      control,
+      value,
+      speciesId: this.loader.getCurrentMetadata()?.id ?? null,
+    });
   }
 
   dispose(): void {
     if (this.state === 'disposed') {
       return;
     }
+    this.resetSpeciesScheduler();
     this.loader.disposeCurrent();
     this.registry.clear();
     this.ecologyControls.reset();
     this.state = 'disposed';
+  }
+
+  private resetSpeciesScheduler(): void {
+    this.speciesScheduler?.dispose();
+    this.speciesScheduler = this.rootScheduler?.createScope('species') ?? createEngineScheduler();
+  }
+
+  private mergeLoadContext(context: unknown): SoundWorldContext {
+    const hostContext = readSoundWorldContext(context);
+    const speciesId = (): SpeciesId | null => this.loader.getCurrentMetadata()?.id ?? null;
+    return {
+      ...hostContext,
+      events: this.events?.createSink(speciesId) ?? hostContext.events,
+      scheduler: this.speciesScheduler ?? hostContext.scheduler,
+    };
   }
 }

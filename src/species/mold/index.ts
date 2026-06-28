@@ -34,6 +34,10 @@ import {
   applyMoldPerformance,
   type MoldPerformanceBase,
 } from './performanceApply.js';
+import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
+import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
+import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
 
 type MoldControlState = Record<EcologicalControl, number>;
 
@@ -63,15 +67,20 @@ export class MoldSoundWorld implements SoundWorld {
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: MoldPerformanceBase | null = null;
+  private eventSink?: EngineEventSink;
+  private scheduler?: EngineScheduler;
 
-  async initialize(_context?: unknown): Promise<void> {
+  async initialize(context?: unknown): Promise<void> {
+    const ctx = readSoundWorldContext(context);
+    this.eventSink = ctx.events;
+    this.scheduler = ctx.scheduler;
     this.teardownGraph();
     this.controls = { ...DEFAULT_CONTROLS };
     this.audioStarted = false;
   }
 
-  start(): void {
-    void this.ensureAudioStarted().then(() => {
+  start(): Promise<void> {
+    return this.ensureAudioStarted().then(() => {
       syncGeneratorEcology(this.generator, this.controls);
       this.generator?.start(MOLD_DEFAULT_TEMPO);
     });
@@ -90,6 +99,9 @@ export class MoldSoundWorld implements SoundWorld {
     }
     const ctx = this.performance?.noteOn(note, velocity);
     this.applyPerformanceModulation();
+    this.eventSink?.emitDensityChanged({
+      density: this.performance?.getDensityEngine().getState().averageDensity ?? 0,
+    });
     const roots = this.controls.roots / 100;
     const transpose = roots > 0.35 ? -12 : roots > 0.15 ? -7 : 0;
     const pitched = Tone.Frequency(note).transpose(transpose).toNote();
@@ -162,19 +174,25 @@ export class MoldSoundWorld implements SoundWorld {
     this.effects = createMoldEffects();
     connectMoldEffects(this.synth.bandpass, this.effects);
 
-    this.generator = new MoldGenerator({
-      noteOn: (note, velocity) => {
-        this.performance?.recordGenerativeActivity('drone');
-        this.noteOn(note, velocity);
-      },
-      noteOff: (note) => this.noteOff(note),
-      onGlitch: (intensity) => {
-        this.performance?.recordGenerativeActivity('ornament');
-        if (this.synth) {
-          triggerMoldGlitch(this.synth, intensity);
-        }
-      },
-    });
+    this.generator = new MoldGenerator(
+      buildGenerativeCallbacks(
+        {
+          noteOn: (note, velocity) => {
+            this.performance?.recordGenerativeActivity('drone');
+            this.noteOn(note, velocity);
+          },
+          noteOff: (note) => this.noteOff(note),
+          onGlitch: (intensity) => {
+            this.performance?.recordGenerativeActivity('ornament');
+            if (this.synth) {
+              triggerMoldGlitch(this.synth, intensity);
+            }
+          },
+        },
+        this.eventSink,
+      ),
+      { scheduler: this.scheduler },
+    );
 
     this.performance = new PerformanceEngine(MOLD_EXPRESSION_PROFILE);
     syncPerformanceEcology(this.performance, this.controls);

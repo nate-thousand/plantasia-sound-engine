@@ -45,6 +45,12 @@ export interface GenerativeCallbacks {
   noteOn: (note: string, velocity: number) => void;
   noteOff: (note: string) => void;
   onGlitch?: (intensity: number) => void;
+  onGeneratorEvent?: (payload: {
+    kind: GenerativeEventKind;
+    note?: string;
+    velocity?: number;
+    intensity?: number;
+  }) => void;
 }
 
 export function clamp01(value: number): number {

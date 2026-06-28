@@ -1,7 +1,7 @@
 # Migration: v1 Presets → v2 Sound Worlds
 
-> **Status:** Planning document (post-grill). Required before Plantasonic integration (Phase 21).  
-> v1 reference: [API_V1.md](./API_V1.md) · v2 target: [API.md](./API.md) · Architecture: [SOUND_WORLD_ENGINE.md](./SOUND_WORLD_ENGINE.md)
+> **Status:** Complete (Phases 17–21). Ready for Plantasonic beta integration.  
+> v1 reference: [API_V1.md](./API_V1.md) · v2 target: [API.md](./API.md) · Integration: [PLANTASONIC_INTEGRATION.md](./PLANTASONIC_INTEGRATION.md)
 
 This is a **staged replacement**, not a hard cutover. Plantasonic keeps working on v1 while the Sound World layer matures behind a compatibility adapter.
 
@@ -34,7 +34,7 @@ This is a **staged replacement**, not a hard cutover. Plantasonic keeps working 
 | `v1-sound-engine-baseline` | Frozen v1 reference |
 | `v2-sound-world-engine` | Active Sound World development |
 | `v2.0.0` | **Deprecated** — architecture milestone only; not integration-ready |
-| `v1.0.0-beta.1` *(planned)* | First honest Sound World beta tag |
+| `v1.0.0-beta.1` | **Current** — first honest Sound World beta (Phases 17–21) |
 
 **Plantasonic should pin:** a corrected prerelease tag or explicit commit SHA after Phase 17 ships — never `v2.0.0`.
 

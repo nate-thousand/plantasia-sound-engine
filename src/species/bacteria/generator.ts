@@ -1,10 +1,19 @@
 import * as Tone from 'tone';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { fromSpeciesControlValue } from '../../engine/EcologyControls.js';
-import { Generator, type GenerativeEcology } from '../../engine/generative/Generator.js';
+import {
+  Generator,
+  type GenerativeCallbacks,
+  type GenerativeEcology,
+} from '../../engine/generative/Generator.js';
 import { BACTERIA_GENERATIVE_PREFERENCES } from './metadata.js';
 
 export type BacteriaGeneratorCallbacks = {
   onParticle: (type: 'noise' | 'fm' | 'sine' | 'impulse', note: string, velocity: number) => void;
+};
+
+export type BacteriaGeneratorOptions = {
+  scheduler?: EngineScheduler;
 };
 
 const PARTICLE_TYPES = ['noise', 'fm', 'sine', 'impulse'] as const;
@@ -14,20 +23,27 @@ export class BacteriaGenerator {
   private readonly engine: Generator;
   private particleIndex = 0;
 
-  constructor(callbacks: BacteriaGeneratorCallbacks) {
+  constructor(
+    callbacks: BacteriaGeneratorCallbacks,
+    generativeCallbacks: GenerativeCallbacks,
+    options: BacteriaGeneratorOptions = {},
+  ) {
     this.engine = new Generator(BACTERIA_GENERATIVE_PREFERENCES, {
       noteOn: (note, velocity) => {
+        generativeCallbacks.onGeneratorEvent?.({ kind: 'particle', note, velocity });
+        generativeCallbacks.noteOn(note, velocity);
         const type = PARTICLE_TYPES[this.particleIndex % PARTICLE_TYPES.length] ?? 'sine';
         this.particleIndex += 1;
         callbacks.onParticle(type, note, velocity);
       },
-      noteOff: () => {
-        // Micro-voices are attack-release only.
-      },
+      noteOff: generativeCallbacks.noteOff,
       onGlitch: (intensity) => {
+        generativeCallbacks.onGeneratorEvent?.({ kind: 'glitch', intensity });
+        generativeCallbacks.onGlitch?.(intensity);
         callbacks.onParticle('noise', 'E5', 0.12 + intensity * 0.25);
       },
-    });
+      onGeneratorEvent: generativeCallbacks.onGeneratorEvent,
+    }, { scheduler: options.scheduler });
   }
 
   setEcology(partial: Partial<GenerativeEcology>): void {

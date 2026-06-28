@@ -33,6 +33,13 @@ export {
   type PerformanceTargets,
   type DensityState,
 } from './performance/index.js';
+export { PlantasiaEngine, createPlantasiaEngine, type CreatePlantasiaEngineOptions } from './plantasiaEngine.js';
+export {
+  resolvePresetToSpecies,
+  presetControlsToEcology,
+  PRESET_SPECIES_MAP,
+  type PresetSpeciesResolution,
+} from './resolvePresetToSpecies.js';
 export { SpeciesManager, DEFAULT_SPECIES_ID } from './SpeciesManager.js';
 export {
   EngineLifecycleError,

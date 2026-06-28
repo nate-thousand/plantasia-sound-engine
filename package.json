@@ -1,6 +1,6 @@
 {
   "name": "plantasia-sound-engine",
-  "version": "2.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Modular Sound World engine for Plantasia — species plugins, generative composition, expressive performance",
   "type": "module",
   "sideEffects": false,
@@ -12,6 +12,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./public": {
+      "types": "./dist/public.d.ts",
+      "import": "./dist/public.js",
+      "default": "./dist/public.js"
     }
   },
   "files": [
@@ -25,11 +30,17 @@
     "clean": "rm -rf dist",
     "sync-presets": "node scripts/sync-presets.mjs",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs && node scripts/validate-species-api.mjs && node scripts/test-ecology-controls.mjs && node scripts/test-generative-engine.mjs && node scripts/test-performance-engine.mjs && node scripts/test-species-registry.mjs && node scripts/test-lifecycle.mjs && node scripts/test-v2-engine.mjs",
+    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs && node scripts/validate-species-api.mjs && node scripts/test-ecology-controls.mjs && node scripts/test-generative-engine.mjs && node scripts/test-performance-engine.mjs && node scripts/test-species-registry.mjs && node scripts/test-lifecycle.mjs && node scripts/test-facade.mjs && node scripts/test-events.mjs && node scripts/test-scheduler.mjs && node scripts/test-midi.mjs && node scripts/validate-species-audio.mjs && node scripts/test-performance-budget.mjs && node scripts/test-v2-engine.mjs",
     "test": "npm run build && node scripts/test-v2-engine.mjs",
     "test:v2": "node scripts/test-v2-engine.mjs",
     "test:species": "node scripts/validate-species-api.mjs",
     "test:lifecycle": "node scripts/test-lifecycle.mjs",
+    "test:facade": "node scripts/test-facade.mjs",
+    "test:events": "node scripts/test-events.mjs",
+    "test:scheduler": "node scripts/test-scheduler.mjs",
+    "test:midi": "node scripts/test-midi.mjs",
+    "test:audio": "node scripts/validate-species-audio.mjs",
+    "test:budget": "node scripts/test-performance-budget.mjs",
     "test:registry": "node scripts/test-species-registry.mjs",
     "test:ecology": "node scripts/test-ecology-controls.mjs",
     "test:generative": "node scripts/test-generative-engine.mjs",

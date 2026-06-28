@@ -36,7 +36,8 @@ export interface SoundWorld {
   metadata: SoundWorldMetadata;
 
   initialize(context: unknown): Promise<void> | void;
-  start(): void;
+  /** May be async while the audio graph unlocks and starts generative systems. */
+  start(): void | Promise<void>;
   stop(): void;
 
   noteOn(note: string, velocity?: number): void;

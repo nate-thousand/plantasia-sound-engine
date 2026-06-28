@@ -1,4 +1,10 @@
-export { PlantasiaEngine, createPlantasiaEngine } from './engine/plantasiaEngine.js';
+export { PlantasiaEngine, createPlantasiaEngine, type CreatePlantasiaEngineOptions } from './engine/plantasiaEngine.js';
+export {
+  resolvePresetToSpecies,
+  presetControlsToEcology,
+  PRESET_SPECIES_MAP,
+  type PresetSpeciesResolution,
+} from './engine/resolvePresetToSpecies.js';
 
 // --- v2 Sound World Engine ---
 export {

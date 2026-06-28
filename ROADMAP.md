@@ -157,22 +157,24 @@ These must ship before **Phase 21 Plantasonic integration**:
   - Rename `validate-species.mjs` → `validate-species-api.mjs`
   - 0–1 control scale enforced at boundary
   - Reserved built-in species IDs
-- [ ] **Phase 18** — Unified `PlantasiaEngine` facade **(blocker)**
+- [x] **Phase 18** — Unified `PlantasiaEngine` facade **(blocker)**
   - `engine.loadSpecies()`, `setControl()`, `noteOn`/`noteOff`, `start`/`stop`
   - `engine.registerSpecies()` — external packages without editing bootstrap
-  - `resolvePresetToSpecies()` legacy adapter
-  - Tiny public export surface; legacy behind adapter
-  - Factories only — deprecate live singleton exports
-- [ ] **Phase 19** — Event bus
+  - `resolvePresetToSpecies()` + `loadPreset()` legacy adapter
+  - `plantasia-sound-engine/public` slim export surface; full root export preserved
+  - Async `start()` awaits species audio readiness
+- [x] **Phase 19** — Event bus
   - `speciesChanged`, `notePlayed`, `controlChanged`, `generatorEvent`, `densityChanged`
   - Semantic events for visualization — no Tone node coupling
-- [ ] **Phase 20** — Unified scheduler + MIDI / transport **(blocker before Plantasonic)**
-  - Replace ad-hoc `setTimeout` / `setInterval` across generative + species + v1 signature synths
-  - Web MIDI input; transport lifecycle
-- [ ] **Phase 21** — Plantasonic integration
-  - Requires: Phases 17–20, sonic validation, CPU budget, migration doc
-  - `validate-species-audio.mjs` in release gate
-  - Real **v2.0.0** semver when facade + lifecycle + tests are honest
+  - [docs/EVENTS.md](./docs/EVENTS.md), `scripts/test-events.mjs`
+- [x] **Phase 20** — Unified scheduler + MIDI / transport **(blocker before Plantasonic)**
+  - `EngineScheduler` + `Transport` on facade; generative timers migrated
+  - Web MIDI input via `enableMidi()`; transport lifecycle
+  - [docs/SCHEDULER.md](./docs/SCHEDULER.md), `scripts/test-scheduler.mjs`, `scripts/test-midi.mjs`
+- [x] **Phase 21** — Plantasonic integration
+  - `createPlantasonicAdapter()`, validation gates, CPU budget test
+  - [docs/PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md)
+  - Semver `1.0.0-beta.1` — first honest integration beta
 
 Full checklist: [docs/ENGINE_AUDIT.md](./docs/ENGINE_AUDIT.md) §8.
 

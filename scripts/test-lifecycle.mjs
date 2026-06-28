@@ -66,7 +66,7 @@ async function main() {
   // start before load throws
   let startBeforeLoad = false;
   try {
-    manager.start();
+    await manager.start();
   } catch (error) {
     startBeforeLoad = error instanceof EngineLifecycleError && error.code === 'NO_SPECIES_LOADED';
   }
@@ -86,13 +86,13 @@ async function main() {
   }
   assert(noteBeforeStart, 'noteOn before start throws');
 
-  manager.start();
+  await manager.start();
   assert(manager.getState() === 'running', 'start transitions to running');
   manager.noteOn('C4');
   assert(mock.notes.includes('C4'), 'noteOn works when running');
 
   // idempotent start
-  manager.start();
+  await manager.start();
   assert(manager.getState() === 'running', 'start is idempotent when running');
 
   manager.stop();
@@ -108,7 +108,7 @@ async function main() {
   // reload while running stops first
   const mock2 = createMockSoundWorld('custom.lifecycle-test-2');
   manager.register(mock2);
-  manager.start();
+  await manager.start();
   await manager.loadSpecies('custom.lifecycle-test-2');
   assert(manager.getState() === 'loaded', 'reload from running lands in loaded');
 

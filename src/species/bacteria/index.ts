@@ -31,6 +31,10 @@ import {
   bacteriaParticleProbability,
   type BacteriaPerformanceBase,
 } from './performanceApply.js';
+import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
+import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
+import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
 
 type BacteriaControlState = Record<EcologicalControl, number>;
 
@@ -60,15 +64,20 @@ export class BacteriaSoundWorld implements SoundWorld {
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: BacteriaPerformanceBase | null = null;
+  private eventSink?: EngineEventSink;
+  private scheduler?: EngineScheduler;
 
-  async initialize(_context?: unknown): Promise<void> {
+  async initialize(context?: unknown): Promise<void> {
+    const ctx = readSoundWorldContext(context);
+    this.eventSink = ctx.events;
+    this.scheduler = ctx.scheduler;
     this.teardownGraph();
     this.controls = { ...DEFAULT_CONTROLS };
     this.audioStarted = false;
   }
 
-  start(): void {
-    void this.ensureAudioStarted().then(() => {
+  start(): Promise<void> {
+    return this.ensureAudioStarted().then(() => {
       syncGeneratorEcology(this.generator, this.controls);
       this.generator?.start(BACTERIA_DEFAULT_TEMPO);
     });
@@ -87,6 +96,9 @@ export class BacteriaSoundWorld implements SoundWorld {
     }
     const ctx = this.performance?.noteOn(note, velocity);
     this.applyPerformanceModulation();
+    this.eventSink?.emitDensityChanged({
+      density: this.performance?.getDensityEngine().getState().averageDensity ?? 0,
+    });
     const shaped = ctx?.shapedVelocity ?? velocity;
     const targets = this.performance?.getTargets();
     this.generator?.triggerAtNote(note, shaped);
@@ -148,14 +160,24 @@ export class BacteriaSoundWorld implements SoundWorld {
     this.effects = createBacteriaEffects();
     connectBacteriaEffects(this.synth.panner, this.effects);
 
-    this.generator = new BacteriaGenerator({
-      onParticle: (type, note, velocity) => {
-        this.performance?.recordGenerativeActivity('particle');
-        if (this.synth) {
-          triggerBacteriaParticle(this.synth, type, note, velocity);
-        }
+    this.generator = new BacteriaGenerator(
+      {
+        onParticle: (type, note, velocity) => {
+          this.performance?.recordGenerativeActivity('particle');
+          if (this.synth) {
+            triggerBacteriaParticle(this.synth, type, note, velocity);
+          }
+        },
       },
-    });
+      buildGenerativeCallbacks(
+        {
+          noteOn: (note, velocity) => this.noteOn(note, velocity),
+          noteOff: (note) => this.noteOff(note),
+        },
+        this.eventSink,
+      ),
+      { scheduler: this.scheduler },
+    );
 
     this.performance = new PerformanceEngine(BACTERIA_EXPRESSION_PROFILE);
     syncPerformanceEcology(this.performance, this.controls);

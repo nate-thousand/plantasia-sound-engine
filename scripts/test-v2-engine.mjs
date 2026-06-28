@@ -38,6 +38,8 @@ async function main() {
     'SpeciesRegistry',
     'registerBuiltinSpecies',
     'registerFutureSpecies',
+    'resolvePresetToSpecies',
+    'PRESET_SPECIES_MAP',
   ];
   for (const name of requiredExports) {
     assert(typeof pkg[name] !== 'undefined', `export missing: ${name}`);
@@ -48,6 +50,13 @@ async function main() {
   assert(v1.presets?.length >= 11, 'v1 presets available');
   assert(typeof v1.init === 'function', 'v1 init');
   assert(typeof v1.playPreset === 'function', 'v1 playPreset');
+  assert(typeof v1.loadSpecies === 'function', 'facade loadSpecies');
+  assert(typeof v1.loadPreset === 'function', 'facade loadPreset');
+  assert(typeof v1.registerSpecies === 'function', 'facade registerSpecies');
+  assert(typeof v1.initialize === 'function', 'facade initialize alias');
+
+  const plantasonic = pkg.resolvePresetToSpecies('plantasonic');
+  assert(plantasonic.speciesId === 'seed', 'plantasonic preset maps to seed');
 
   // --- Registry (playable default; future opt-in) ---
   const registry = pkg.createSpeciesRegistry();

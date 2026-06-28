@@ -1,19 +1,25 @@
 import * as Tone from 'tone';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { fromSpeciesControlValue } from '../../engine/EcologyControls.js';
-import { Generator, type GenerativeEcology } from '../../engine/generative/Generator.js';
+import {
+  Generator,
+  type GenerativeCallbacks,
+  type GenerativeEcology,
+} from '../../engine/generative/Generator.js';
 import { FLOWERS_GENERATIVE_PREFERENCES } from './metadata.js';
 
-export type FlowersGeneratorCallbacks = {
-  noteOn: (note: string, velocity: number) => void;
-  noteOff: (note: string) => void;
+export type FlowersGeneratorOptions = {
+  scheduler?: EngineScheduler;
 };
 
 /** Flowers generative adapter — chord blooms and flowing phrases via shared engine. */
 export class FlowersGenerator {
   private readonly engine: Generator;
 
-  constructor(callbacks: FlowersGeneratorCallbacks) {
-    this.engine = new Generator(FLOWERS_GENERATIVE_PREFERENCES, callbacks);
+  constructor(callbacks: GenerativeCallbacks, options: FlowersGeneratorOptions = {}) {
+    this.engine = new Generator(FLOWERS_GENERATIVE_PREFERENCES, callbacks, {
+      scheduler: options.scheduler,
+    });
   }
 
   setEcology(partial: Partial<GenerativeEcology>): void {

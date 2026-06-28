@@ -32,7 +32,7 @@ Query current state: `manager.getState()`.
 const engine = createSpeciesManager();
 
 await engine.loadSpecies('seed'); // idle → loaded
-engine.start();                   // loaded → running (browser: after user gesture + audio context)
+await engine.start();             // loaded → running (awaits audio graph)
 
 engine.setControl('growth', 0.5); // 0–1 only
 engine.noteOn('C4', 0.8);
@@ -49,7 +49,7 @@ engine.dispose();                 // → disposed
 | Method | Invalid state behavior |
 |--------|------------------------|
 | `loadSpecies()` | Throws `EngineLifecycleError` (`ENGINE_DISPOSED`) |
-| `start()` | Throws if `idle` (`NO_SPECIES_LOADED`) or `disposed` |
+| `start()` | Throws if `idle` (`NO_SPECIES_LOADED`) or `disposed`; **async** — resolves when species audio is ready |
 | `noteOn()` | Throws if not `running` (`ENGINE_NOT_STARTED` or `NO_SPECIES_LOADED`) |
 | `noteOff()` | Throws if `idle` or `disposed` |
 | `setControl()` | Throws `EcologyControlScaleError` if value ∉ [0, 1] |

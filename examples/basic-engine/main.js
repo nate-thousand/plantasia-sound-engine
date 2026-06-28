@@ -1,6 +1,6 @@
-import { createSpeciesManager, loadDefaultSpecies } from 'plantasia-sound-engine';
+import { createPlantasiaEngine } from 'plantasia-sound-engine';
 
-const manager = createSpeciesManager();
+const engine = createPlantasiaEngine();
 const status = document.getElementById('status');
 const bloom = document.getElementById('bloom');
 
@@ -10,15 +10,16 @@ function log(msg) {
 }
 
 document.getElementById('btn-start')?.addEventListener('click', async () => {
-  await loadDefaultSpecies(manager);
-  manager.start();
-  log(`Loaded ${manager.getCurrentSpecies()?.name ?? 'species'}`);
+  await engine.initialize();
+  await engine.loadDefaultSpecies();
+  await engine.start();
+  log(`Loaded ${engine.getCurrentSpecies()?.name ?? 'species'}`);
 });
 
 document.getElementById('btn-note')?.addEventListener('click', () => {
   try {
-    manager.noteOn('C4', 0.82);
-    setTimeout(() => manager.noteOff('C4'), 1200);
+    engine.noteOn('C4', 0.82);
+    setTimeout(() => engine.noteOff('C4'), 1200);
     log('Note C4');
   } catch (error) {
     log(error.message ?? String(error));
@@ -26,14 +27,14 @@ document.getElementById('btn-note')?.addEventListener('click', () => {
 });
 
 document.getElementById('btn-stop')?.addEventListener('click', () => {
-  manager.allNotesOff();
-  manager.stop();
+  engine.allNotesOff();
+  engine.stopSpecies();
   log('Stopped');
 });
 
 bloom?.addEventListener('input', () => {
   const value = Number(bloom.value) / 100;
-  manager.setControl('bloom', value);
+  engine.setControl('bloom', value);
   log(`Bloom ${bloom.value}%`);
 });
 

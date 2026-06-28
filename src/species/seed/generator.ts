@@ -1,19 +1,25 @@
 import * as Tone from 'tone';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { fromSpeciesControlValue } from '../../engine/EcologyControls.js';
-import { Generator, type GenerativeEcology } from '../../engine/generative/Generator.js';
+import {
+  Generator,
+  type GenerativeCallbacks,
+  type GenerativeEcology,
+} from '../../engine/generative/Generator.js';
 import { SEED_GENERATIVE_PREFERENCES } from './metadata.js';
 
-export type SeedGeneratorCallbacks = {
-  noteOn: (note: string, velocity: number) => void;
-  noteOff: (note: string) => void;
+export type SeedGeneratorOptions = {
+  scheduler?: EngineScheduler;
 };
 
 /** Seed generative adapter — delegates to the shared Generative Engine. */
 export class SeedGenerator {
   private readonly engine: Generator;
 
-  constructor(callbacks: SeedGeneratorCallbacks) {
-    this.engine = new Generator(SEED_GENERATIVE_PREFERENCES, callbacks);
+  constructor(callbacks: GenerativeCallbacks, options: SeedGeneratorOptions = {}) {
+    this.engine = new Generator(SEED_GENERATIVE_PREFERENCES, callbacks, {
+      scheduler: options.scheduler,
+    });
   }
 
   setEcology(partial: Partial<GenerativeEcology>): void {

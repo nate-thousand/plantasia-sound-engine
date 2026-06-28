@@ -28,6 +28,10 @@ import {
   applySeedPerformance,
   type SeedPerformanceBase,
 } from './performanceApply.js';
+import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
+import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
+import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
+import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
 
 type SeedControlState = Record<EcologicalControl, number>;
 
@@ -57,15 +61,20 @@ export class SeedSoundWorld implements SoundWorld {
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: SeedPerformanceBase | null = null;
+  private eventSink?: EngineEventSink;
+  private scheduler?: EngineScheduler;
 
-  async initialize(_context?: unknown): Promise<void> {
+  async initialize(context?: unknown): Promise<void> {
+    const ctx = readSoundWorldContext(context);
+    this.eventSink = ctx.events;
+    this.scheduler = ctx.scheduler;
     this.teardownGraph();
     this.controls = { ...DEFAULT_CONTROLS };
     this.audioStarted = false;
   }
 
-  start(): void {
-    void this.ensureAudioStarted().then(() => {
+  start(): Promise<void> {
+    return this.ensureAudioStarted().then(() => {
       syncGeneratorEcology(this.generator, this.controls);
       this.generator?.start(SEED_DEFAULT_TEMPO);
     });
@@ -82,6 +91,9 @@ export class SeedSoundWorld implements SoundWorld {
     }
     const ctx = this.performance?.noteOn(note, velocity);
     this.applyPerformanceModulation();
+    this.eventSink?.emitDensityChanged({
+      density: this.performance?.getDensityEngine().getState().averageDensity ?? 0,
+    });
     this.synth.poly.triggerAttack(note, undefined, ctx?.shapedVelocity ?? velocity);
   }
 
@@ -136,13 +148,19 @@ export class SeedSoundWorld implements SoundWorld {
     this.effects = createSeedEffects();
     connectSeedEffects(this.synth.filter, this.effects);
 
-    this.generator = new SeedGenerator({
-      noteOn: (note, velocity) => {
-        this.performance?.recordGenerativeActivity('phrase');
-        this.noteOn(note, velocity);
-      },
-      noteOff: (note) => this.noteOff(note),
-    });
+    this.generator = new SeedGenerator(
+      buildGenerativeCallbacks(
+        {
+          noteOn: (note, velocity) => {
+            this.performance?.recordGenerativeActivity('phrase');
+            this.noteOn(note, velocity);
+          },
+          noteOff: (note) => this.noteOff(note),
+        },
+        this.eventSink,
+      ),
+      { scheduler: this.scheduler },
+    );
 
     this.performance = new PerformanceEngine(SEED_EXPRESSION_PROFILE);
     syncPerformanceEcology(this.performance, this.controls);
