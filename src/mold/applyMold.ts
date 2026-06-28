@@ -106,18 +106,11 @@ export function applyMoldParams(host: MoldHost, params: MoldEffectParams): void 
   const { delay, lfo, started, moldNodes } = host;
   const t = params.intensity;
 
-  setRampParam(
-    started,
-    moldNodes.tapeSaturation.distortion as unknown as RampParam,
-    0.08 + params.saturation * 0.42,
-  );
+  // Tone.Distortion.distortion is a plain number, not a rampable Param.
+  moldNodes.tapeSaturation.distortion = 0.08 + params.saturation * 0.42;
   setRampParam(started, moldNodes.tapeSaturation.wet as unknown as RampParam, params.tapeWear * 0.35);
 
-  setRampParam(
-    started,
-    moldNodes.harmonicDistortion.distortion as unknown as RampParam,
-    params.harmonicDistortion * 0.55,
-  );
+  moldNodes.harmonicDistortion.distortion = params.harmonicDistortion * 0.55;
   setRampParam(
     started,
     moldNodes.harmonicDistortion.wet as unknown as RampParam,

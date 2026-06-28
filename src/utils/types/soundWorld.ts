@@ -1,3 +1,6 @@
+/** Live keyboard/MIDI audio graph routing for a Sound World. */
+export type LiveVoiceRouting = 'plantasonic' | 'botanical' | 'standard';
+
 /** Visual identity for a Sound World — consumed by host apps for ASCII rendering. */
 export type PresetVisualConfig = {
   /** Theme template key (e.g. moss, canopy, night-bloom). */

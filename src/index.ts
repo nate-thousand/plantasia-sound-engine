@@ -18,6 +18,15 @@ export {
 
 export { presets, presetManifest, getPresetById, getPresetsByCategory } from './presets/loader.js';
 export { getPresetMold, getPresetControls } from './presets/moldDefaults.js';
+export { PRESET_ID_ALIASES, resolvePresetId } from './presets/aliases.js';
+export { getPresetLiveRouting } from './presets/routing.js';
+export type { LiveVoiceRouting } from './presets/routing.js';
+export {
+  HOST_ASCII_THEMES,
+  isRegisteredAsciiTheme,
+  type HostAsciiTheme,
+} from './presets/themeRegistry.js';
+export { validatePreset, validateAllPresets, type PresetValidationIssue } from './presets/validatePresets.js';
 
 export {
   ENGINE_PARAMETER_METADATA,
@@ -25,6 +34,7 @@ export {
   MOLD_PROFILES,
   resolveMoldParameters,
   resolveMoldProfile,
+  setActiveMoldProfile,
   normalizeMold,
 } from './mold/index.js';
 
@@ -82,6 +92,7 @@ export {
   syncJunoBotanical,
   tickJunoLivingVoice,
   toJunoEnginePreset,
+  applyJunoMold,
 } from './synths/junoFlowersAudio.js';
 
 export type {

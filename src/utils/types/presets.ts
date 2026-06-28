@@ -2,12 +2,14 @@ import type { OrganismState, SpeciesName } from './botanical.js';
 import type { JunoBotanicalConfig, JunoGrowthConfig } from './junoFlowers.js';
 import type { PlantasonicConfig } from './plantasonic.js';
 import type {
+  LiveVoiceRouting,
   PresetControlDefaults,
   PresetMidiConfig,
   PresetVisualConfig,
 } from './soundWorld.js';
 
 export type {
+  LiveVoiceRouting,
   PresetControlDefaults,
   PresetMidiConfig,
   PresetVisualConfig,
@@ -64,6 +66,8 @@ export type PlantasiaPreset = {
   growth?: JunoGrowthConfig;
   /** Plantasonic flagship sound-world routing. */
   plantasonic?: PlantasonicConfig;
+  /** Explicit live-voice routing; inferred from blocks when omitted. */
+  routing?: LiveVoiceRouting;
   /** Sound World visual identity — ASCII theme, palette, motion. */
   visual?: PresetVisualConfig;
   /** Per-preset MIDI performance defaults. */

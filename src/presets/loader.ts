@@ -11,6 +11,7 @@ import coral from './bundled/ambient/coral.json' with { type: 'json' };
 import mycelium from './bundled/ambient/mycelium.json' with { type: 'json' };
 import mutation from './bundled/textures/mutation.json' with { type: 'json' };
 import crystal from './bundled/textures/crystal.json' with { type: 'json' };
+import { resolvePresetId } from './aliases.js';
 import { presetFromJson } from './serialize.js';
 
 /** Preset load order preserved from v0.1.0 for stable behavior. */
@@ -36,9 +37,10 @@ export const presets: PlantasiaPreset[] = BUILTIN_PRESET_DATA.map((data) =>
 /** Default manifest describing categories and default preset id. */
 export const presetManifest = defaultManifest;
 
-/** Lookup a built-in preset by id. */
+/** Lookup a built-in preset by id or legacy alias (e.g. moss → seed). */
 export function getPresetById(id: string): PlantasiaPreset | undefined {
-  return presets.find((preset) => preset.id === id);
+  const canonical = resolvePresetId(id);
+  return presets.find((preset) => preset.id === canonical);
 }
 
 /** List presets for a category name from the manifest. */

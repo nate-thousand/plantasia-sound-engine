@@ -14,6 +14,10 @@ export function setRampParam(
   value: number,
   time = 0.2,
 ): void {
+  if (param == null || typeof param !== 'object') {
+    return;
+  }
+
   if (started && typeof param.linearRampTo === 'function') {
     param.linearRampTo(value, time);
     return;

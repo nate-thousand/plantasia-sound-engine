@@ -1,6 +1,6 @@
 {
   "name": "plantasia-sound-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reusable botanical synthesis engine for Plantasia applications",
   "type": "module",
   "sideEffects": false,
@@ -25,7 +25,7 @@
     "clean": "rm -rf dist",
     "sync-presets": "node scripts/sync-presets.mjs",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp -r src/presets/bundled dist/presets/bundled",
+    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prebuild": "npm run clean && npm run sync-presets",
     "prepare": "npm run build",
