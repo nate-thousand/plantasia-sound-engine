@@ -2,8 +2,12 @@
 
 > **Canonical roadmap:** [../ROADMAP.md](../ROADMAP.md)
 
-This file exists for documentation index consistency. All milestone tracking lives in the repository root `ROADMAP.md`.
+| Document | Purpose |
+|----------|---------|
+| [ROADMAP.md](../ROADMAP.md) | Phases, blockers, release tags |
+| [MIGRATION_V1_TO_V2.md](./MIGRATION_V1_TO_V2.md) | v1 → v2 migration for Plantasonic |
+| [ENGINE_AUDIT.md](./ENGINE_AUDIT.md) §8 | v2.0 release audit |
 
-**Current release:** `v2.0.0` — Sound World Engine with four live species, generative + performance engines, plugin registry.
+**Current honest target:** Sound World architecture beta (`v1.0.0-beta.1` planned). Tag `v2.0.0` is deprecated for integration.
 
-See also: [API.md](./API.md) · [SOUND_WORLD_ENGINE.md](./SOUND_WORLD_ENGINE.md) · [ENGINE_AUDIT.md](./ENGINE_AUDIT.md)
+**Next phase:** 17 — Lifecycle contract (blocker).

@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2026-06-28
 
-Introduces Sound World architecture, Species Manager, ecological controls, generative ecosystem engine, expressive performance engine, and plugin-ready species system.
+> **Deprecated for integration.** This tag marks Sound World architecture landing (Phases 8–16), not a host-safe major release. Pin `v1.0.0-beta.1` (planned) or a commit SHA. See [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md).
+
+Introduces Sound World architecture, Species Manager, ecological controls, generative ecosystem engine, expressive performance engine, and plugin-ready species shape.
 
 ### Added
 
@@ -34,11 +36,15 @@ Introduces Sound World architecture, Species Manager, ecological controls, gener
 
 ## [Unreleased]
 
-### Planned
+### Planned (Phases 17–21)
 
-- Event bus (`speciesChanged`, `notePlayed`, `parameterChanged`)
-- Wire `SpeciesManager` into `PlantasiaEngine`
-- Web MIDI input and engine-level transport
+- Lifecycle contract — states, throws, `LIFECYCLE.md`
+- Unified `PlantasiaEngine` facade — `loadSpecies()`, tiny exports
+- Event bus for visuals
+- Unified scheduler + MIDI / transport
+- Plantasonic integration gates (sonic test, CPU budget)
+- Corrected prerelease tag `v1.0.0-beta.1`
+- [MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) implementation items
 
 ## [0.2.0] - 2026
 

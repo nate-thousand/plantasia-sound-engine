@@ -1,10 +1,12 @@
 # Plantasia Sound Engine
 
-**v2.0** — A modular Sound World engine for botanical synthesis. Four live species (Seed, Flowers, Mold, Bacteria), shared generative composition, expressive performance routing, and a plugin-ready species registry.
+**Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), generative composition, performance routing, and registry shape. **Not integration-ready** until Phases 17–20 ship.
 
-The v1 preset path (`PlantasiaEngine`, JSON presets, Plantasonic / Juno graphs) remains fully supported.
+The v1 preset path (`PlantasiaEngine`, JSON presets, Plantasonic / Juno graphs) remains fully supported on `main`.
 
-## Quick start (v2)
+> **Do not pin tag `v2.0.0` for Plantasonic.** See [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) and [ROADMAP.md](./ROADMAP.md).
+
+## Quick start (v2 — prototype only)
 
 ```typescript
 import { createSpeciesManager, loadDefaultSpecies } from 'plantasia-sound-engine';
@@ -12,7 +14,8 @@ import { createSpeciesManager, loadDefaultSpecies } from 'plantasia-sound-engine
 const manager = createSpeciesManager();
 await loadDefaultSpecies(manager);
 
-manager.setControl('bloom', 0.65);
+// Requires user gesture + manager.start() before noteOn produces audio
+manager.setControl('bloom', 0.65); // 0–1 only
 manager.start();
 manager.noteOn('C4', 0.8);
 ```
@@ -35,6 +38,7 @@ npm run example:basic-engine
 | [docs/PERFORMANCE_ENGINE.md](./docs/PERFORMANCE_ENGINE.md) | Expressive performance routing |
 | [docs/PLUGIN_ARCHITECTURE.md](./docs/PLUGIN_ARCHITECTURE.md) | Species registry and plugins |
 | [docs/CREATING_A_SPECIES.md](./docs/CREATING_A_SPECIES.md) | Add a new Sound World |
+| [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) | v1 presets → v2 species (required before Plantasonic) |
 | [docs/API_V1.md](./docs/API_V1.md) | v1 preset engine reference |
 | [ROADMAP.md](./ROADMAP.md) | Milestones and release history |
 | [CHANGELOG.md](./CHANGELOG.md) | Version history |
