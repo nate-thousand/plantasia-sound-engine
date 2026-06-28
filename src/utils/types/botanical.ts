@@ -22,7 +22,8 @@ export type SpeciesName =
   | 'Crystal'
   | 'Alien'
   | 'Mushroom'
-  | 'Juno Flowers';
+  | 'Juno Flowers'
+  | 'Plantasonic';
 
 /** Organism lifecycle state referenced by presets (audio metadata only). */
 export type OrganismState =

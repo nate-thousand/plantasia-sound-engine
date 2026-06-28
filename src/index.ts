@@ -11,6 +11,7 @@ export {
   getLevel,
   updateParameter,
   defaultNotePool,
+  setPlantasonicPerformance,
 } from './engine/audioEngine.js';
 
 export { presets } from './presets/loader.js';
@@ -21,6 +22,12 @@ export {
   JUNO_FLOWERS_GROWTH,
   JUNO_FLOWERS_SCALE,
 } from './synths/junoFlowers.js';
+
+export {
+  plantasonicPreset,
+  PLANTASONIC_CONFIG,
+  PLANTASONIC_SCALE,
+} from './synths/plantasonic.js';
 
 export type {
   BotanicalControlKey,
@@ -34,3 +41,7 @@ export { initialBotanicalControls } from './utils/types/botanical.js';
 export type { SynthSettings, PlantasiaPreset } from './utils/types/presets.js';
 
 export type { JunoBotanicalConfig, JunoGrowthConfig } from './utils/types/junoFlowers.js';
+
+export type { PlantasonicConfig } from './utils/types/plantasonic.js';
+
+export type { PlantasonicPerformanceState } from './synths/plantasonicAudio.js';

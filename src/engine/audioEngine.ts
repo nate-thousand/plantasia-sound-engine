@@ -6,6 +6,12 @@ import {
   setJunoModeActive,
   stopAllJunoVoices,
 } from '../synths/junoFlowersAudio.js';
+import {
+  playPlantasonicPreset,
+  setPlantasonicModeActive,
+  setPlantasonicPerformance,
+  stopAllPlantasonicVoices,
+} from '../synths/plantasonicAudio.js';
 
 /**
  * Botanical -> synthesis mapping. The UI only ever speaks in botanical terms;
@@ -102,6 +108,10 @@ function isJunoPreset(preset: PlantasiaPreset): boolean {
   return preset.botanical != null;
 }
 
+function isPlantasonicPreset(preset: PlantasiaPreset): boolean {
+  return preset.plantasonic != null;
+}
+
 export async function initAudio(): Promise<void> {
   ensureNodes();
   if (!started) {
@@ -147,6 +157,18 @@ function applySettings(settings: SynthSettings): void {
 export function playPreset(preset: PlantasiaPreset): void {
   ensureNodes();
 
+  if (isPlantasonicPreset(preset)) {
+    if (!started) {
+      console.info('[Plantasia audio] preset staged (awaiting user gesture)', preset.name);
+      return;
+    }
+    const engine = ensureNodes();
+    engine.synth.volume.value = -100;
+    setJunoModeActive(false);
+    void playPlantasonicPreset(preset);
+    return;
+  }
+
   if (isJunoPreset(preset)) {
     if (!started) {
       console.info('[Plantasia audio] preset staged (awaiting user gesture)', preset.name);
@@ -154,11 +176,13 @@ export function playPreset(preset: PlantasiaPreset): void {
     }
     const engine = ensureNodes();
     engine.synth.volume.value = -100;
+    setPlantasonicModeActive(false);
     void playJunoFlowersPreset(preset);
     return;
   }
 
   setJunoModeActive(false);
+  setPlantasonicModeActive(false);
   const engine = ensureNodes();
   engine.synth.volume.value = 0;
   applySettings(preset.synth);
@@ -171,7 +195,9 @@ export function playPreset(preset: PlantasiaPreset): void {
 
 export function stopAudio(): void {
   stopAllJunoVoices(true);
+  stopAllPlantasonicVoices(true);
   setJunoModeActive(false);
+  setPlantasonicModeActive(false);
   if (!nodes) {
     return;
   }
@@ -278,3 +304,6 @@ export function updateParameter(
 
 /** Default note pool used by triggerChord. */
 export const defaultNotePool = NOTE_POOL;
+
+/** Update Plantasonic live performance controllers (growth, aftertouch, expression). */
+export { setPlantasonicPerformance };

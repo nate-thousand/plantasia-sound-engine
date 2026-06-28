@@ -1,5 +1,6 @@
 import type { PlantasiaPreset } from '../utils/types/presets.js';
 import defaultManifest from './bundled/default.json' with { type: 'json' };
+import plantasonic from './bundled/signature/plantasonic.json' with { type: 'json' };
 import seed from './bundled/flora/seed.json' with { type: 'json' };
 import root from './bundled/flora/root.json' with { type: 'json' };
 import bloom from './bundled/flora/bloom.json' with { type: 'json' };
@@ -14,6 +15,7 @@ import { presetFromJson } from './serialize.js';
 
 /** Preset load order preserved from v0.1.0 for stable behavior. */
 const BUILTIN_PRESET_DATA = [
+  plantasonic,
   seed,
   root,
   bloom,

@@ -1,5 +1,6 @@
 import type { OrganismState, SpeciesName } from './botanical.js';
 import type { JunoBotanicalConfig, JunoGrowthConfig } from './junoFlowers.js';
+import type { PlantasonicConfig } from './plantasonic.js';
 
 export type SynthSettings = {
   oscillator: 'sine' | 'triangle' | 'sawtooth' | 'square';
@@ -45,4 +46,6 @@ export type PlantasiaPreset = {
   botanical?: JunoBotanicalConfig;
   /** Hold-time growth/bloom behavior metadata. */
   growth?: JunoGrowthConfig;
+  /** Plantasonic flagship sound-world routing. */
+  plantasonic?: PlantasonicConfig;
 };

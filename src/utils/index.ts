@@ -13,3 +13,5 @@ export { initialBotanicalControls } from './types/botanical.js';
 export type { SynthSettings, PlantasiaPreset } from './types/presets.js';
 
 export type { JunoBotanicalConfig, JunoGrowthConfig } from './types/junoFlowers.js';
+
+export type { PlantasonicConfig } from './types/plantasonic.js';

@@ -1,0 +1,88 @@
+{
+  "id": "plantasonic",
+  "name": "Plantasonic",
+  "species": "Plantasonic",
+  "description": "Plantasia's flagship analog inspired ecosystem. Warm evolving textures, organic movement, and lush harmonic growth.",
+  "mood": "warm / organic / analog / lush / dreamlike / calm / alive",
+  "asciiState": "ecosystem",
+  "category": "signature",
+  "scale": [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25],
+  "synth": {
+    "oscillator": "sawtooth",
+    "filterType": "lowpass",
+    "filterHz": 1650,
+    "filterQ": 0.9,
+    "envelope": { "attack": 0.14, "release": 3.2 },
+    "detuneCents": [-5, 5],
+    "drift": 0.72,
+    "chorus": 0.48,
+    "saturation": 0.28,
+    "stereoWidth": 0.68,
+    "subAmount": 0.18,
+    "hfRolloff": 4800,
+    "effects": { "delay": 0.14, "echo": 0.12, "reverb": 0.58 }
+  },
+  "plantasonic": {
+    "oscillators": {
+      "oscA": "sawtooth",
+      "oscB": "triangle",
+      "detuneCents": [-5, 5],
+      "drift": 0.72,
+      "subAmount": 0.18
+    },
+    "filter": {
+      "cutoffHz": 1650,
+      "resonance": 0.9,
+      "envModDepth": 0.42,
+      "tracking": 0.65
+    },
+    "envelope": {
+      "attack": 0.14,
+      "decay": 0.85,
+      "sustain": 0.7,
+      "release": 3.2
+    },
+    "modulation": {
+      "pitchDrift": 0.38,
+      "filterMovement": 0.32,
+      "stereoMovement": 0.28,
+      "amplitudeVariation": 0.18,
+      "vlfRate": 0.04
+    },
+    "effects": {
+      "saturation": 0.28,
+      "chorus": { "depth": 0.48, "rate": 0.22, "width": 0.62 },
+      "delay": { "time": 0.28, "feedback": 0.12, "mix": 0.14 },
+      "reverb": { "decay": 5.8, "mix": 0.58, "size": 0.82 },
+      "compression": { "threshold": -18, "ratio": 2.4 },
+      "stereoWidth": 0.68
+    },
+    "texture": {
+      "pinkNoise": 0.04,
+      "tapeHiss": 0.025,
+      "air": 0.035,
+      "ambience": 0.02
+    },
+    "performance": {
+      "velocityBrightness": 0.55,
+      "growth": {
+        "filterOpen": 0.62,
+        "chorusDepth": 0.58,
+        "reverbAmount": 0.52,
+        "stereoWidth": 0.48,
+        "harmonicRichness": 0.42
+      },
+      "aftertouch": { "filterOpen": 0.35, "modDepth": 0.28 },
+      "expression": { "ambience": 0.72 }
+    },
+    "evolution": {
+      "speed": 1.0,
+      "harmonicBloom": 1.15,
+      "stereoWiden": 1.12,
+      "filterShift": 1.08,
+      "chorusDeepen": 1.18,
+      "reverbExpand": 1.22,
+      "modVariation": 1.1
+    }
+  }
+}
