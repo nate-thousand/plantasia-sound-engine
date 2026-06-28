@@ -1,7 +1,7 @@
 {
   "name": "plantasia-sound-engine",
-  "version": "0.2.0",
-  "description": "Reusable botanical synthesis engine for Plantasia applications",
+  "version": "2.0.0",
+  "description": "Modular Sound World engine for Plantasia — species plugins, generative composition, expressive performance",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -25,7 +25,14 @@
     "clean": "rm -rf dist",
     "sync-presets": "node scripts/sync-presets.mjs",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs",
+    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs && node scripts/validate-species.mjs && node scripts/test-ecology-controls.mjs && node scripts/test-generative-engine.mjs && node scripts/test-performance-engine.mjs && node scripts/test-species-registry.mjs && node scripts/test-v2-engine.mjs",
+    "test": "npm run build && node scripts/test-v2-engine.mjs",
+    "test:v2": "node scripts/test-v2-engine.mjs",
+    "test:species": "node scripts/validate-species.mjs",
+    "test:registry": "node scripts/test-species-registry.mjs",
+    "test:ecology": "node scripts/test-ecology-controls.mjs",
+    "test:generative": "node scripts/test-generative-engine.mjs",
+    "test:performance": "node scripts/test-performance-engine.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prebuild": "npm run clean && npm run sync-presets",
     "prepare": "npm run build",
@@ -37,7 +44,11 @@
     "example:effects": "EXAMPLE_DIR=examples/effects vite --config vite.example.config.ts",
     "example:midi": "EXAMPLE_DIR=examples/midi vite --config vite.example.config.ts",
     "example:sequencing": "EXAMPLE_DIR=examples/sequencing vite --config vite.example.config.ts",
-    "example:generative": "EXAMPLE_DIR=examples/generative vite --config vite.example.config.ts"
+    "example:generative": "EXAMPLE_DIR=examples/generative vite --config vite.example.config.ts",
+    "example:basic-engine": "EXAMPLE_DIR=examples/basic-engine vite --config vite.example.config.ts",
+    "example:species-switching": "EXAMPLE_DIR=examples/species-switching vite --config vite.example.config.ts",
+    "example:midi-performance": "EXAMPLE_DIR=examples/midi-performance vite --config vite.example.config.ts",
+    "example:generative-playback": "EXAMPLE_DIR=examples/generative-playback vite --config vite.example.config.ts"
   },
   "keywords": [
     "audio",

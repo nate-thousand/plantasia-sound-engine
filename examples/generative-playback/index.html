@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plantasia v2 — Generative Playback</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+      label { display: block; margin: 0.5rem 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Generative Playback</h1>
+    <p>Autonomous composition via each species' generative adapter.</p>
+    <button type="button" id="btn-start">Start Audio + Generative</button>
+    <button type="button" id="btn-stop">Stop</button>
+    <label>Species
+      <select id="species">
+        <option value="seed">Seed</option>
+        <option value="flowers">Flowers</option>
+        <option value="mold">Mold</option>
+        <option value="bacteria">Bacteria</option>
+      </select>
+    </label>
+    <label>Growth <input type="range" id="growth" min="0" max="100" value="60" /></label>
+    <label>Bacteria <input type="range" id="bacteria" min="0" max="100" value="30" /></label>
+    <p id="status"></p>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

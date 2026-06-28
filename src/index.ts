@@ -1,5 +1,52 @@
-export { PlantasiaEngine } from './engine/plantasiaEngine.js';
+export { PlantasiaEngine, createPlantasiaEngine } from './engine/plantasiaEngine.js';
 
+// --- v2 Sound World Engine ---
+export {
+  SpeciesManager,
+  DEFAULT_SPECIES_ID,
+  createSpeciesManager,
+  loadDefaultSpecies,
+  createSpeciesRegistry,
+  EcologyControls,
+  ECOLOGICAL_CONTROLS,
+  DEFAULT_ECOLOGY_STATE,
+  clampEcologyValue,
+  toSpeciesControlValue,
+  fromSpeciesControlValue,
+  SpeciesRegistry,
+  SpeciesLoader,
+  SpeciesValidationError,
+  SpeciesNotLoadableError,
+  SpeciesLoadError,
+  DuplicateSpeciesError,
+  registerBuiltinSpecies,
+  Generator,
+  PerformanceEngine,
+} from './engine/index.js';
+
+export type {
+  SoundWorld,
+  SoundWorldMetadata,
+  SpeciesId,
+  SpeciesStatus,
+  EcologicalControl,
+  EcologyControlState,
+  ExpressionProfile,
+  PerformanceTargets,
+} from './engine/index.js';
+
+export {
+  seedSpecies,
+  flowersSpecies,
+  moldSpecies,
+  bacteriaSpecies,
+  createSeedSoundWorld,
+  createFlowersSoundWorld,
+  createMoldSoundWorld,
+  createBacteriaSoundWorld,
+} from './species/index.js';
+
+// --- v1 preset engine (unchanged) ---
 export {
   initAudio,
   playPreset,

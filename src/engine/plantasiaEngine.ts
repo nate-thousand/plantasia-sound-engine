@@ -19,10 +19,6 @@ import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
 import { ENGINE_PARAMETER_METADATA } from '../mold/parameterMetadata.js';
 import type { EngineParameterMeta } from '../mold/types.js';
 
-/**
- * Public facade for the Plantasia botanical synthesis engine.
- * Wraps the underlying Tone.js graph without altering signal behavior.
- */
 export class PlantasiaEngine {
   /** Preset definitions shipped with the engine. */
   readonly presets = presets;
@@ -95,4 +91,12 @@ export class PlantasiaEngine {
   getParameterMetadata(): EngineParameterMeta[] {
     return ENGINE_PARAMETER_METADATA;
   }
+}
+
+/**
+ * Public facade for the v1 preset-centric botanical synthesis engine.
+ * Wraps the underlying Tone.js graph without altering signal behavior.
+ */
+export function createPlantasiaEngine(): PlantasiaEngine {
+  return new PlantasiaEngine();
 }
