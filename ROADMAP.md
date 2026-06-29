@@ -20,7 +20,7 @@ The engine is transitioning from a **preset-centric v1 runtime** (frozen at tag 
 | **Public API today** | `createPlantasiaEngine()` facade + `plantasia-sound-engine/public` |
 | **Architecture phases** | ✅ Phases 8–21 complete |
 | **Integration** | ✅ Beta ready — [PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md) |
-| **Live demo** | https://sound-engine.xyz |
+| **Live demo** | https://sound-engine.xyz — demo control surface (validated) |
 
 ### What shipped in 1.0.0-beta.1
 
@@ -336,12 +336,26 @@ v2 **Phase 14** shipped the Expressive Performance Engine — see [docs/PERFORMA
 - [x] Ecological control surface — v2 `EcologyControls` (Phase 12); wire into unified facade (Phase 18)
 - [ ] Honor extended `SynthSettings` on standard path (`chorus`, `subAmount`, `stereoWidth`)
 
+### Demo control surface (complete)
+
+- [x] Full engine audit — presets, species, ecology, botanical, mold, generative, MIDI, events
+- [x] Collapsible panel sections with persisted open/closed state
+- [x] Preset browser — categories, favorites, prev/next/random, JSON export
+- [x] Species-specific performance macro routing (12 macros × 4 species)
+- [x] Layer overview cards per species with ecology proxy routing
+- [x] Waveform + multi-band meters, live event feed, debug validation panel
+- [x] Keyboard (A–K) + Web MIDI enable + v1 `playPreset` chord preserved
+- [x] Debug panel shows real engine state only (no guessed values)
+- [x] Validation pass — [docs/DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md)
+- [ ] Audio reactive mapping — awaits engine `bindSensor()` implementation
+- [ ] v2 public analyser getters — waveform meters currently v1-biased
+
 ---
 
 ## Integration targets
 
 - **Plantasia 2.0** — primary consumer via `file:` or npm dependency
 - **Plantasonic** — flagship Seed species host
-- **Standalone demo** — `demo/` and `examples/`
+- **Standalone demo** — `demo/` complete control surface; `examples/` focused snippets
 - **Future platforms** — VST, installation, mobile (v2 API designed browser-first, platform-portable)
 - **Future npm publish** — semantic versioning with preset JSON shipped in package

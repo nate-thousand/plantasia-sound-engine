@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Complete demo control surface** (`demo/`) — definitive test bench for all wired engine capabilities
+  - Collapsible sections: Presets, Sound Worlds, Musical, Layers, Timbre, Effects, Generative, Ecology, Botanical, Audio, Reactive (scaffold), MIDI, Keyboard, Performance, Utilities, Debug
+  - Preset browser with categories, favorites (localStorage), prev/next/random, temp save, JSON copy/export/import
+  - 12 performance macros with species-specific routing (`applyMacro` in `demo/lib/engineBridge.js`)
+  - Per-species layer cards (Seed, Flowers, Mold, Bacteria) with ecology proxy controls
+  - Waveform visualization, RMS/peak/bass/mid/treble meters, live event chips
+  - Web MIDI enable, keyboard performance (A–K), transport controls
+  - Debug panel with live engine state and validation warnings for scaffold APIs
+  - Responsive layout — fullscreen stage + collapsible side panel (mobile-friendly)
+
+### Changed
+
+- **Demo validation pass** — removed dead controls; disabled/removed fake layer mute/solo, unwired generative/musical/timbre/effects sliders, mic, MIDI device select, reactive mapping UI
+- Debug panel shows measured state only (ecology values, audio lock, MIDI enabled flag)
+- Lifecycle errors surfaced for noteOn/MIDI/species before unlock
+- [docs/DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md) — full control inventory
+- `npm run demo` upgraded from v1 smoke test to full control surface reference implementation
+- README demo section documents every control section, workflow, and macro behavior
+- Vercel site (`build:site`) now deploys `demo/` control surface instead of basic-engine example
+
 ## [1.0.0-beta.1] - 2026-06-28
 
 First honest Sound World integration beta. Phases 17–21 complete — lifecycle contract, unified facade, event bus, scheduler, Web MIDI scaffold, and Plantasonic adapter.

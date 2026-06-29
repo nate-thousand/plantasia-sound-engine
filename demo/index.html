@@ -3,87 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plantasia Sound Engine — Demo</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-      }
-      body {
-        font-family: system-ui, sans-serif;
-        max-width: 36rem;
-        margin: 2rem auto;
-        padding: 0 1rem;
-        line-height: 1.5;
-      }
-      label {
-        display: block;
-        margin: 1rem 0 0.25rem;
-        font-weight: 600;
-      }
-      select,
-      button {
-        font: inherit;
-      }
-      select {
-        width: 100%;
-        padding: 0.35rem 0.5rem;
-      }
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 1rem;
-      }
-      button {
-        padding: 0.45rem 0.85rem;
-        cursor: pointer;
-      }
-      button:disabled {
-        cursor: not-allowed;
-        opacity: 0.55;
-      }
-      #status {
-        margin-top: 1.25rem;
-        padding: 0.75rem 1rem;
-        border: 1px solid #8884;
-        border-radius: 0.5rem;
-        background: #8881;
-      }
-      #status[data-kind='ok'] {
-        border-color: #2a7a3a66;
-        background: #2a7a3a18;
-      }
-      #status[data-kind='error'] {
-        border-color: #b33a3a66;
-        background: #b33a3a18;
-      }
-      #status-label {
-        display: block;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        opacity: 0.7;
-        margin-bottom: 0.25rem;
-      }
-    </style>
+    <title>Plantasia Sound Engine — Control Surface</title>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <h1>Plantasia Sound Engine</h1>
-    <p>Browser smoke test for the built ESM package. Audio starts only after you click <strong>Start Audio</strong>.</p>
+    <div id="app">
+      <main id="stage">
+        <header id="stage-header">
+          <div>
+            <h1>Plantasia Sound Engine</h1>
+            <p id="stage-subtitle">Audio locked — click Start Audio to unlock</p>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="btn-start" class="primary">Start Audio</button>
+            <button type="button" id="btn-generative" disabled>Start Generative</button>
+            <button type="button" id="btn-play-preset" disabled>Play Preset Chord</button>
+            <button type="button" id="btn-stop" disabled>Stop</button>
+          </div>
+        </header>
 
-    <label for="preset-select">Preset</label>
-    <select id="preset-select" aria-label="Preset selector"></select>
+        <div id="viz-area">
+          <canvas id="waveform-canvas" aria-label="Waveform"></canvas>
+          <div id="meter-row">
+            <div class="meter" data-meter="master">
+              <span class="meter-label">Master</span>
+              <div class="meter-bar"><div class="meter-fill"></div></div>
+              <span class="meter-value">0</span>
+            </div>
+            <div class="meter" data-meter="peak">
+              <span class="meter-label">Peak</span>
+              <div class="meter-bar"><div class="meter-fill"></div></div>
+              <span class="meter-value">0</span>
+            </div>
+            <div class="meter" data-meter="rms">
+              <span class="meter-label">RMS</span>
+              <div class="meter-bar"><div class="meter-fill"></div></div>
+              <span class="meter-value">0</span>
+            </div>
+            <div class="meter" data-meter="bass">
+              <span class="meter-label">Bass</span>
+              <div class="meter-bar"><div class="meter-fill"></div></div>
+              <span class="meter-value">0</span>
+            </div>
+            <div class="meter" data-meter="mid">
+              <span class="meter-label">Mid</span>
+              <div class="meter-bar"><div class="meter-fill"></div></div>
+              <span class="meter-value">0</span>
+            </div>
+            <div class="meter" data-meter="treble">
+              <span class="meter-label">Treble</span>
+              <div class="meter-bar"><div class="meter-fill"></div></div>
+              <span class="meter-value">0</span>
+            </div>
+          </div>
+        </div>
 
-    <div class="controls">
-      <button type="button" id="btn-start">Start Audio</button>
-      <button type="button" id="btn-play" disabled>Play Note</button>
-      <button type="button" id="btn-stop" disabled>Stop Note</button>
+        <div id="live-feed" aria-live="polite"></div>
+      </main>
+
+      <aside id="panel">
+        <div id="panel-toolbar">
+          <button type="button" id="btn-panel-close" class="small" aria-label="Collapse panel">◀</button>
+          <span style="font-size:0.8rem;color:var(--muted)">Control Panel</span>
+        </div>
+        <div id="panel-scroll">
+          <!-- Sections injected by main.js -->
+          <div id="sections-root"></div>
+        </div>
+        <div id="status-bar" data-kind="ok" role="status" aria-live="polite">Loading engine…</div>
+      </aside>
     </div>
 
-    <div id="status" data-kind="ok" role="status" aria-live="polite">
-      <span id="status-label">Status</span>
-      <span id="status-text">Loading engine…</span>
-    </div>
+    <button type="button" id="panel-toggle" class="primary">Controls</button>
 
     <script type="module" src="./main.js"></script>
   </body>

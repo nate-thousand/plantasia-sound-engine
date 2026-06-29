@@ -32,7 +32,8 @@ npm run test
 npm run example:basic-engine
 ```
 
-**Live demo:** deploy via Vercel (`npm run build:site`) — v2 basic-engine showcase.
+**Live demo:** https://sound-engine.xyz — full control surface (Vercel, `npm run build:site`).  
+**Local:** `npm run demo` — same UI locally (see [Demo control surface](#demo-control-surface)).
 
 ## Documentation
 
@@ -44,7 +45,7 @@ npm run example:basic-engine
 | [docs/EVENTS.md](./docs/EVENTS.md) | Semantic event bus |
 | [docs/SCHEDULER.md](./docs/SCHEDULER.md) | Scheduler + transport + MIDI |
 | [docs/API.md](./docs/API.md) | v2 public API + v1 compatibility |
-| [docs/SOUND_WORLD_ENGINE.md](./docs/SOUND_WORLD_ENGINE.md) | Sound World architecture |
+| [docs/DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md) | Demo control wiring audit (validation pass) |
 | [docs/SPECIES.md](./docs/SPECIES.md) | Seed, Flowers, Mold, Bacteria |
 | [ROADMAP.md](./ROADMAP.md) | Milestones and release history |
 | [CHANGELOG.md](./CHANGELOG.md) | Version history |
@@ -75,6 +76,48 @@ import {
 
 See [docs/API.md](./docs/API.md) for the full contract.
 
+## Demo control surface
+
+`npm run build && npm run demo` opens the definitive Plantasia test bench at `demo/`. It exposes every **wired** engine capability and flags scaffold features in the Debug panel.
+
+| Section | Controls |
+|---------|----------|
+| **Presets** | Category filter, browser, prev/next/random, favorites, temp save, copy JSON |
+| **Sound Worlds** | Active species, upcoming species, preset→species mapping via `loadPreset()` |
+| **Musical** | Tempo, swing, density, complexity, transport play/pause/stop |
+| **Layers** | Per-species layer cards (drone, pulse, melody, …) routed via ecology proxies |
+| **Timbre** | Filter, envelope, detune, FM, modulation, drift, stereo — v1 `updateParameter` + botanical |
+| **Effects** | Reverb, delay, chorus, saturation, distortion/mold, EQ — botanical + mold routing |
+| **Generative** | Phrase evolution, memory, mutation, surprise, event frequency |
+| **Ecology (v2)** | growth, bloom, roots, mold, bacteria (0–100 UI → 0–1 API) |
+| **Botanical (v1)** | All 11 botanical controls including mold |
+| **Audio** | Waveform canvas, RMS/peak/bass/mid/treble meters, chord trigger |
+| **Reactive** | Not wired — section shows hint only |
+| **MIDI** | Enable, device list, note monitor, panic |
+| **Keyboard** | A–K pentatonic layout, visual key feedback, octave/velocity options |
+| **Performance** | 12 macros with **species-specific routing** (Bloom, Mold, Air, Roots, …) |
+| **Utilities** | Reset, randomize, export/import JSON, copy engine state |
+| **Debug** | Live state, validation warnings, unwired control detection |
+
+### Workflows
+
+- **Sound design (v2):** Start Audio → Start Generative → tune **Ecological Controls** + Performance macros
+- **Sound design (v1):** Start Audio → **Play Preset Chord** → tune **Botanical Controls** + timbre (v1 path)
+- **Generative:** Start Audio → Start Generative → ecology + generative sliders
+- **MIDI performance:** Start Generative → Enable MIDI (requires `running` state)
+- **Keyboard:** Start Audio → keys A–K (auto-starts generative)
+- **Debugging:** Debug panel → Validate — see [DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md)
+
+Every active control is wired to a real engine API. Removed or labeled unavailable: audio reactive, mic, MIDI device select, per-layer mute/solo, and generative parameters with no engine facade. See audit doc for full inventory.
+
+### Macro behavior
+
+Performance macros route differently per active species (`seed`, `flowers`, `mold`, `bacteria`). For example, **Bloom** on Flowers boosts harmony and ecology bloom; on Mold it scales bloom conservatively and favors decay character. See `demo/lib/engineBridge.js` → `applyMacro()`.
+
+### Preserved v1 path
+
+**Play Preset Chord** still calls `engine.playPreset()` for signature Plantasonic/Juno/standard graphs. v2 generative playback uses `loadPreset()` + `start()`.
+
 ## Examples
 
 | Command | Description |
@@ -83,7 +126,7 @@ See [docs/API.md](./docs/API.md) for the full contract.
 | `npm run example:species-switching` | Switch Sound Worlds |
 | `npm run example:midi-performance` | Keyboard + velocity |
 | `npm run example:generative-playback` | Autonomous generative output |
-| `npm run demo` | v1 preset browser (local dev) |
+| `npm run demo` | **Complete control surface** — presets, species, macros, MIDI, keyboard, debug |
 
 ## Installation
 
@@ -129,6 +172,7 @@ plantasia-sound-engine/
 │   ├── integration/     Plantasonic adapter
 │   ├── public.ts        Slim recommended exports
 │   └── index.ts         Full API barrel (v1 + v2)
+├── demo/                Complete control surface (npm run demo)
 ├── examples/            v1 + v2 browser examples
 ├── docs/                Architecture and API documentation
 └── scripts/             Build validation and test suite
