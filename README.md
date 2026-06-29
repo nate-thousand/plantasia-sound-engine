@@ -1,89 +1,101 @@
 # Plantasia Sound Engine
 
-**Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), generative composition, performance routing, and registry shape. **Not integration-ready** until Phases 17–20 ship.
+**Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), unified facade, semantic events, generative composition, and expressive performance routing.
 
-The v1 preset path (`PlantasiaEngine`, JSON presets, Plantasonic / Juno graphs) remains fully supported on `main`.
+**Version:** `1.0.0-beta.1` on branch `v2-sound-world-engine` — first honest integration beta (Phases 17–21 complete).
 
-> **Do not pin tag `v2.0.0` for Plantasonic.** See [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) and [ROADMAP.md](./ROADMAP.md).
+The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature graphs) remains available on the root export for legacy hosts.
 
-## Quick start (v2 — prototype only)
+> Pin **`1.0.0-beta.1`** or a commit SHA on `v2-sound-world-engine`. Do **not** use tag `v2.0.0` for integration.
+
+## Quick start (v2 — recommended)
 
 ```typescript
-import { createPlantasiaEngine } from 'plantasia-sound-engine';
+import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
 
 const engine = createPlantasiaEngine();
-await engine.initialize();
-await engine.loadSpecies('seed');
+await engine.initialize();       // user gesture required
+await engine.loadPreset('plantasonic'); // or loadSpecies('seed')
 await engine.start();
 
-engine.setControl('bloom', 0.65); // 0–1 only
+engine.setControl('bloom', 0.65);  // 0–1 only
 engine.noteOn('C4', 0.8);
-```
 
-Slim imports: `import { createPlantasiaEngine } from 'plantasia-sound-engine/public'`
+engine.on('notePlayed', ({ note, velocity }) => { /* visuals */ });
+engine.on('densityChanged', ({ density }) => { /* motion */ });
+```
 
 ```bash
 npm install
 npm run build
-npm run test          # full v2 validation suite
+npm run test
 npm run example:basic-engine
 ```
+
+**Live demo:** deploy via Vercel (`npm run build:site`) — v2 basic-engine showcase.
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
+| [docs/PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md) | Host integration guide |
+| [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) | v1 presets → v2 species |
+| [docs/LIFECYCLE.md](./docs/LIFECYCLE.md) | Engine state machine |
+| [docs/EVENTS.md](./docs/EVENTS.md) | Semantic event bus |
+| [docs/SCHEDULER.md](./docs/SCHEDULER.md) | Scheduler + transport + MIDI |
 | [docs/API.md](./docs/API.md) | v2 public API + v1 compatibility |
 | [docs/SOUND_WORLD_ENGINE.md](./docs/SOUND_WORLD_ENGINE.md) | Sound World architecture |
-| [docs/SPECIES.md](./docs/SPECIES.md) | Seed, Flowers, Mold, Bacteria reference |
-| [docs/GENERATIVE_ENGINE.md](./docs/GENERATIVE_ENGINE.md) | Shared composition system |
-| [docs/PERFORMANCE_ENGINE.md](./docs/PERFORMANCE_ENGINE.md) | Expressive performance routing |
-| [docs/PLUGIN_ARCHITECTURE.md](./docs/PLUGIN_ARCHITECTURE.md) | Species registry and plugins |
-| [docs/CREATING_A_SPECIES.md](./docs/CREATING_A_SPECIES.md) | Add a new Sound World |
-| [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) | v1 presets → v2 species (required before Plantasonic) |
-| [docs/API_V1.md](./docs/API_V1.md) | v1 preset engine reference |
+| [docs/SPECIES.md](./docs/SPECIES.md) | Seed, Flowers, Mold, Bacteria |
 | [ROADMAP.md](./ROADMAP.md) | Milestones and release history |
 | [CHANGELOG.md](./CHANGELOG.md) | Version history |
 
-## Public API (v2)
+## Public API
+
+**Slim surface (recommended):**
 
 ```typescript
 import {
-  createPlantasiaEngine,   // v1 facade factory
-  createSpeciesManager,    // v2 species host
-  createSpeciesRegistry,   // plugin discovery
-  seedSpecies,
-  flowersSpecies,
-  moldSpecies,
-  bacteriaSpecies,
-} from 'plantasia-sound-engine';
+  createPlantasiaEngine,
+  createPlantasonicAdapter,
+  resolvePresetToSpecies,
+  EngineEventBus,
+} from 'plantasia-sound-engine/public';
 ```
+
+**Full surface** (v1 + v2 internals): `import { … } from 'plantasia-sound-engine'`
 
 | Export | Description |
 |--------|-------------|
-| `createSpeciesManager()` | Manager with all built-in species registered |
-| `createSpeciesRegistry()` | Registry only — for custom plugin setups |
-| `loadDefaultSpecies()` | Load Seed (default species) |
-| `SpeciesManager` | Load/switch species, ecology, notes |
-| `EcologyControls` | Normalized 0–1 ecological state |
-| `Generator` | Shared generative composition engine |
-| `PerformanceEngine` | Velocity, density, macro routing |
-| `createPlantasiaEngine()` | v1 preset facade (unchanged) |
+| `createPlantasiaEngine()` | Unified facade — v2 lifecycle + v1 preset compat |
+| `createPlantasonicAdapter()` | Preset metadata + v2 audio for Plantasonic hosts |
+| `resolvePresetToSpecies()` | Map legacy preset id → species + ecology |
+| `engine.on()` / `engine.events` | Semantic events for visualization |
+| `engine.scheduler` / `engine.transport` | Central timing |
+| `engine.enableMidi()` | Web MIDI input (browser) |
 
 See [docs/API.md](./docs/API.md) for the full contract.
 
-## v2 examples
+## Examples
 
 | Command | Description |
 |---------|-------------|
-| `npm run example:basic-engine` | Load Seed, play notes, bloom control |
-| `npm run example:species-switching` | Switch active Sound Worlds |
-| `npm run example:midi-performance` | Keyboard performance with velocity |
+| `npm run example:basic-engine` | v2 Seed — notes + bloom control |
+| `npm run example:species-switching` | Switch Sound Worlds |
+| `npm run example:midi-performance` | Keyboard + velocity |
 | `npm run example:generative-playback` | Autonomous generative output |
-
-Legacy v1 examples: `example:basic`, `example:presets`, `example:midi`, etc.
+| `npm run demo` | v1 preset browser (local dev) |
 
 ## Installation
+
+```json
+{
+  "dependencies": {
+    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#v2-sound-world-engine"
+  }
+}
+```
+
+Or local development:
 
 ```json
 {
@@ -104,7 +116,7 @@ npm run sync-presets
 npm run build
 npm run typecheck
 npm run test
-npm run demo            # v1 browser demo
+npm run build:site   # production bundle for Vercel
 ```
 
 ## Repository structure
@@ -112,13 +124,11 @@ npm run demo            # v1 browser demo
 ```
 plantasia-sound-engine/
 ├── src/
-│   ├── engine/          Core runtime, registry, generative, performance
+│   ├── engine/          Core runtime, events, scheduler, registry
 │   ├── species/         Sound World plugins (seed, flowers, mold, bacteria)
-│   ├── templates/       Species template for new plugins
-│   ├── shared/          Cross-species helpers
-│   ├── presets/         v1 JSON preset loader
-│   ├── synths/          v1 signature graphs (Plantasonic, Juno)
-│   └── index.ts         Public API barrel
+│   ├── integration/     Plantasonic adapter
+│   ├── public.ts        Slim recommended exports
+│   └── index.ts         Full API barrel (v1 + v2)
 ├── examples/            v1 + v2 browser examples
 ├── docs/                Architecture and API documentation
 └── scripts/             Build validation and test suite

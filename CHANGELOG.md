@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta.1] - 2026-06-28
+
+First honest Sound World integration beta. Phases 17–21 complete — lifecycle contract, unified facade, event bus, scheduler, Web MIDI scaffold, and Plantasonic adapter.
+
+### Added
+
+- **Phase 17** — Lifecycle state machine, playable-only default registry, 0–1 control enforcement, reserved species IDs
+- **Phase 18** — `PlantasiaEngine` unified facade, `loadPreset()` / `resolvePresetToSpecies()`, `plantasia-sound-engine/public` slim exports
+- **Phase 19** — `EngineEventBus` — `speciesChanged`, `notePlayed`, `controlChanged`, `generatorEvent`, `densityChanged`
+- **Phase 20** — `EngineScheduler`, `Transport`, `WebMidiManager`, `engine.enableMidi()`
+- **Phase 21** — `createPlantasonicAdapter()`, validation gates, [PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md)
+- Docs: [EVENTS.md](./docs/EVENTS.md), [SCHEDULER.md](./docs/SCHEDULER.md), [LIFECYCLE.md](./docs/LIFECYCLE.md)
+- Test scripts: `test-events`, `test-scheduler`, `test-midi`, `validate-species-audio`, `test-performance-budget`, `test-facade`
+- Vercel deployment config (`vercel.json`, `build:site`)
+
+### Changed
+
+- Package version **1.0.0-beta.1** (replaces premature 2.0.0 for integration pinning)
+- Async `start()` awaits species audio graph readiness
+- All four species wire event sink + scheduler via `SoundWorldContext`
+- Generative `Generator` uses central scheduler instead of ad-hoc timers
+
+### Pinning
+
+```json
+"plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.0.0-beta.1"
+```
+
 ## [2.0.0] - 2026-06-28
 
 > **Deprecated for integration.** This tag marks Sound World architecture landing (Phases 8–16), not a host-safe major release. Pin `v1.0.0-beta.1` (planned) or a commit SHA. See [docs/MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md).
@@ -35,16 +63,6 @@ Introduces Sound World architecture, Species Manager, ecological controls, gener
 - `PlantasiaEngine`, `playPreset()`, bundled JSON presets, Mold macro, Plantasonic / Juno signature graphs unchanged
 
 ## [Unreleased]
-
-### Planned (Phases 17–21)
-
-- Lifecycle contract — states, throws, `LIFECYCLE.md`
-- Unified `PlantasiaEngine` facade — `loadSpecies()`, tiny exports
-- Event bus for visuals
-- Unified scheduler + MIDI / transport
-- Plantasonic integration gates (sonic test, CPU budget)
-- Corrected prerelease tag `v1.0.0-beta.1`
-- [MIGRATION_V1_TO_V2.md](./docs/MIGRATION_V1_TO_V2.md) implementation items
 
 ## [0.2.0] - 2026
 

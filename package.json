@@ -51,6 +51,7 @@
     "prepublishOnly": "npm run build",
     "dev": "vite --config vite.config.ts",
     "demo": "vite --config vite.demo.config.ts",
+    "build:site": "npm run build && vite build --config vite.site.config.ts",
     "example:basic": "EXAMPLE_DIR=examples/basic vite --config vite.example.config.ts",
     "example:presets": "EXAMPLE_DIR=examples/presets vite --config vite.example.config.ts",
     "example:effects": "EXAMPLE_DIR=examples/effects vite --config vite.example.config.ts",

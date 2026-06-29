@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+site/
 src/presets/bundled/
 *.tsbuildinfo
 
