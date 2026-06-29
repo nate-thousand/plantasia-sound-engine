@@ -10,20 +10,21 @@ The engine is transitioning from a **preset-centric v1 runtime** (frozen at tag 
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `2.0.0` — semver under review |
-| **Honest integration target** | `v1.0.0-beta.1` *(planned)* — Sound World architecture beta |
+| **Package version (package.json)** | `1.0.0-beta.1` |
+| **Honest integration target** | `1.0.0-beta.1` — **shipped** |
 | **Production branch** | `main` — v1 preset API + mold profiles |
 | **Active development branch** | `v2-sound-world-engine` |
 | **v1 freeze tag** | `v1-sound-engine-baseline` |
-| **Deprecated tag** | `v2.0.0` — architecture milestone only; **do not pin for Plantasonic** |
-| **Live species** | Seed, Flowers, Mold, Bacteria (prototype-safe, not integration-ready) |
-| **Public API today** | v1 `createPlantasiaEngine()` + internal v2 `createSpeciesManager()` |
-| **Architecture phases** | ✅ Phases 8–16 complete |
-| **Integration** | ❌ Blocked until Phases 17–20 + validation gates |
+| **Deprecated tag** | `v2.0.0` — architecture milestone only; **do not pin** |
+| **Live species** | Seed, Flowers, Mold, Bacteria — integration beta |
+| **Public API today** | `createPlantasiaEngine()` facade + `plantasia-sound-engine/public` |
+| **Architecture phases** | ✅ Phases 8–21 complete |
+| **Integration** | ✅ Beta ready — [PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md) |
+| **Live demo** | https://sound-engine.xyz |
 
-### What “done” means vs what shipped
+### What shipped in 1.0.0-beta.1
 
-Phases 8–16 prove the **Sound World architecture exists** — species modules, ecology, generative engine, performance routing, registry shape, tests, and docs. They do **not** yet deliver a host-safe unified facade, lifecycle enforcement, sonic validation, or Plantasonic-ready integration.
+Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semantic events, central scheduler, Web MIDI scaffold, Plantasonic adapter, validation gates, and Vercel demo deploy.
 
 ### Release tags
 
@@ -33,30 +34,30 @@ Phases 8–16 prove the **Sound World architecture exists** — species modules,
 | `v0.2.0` | Sound Worlds API, mold profile exports, preset validation |
 | `v1-sound-engine-baseline` | Frozen engine before v2 refactor |
 | `v2.0.0` | **Deprecated** — Sound World architecture landed; premature major tag |
-| `v1.0.0-beta.1` | *(planned)* Honest Sound World beta |
+| `v1.0.0-beta.1` | **Current** — honest Sound World integration beta (Phases 17–21) |
 
-**Plantasonic should pin:** corrected prerelease tag or commit SHA — not `v2.0.0`.
+**Plantasonic should pin:** `1.0.0-beta.1` or a commit SHA on `v2-sound-world-engine` — not `v2.0.0`.
 
 ---
 
-## Integration blockers (post-grill)
+## Integration blockers (complete)
 
-These must ship before **Phase 21 Plantasonic integration**:
+All blockers shipped in **`1.0.0-beta.1`**:
 
-| Blocker | Phase |
-|---------|-------|
-| Lifecycle contract — states, throws, `LIFECYCLE.md` | 17 |
-| Playable-only default registry; remove `coming_soon` from host API | 17 |
-| Unified `PlantasiaEngine` facade + tiny exports | 18 |
-| `resolvePresetToSpecies()` adapter | 18 |
-| `registerSpecies()` for external packages | 18 |
-| Event bus for visuals | 19 |
-| Unified scheduler (replace ad-hoc timers) | 20 |
-| MIDI / transport | 20 |
-| `MIGRATION_V1_TO_V2.md` *(draft exists)* | 21 prereq |
-| Browser sonic test (`validate-species-audio.mjs`) | 21 prereq |
-| 10-min CPU + visuals performance budget | 21 prereq |
-| Ecology primary/secondary mapping doc | 21 prereq |
+| Blocker | Phase | Status |
+|---------|-------|--------|
+| Lifecycle contract — states, throws, `LIFECYCLE.md` | 17 | ✅ |
+| Playable-only default registry; remove `coming_soon` from host API | 17 | ✅ |
+| Unified `PlantasiaEngine` facade + tiny exports | 18 | ✅ |
+| `resolvePresetToSpecies()` adapter | 18 | ✅ |
+| `registerSpecies()` for external packages | 18 | ✅ |
+| Event bus for visuals | 19 | ✅ |
+| Unified scheduler (replace ad-hoc timers) | 20 | ✅ |
+| MIDI / transport | 20 | ✅ |
+| `MIGRATION_V1_TO_V2.md` | 21 | ✅ |
+| Browser sonic test (`validate-species-audio.mjs`) | 21 | ✅ |
+| CPU + performance budget test | 21 | ✅ |
+| Plantasonic adapter + integration doc | 21 | ✅ |
 
 ---
 
@@ -246,12 +247,12 @@ Scaffold: `src/modulation/`
 
 ## Milestone 4 — MIDI
 
-Scaffold: `src/midi/` (types only — no runtime wiring). Engine-level MIDI planned for Phase 20.
+Shipped in Phase 20 (scaffold + note input). Remaining items are future milestones.
 
-- [ ] Web MIDI input (`enableMIDI`, `getMIDIDevices`)
+- [x] Web MIDI input — `engine.enableMidi()`, `engine.midi.devices` *(Phase 20)*
 - [ ] MIDI Learn for ecological / botanical controls
-- [x] Velocity sensitivity (partial — signature live voices + v2 `VelocityEngine` on all four species; no Web MIDI path yet)
-- [ ] Aftertouch / channel pressure (Plantasonic performance state exists; v2 router ready for extension, no input path)
+- [x] Velocity sensitivity — signature live voices + v2 `VelocityEngine`; Web MIDI note path via `enableMidi()`
+- [ ] Aftertouch / channel pressure
 - [ ] MPE (MIDI Polyphonic Expression)
 
 ---
@@ -287,7 +288,7 @@ v2 **Phase 14** shipped the Expressive Performance Engine — see [docs/PERFORMA
 - [ ] CPU metering and adaptive quality
 - [ ] Preset morphing at runtime
 - [ ] Offline rendering / export
-- [ ] Central scheduler (Phase 20 — unified transport before Plantasonic)
+- [x] Central scheduler — `EngineScheduler` + `Transport` on facade *(Phase 20)*
 
 ---
 

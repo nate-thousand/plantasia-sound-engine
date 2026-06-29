@@ -21,7 +21,7 @@ This is a **staged replacement**, not a hard cutover. Plantasonic keeps working 
 | `PlantasiaEngine` + `playPreset(preset)` | `createPlantasiaEngine()` + `engine.loadSpecies(id)` *(Phase 18)* |
 | 11 JSON presets in `presets/` | 4 live species + preset→species adapter |
 | Botanical controls (`growth`, `energy`, …) | Ecological controls (`growth`, `bloom`, `roots`, `mold`, `bacteria`) — **0–1 only** |
-| WAAPI visual graph per preset | Semantic engine events → visuals *(Phase 19)* |
+| WAAPI visual graph per preset | Semantic engine events → visuals *(Phase 19 — shipped)* |
 | `Tone.start()` via `engine.init()` | Strict lifecycle: gesture → load → start → note *(Phase 17)* |
 
 ---
@@ -183,7 +183,7 @@ engine.noteOn('E4', 0.8);
 
 **Today:** visuals driven by preset JSON + WAAPI graph state.
 
-**Target (Phase 19):** subscribe to semantic events — no Tone node coupling.
+**Target (Phase 19 — shipped):** subscribe to semantic events — no Tone node coupling.
 
 | Event | Visual use |
 |-------|------------|
@@ -193,7 +193,7 @@ engine.noteOn('E4', 0.8);
 | `generatorEvent` | Particle / ornament layers |
 | `densityChanged` | Scale motion intensity |
 
-Until Phase 19, keep preset `visual` metadata as the visual source of truth.
+Preset `visual` metadata remains the easy path; engine events are available via `engine.on()`.
 
 ---
 

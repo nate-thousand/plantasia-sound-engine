@@ -569,14 +569,24 @@ These enabled Plantasia 2.0 deep integration but violate the v2 black-box contra
 | Build output | ✅ | ESM `dist/`; postbuild test suite |
 | v1 compatibility | ✅ | `PlantasiaEngine`, presets, Mold, signature synths unchanged |
 
-### Not yet shipped (post-v2.0)
+### Shipped (1.0.0-beta.1)
 
-| Area | Status | Target phase |
-|------|--------|--------------|
-| Web MIDI input | ❌ | Phase 19 |
-| Event bus | ❌ | Phase 17 |
-| `PlantasiaEngine.loadSpecies()` | ❌ | Phase 18 — use `createSpeciesManager()` today |
-| Central scheduler | ❌ | Phase 19 |
+| Area | Status |
+|------|--------|
+| Lifecycle contract | ✅ Phase 17 |
+| Unified facade + `loadSpecies()` | ✅ Phase 18 |
+| Event bus | ✅ Phase 19 |
+| Central scheduler + transport | ✅ Phase 20 |
+| Web MIDI note input (scaffold) | ✅ Phase 20 |
+| Plantasonic adapter | ✅ Phase 21 |
+
+### Future milestones (post-beta)
+
+| Area | Status | Notes |
+|------|--------|-------|
+| MIDI Learn / MPE / aftertouch | ❌ | Milestone 4 remaining |
+| v1 signature synth timer migration | ❌ | Generative layer migrated; v1 graphs still ad-hoc |
+| Sonic parity v2 Seed vs v1 Plantasonic | ❌ | Parallel audio paths during migration |
 
 ### Test coverage
 
@@ -591,16 +601,21 @@ These enabled Plantasia 2.0 deep integration but violate the v2 black-box contra
 
 ### Host integration (Plantasonic)
 
-Use v2 path:
+Use v2 path (recommended):
 
 ```typescript
-import { createSpeciesManager, loadDefaultSpecies } from 'plantasia-sound-engine';
+import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
+
+const engine = createPlantasiaEngine();
+await engine.initialize();
+await engine.loadPreset('plantasonic');
+await engine.start();
 ```
 
-v1 path remains for preset-based flows:
+Or the adapter:
 
 ```typescript
-import { createPlantasiaEngine } from 'plantasia-sound-engine';
+import { createPlantasonicAdapter } from 'plantasia-sound-engine/public';
 ```
 
 ---
