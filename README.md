@@ -1,6 +1,8 @@
 # Plantasia Sound Engine
 
-Reusable botanical synthesis engine for Plantasia applications — including Plantasia 2.0. Maps botanical control parameters to a Tone.js synth graph with no UI, React, or visualization dependencies.
+Reusable botanical synthesis engine for Plantasia applications — including Plantasia 2.0.
+
+**[Explore the live control surface](https://plantasia-sound-engine.vercel.app/)** Maps botanical control parameters to a Tone.js synth graph with no UI, React, or visualization dependencies.
 
 ## Overview
 
@@ -145,3 +147,4 @@ See [ROADMAP.md](./ROADMAP.md) for milestones: preset browser, effect rack, modu
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
