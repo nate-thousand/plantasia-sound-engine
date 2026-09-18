@@ -45,7 +45,6 @@ export type FlowersEffectsNodes = {
   reverb: Tone.Reverb;
   widener: Tone.StereoWidener;
   master: Tone.Gain;
-  analyser: Tone.Analyser;
 };
 
 export function createFlowersEffects(): FlowersEffectsNodes {
@@ -83,7 +82,6 @@ export function createFlowersEffects(): FlowersEffectsNodes {
 
   const widener = new Tone.StereoWidener(FLOWERS_WIDENER_WIDTH);
   const master = new Tone.Gain(FLOWERS_MASTER_GAIN);
-  const analyser = new Tone.Analyser('waveform', 1024);
 
   chorus.start();
   ensembleChorus.start();
@@ -96,7 +94,6 @@ export function createFlowersEffects(): FlowersEffectsNodes {
     reverb,
     widener,
     master,
-    analyser,
   };
 }
 
@@ -111,8 +108,7 @@ export function connectFlowersEffects(
   effects.delay.connect(effects.reverb);
   effects.reverb.connect(effects.widener);
   effects.widener.connect(effects.master);
-  effects.master.connect(effects.analyser);
-  effects.analyser.connect(getMasterBus());
+  effects.master.connect(getMasterBus());
 }
 
 export function disposeFlowersEffects(nodes: FlowersEffectsNodes): void {
@@ -123,7 +119,6 @@ export function disposeFlowersEffects(nodes: FlowersEffectsNodes): void {
   nodes.reverb.dispose();
   nodes.widener.dispose();
   nodes.master.dispose();
-  nodes.analyser.dispose();
 }
 
 export type FlowersEffectsLevels = {

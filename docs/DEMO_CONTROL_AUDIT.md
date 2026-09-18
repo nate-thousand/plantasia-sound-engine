@@ -3,7 +3,7 @@
 Validation pass for `demo/` — every visible control mapped to real engine behavior.
 
 **Audit date:** 2026-06-28  
-**Engine version:** `1.0.0-beta.1`  
+**Engine version:** `1.0.0-beta.2`  
 **Demo entry:** `npm run build && npm run demo`
 
 ---

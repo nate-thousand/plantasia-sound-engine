@@ -34,7 +34,6 @@ export type SeedEffectsNodes = {
   delay: Tone.FeedbackDelay;
   reverb: Tone.Reverb;
   master: Tone.Gain;
-  analyser: Tone.Analyser;
 };
 
 export function createSeedEffects(): SeedEffectsNodes {
@@ -62,11 +61,10 @@ export function createSeedEffects(): SeedEffectsNodes {
   });
 
   const master = new Tone.Gain(SEED_MASTER_GAIN);
-  const analyser = new Tone.Analyser('waveform', 1024);
 
   chorus.start();
 
-  return { tapeSaturation, chorus, delay, reverb, master, analyser };
+  return { tapeSaturation, chorus, delay, reverb, master };
 }
 
 export function connectSeedEffects(input: Tone.ToneAudioNode, effects: SeedEffectsNodes): void {
@@ -75,8 +73,7 @@ export function connectSeedEffects(input: Tone.ToneAudioNode, effects: SeedEffec
   effects.chorus.connect(effects.delay);
   effects.delay.connect(effects.reverb);
   effects.reverb.connect(effects.master);
-  effects.master.connect(effects.analyser);
-  effects.analyser.connect(getMasterBus());
+  effects.master.connect(getMasterBus());
 }
 
 export function disposeSeedEffects(nodes: SeedEffectsNodes): void {
@@ -85,7 +82,6 @@ export function disposeSeedEffects(nodes: SeedEffectsNodes): void {
   nodes.delay.dispose();
   nodes.reverb.dispose();
   nodes.master.dispose();
-  nodes.analyser.dispose();
 }
 
 export type SeedEffectsLevels = {

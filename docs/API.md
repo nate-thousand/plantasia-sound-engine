@@ -1,6 +1,6 @@
 # Public API (v2 — release contract)
 
-> **Status:** Integration beta **`1.0.0-beta.1`** (Phases 8–21). Pin tag `1.0.0-beta.1` — not `v2.0.0`.  
+> **Status:** Integration beta **`1.0.0-beta.2`** (Phases 8 to 21). Pin tag `1.0.0-beta.2`, not `v2.0.0`.  
 > **Migration:** [MIGRATION_V1_TO_V2.md](./MIGRATION_V1_TO_V2.md) · **Integration:** [PLANTASONIC_INTEGRATION.md](./PLANTASONIC_INTEGRATION.md)
 >
 > Quick start: see [CREATING_A_SPECIES.md](./CREATING_A_SPECIES.md) · v1 reference: [API_V1.md](./API_V1.md) · Architecture: [SOUND_WORLD_ENGINE.md](./SOUND_WORLD_ENGINE.md)

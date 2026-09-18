@@ -91,6 +91,14 @@ export class BacteriaSoundWorld implements SoundWorld {
   }
 
   noteOn(note: string, velocity = 0.8): void {
+    this.playNote(note, velocity, true);
+  }
+
+  /**
+   * Host notes spawn a particle swarm through the generator; generator notes
+   * must not, or the swarm re-triggers itself without bound.
+   */
+  private playNote(note: string, velocity: number, spawnSwarm: boolean): void {
     if (!this.audioStarted || !this.synth) {
       return;
     }
@@ -101,7 +109,9 @@ export class BacteriaSoundWorld implements SoundWorld {
     });
     const shaped = ctx?.shapedVelocity ?? velocity;
     const targets = this.performance?.getTargets();
-    this.generator?.triggerAtNote(note, shaped);
+    if (spawnSwarm) {
+      this.generator?.triggerAtNote(note, shaped);
+    }
     triggerBacteriaParticle(this.synth, 'sine', note, shaped * 0.45);
     const bacteria = this.controls.bacteria / 100;
     const prob =
@@ -171,7 +181,7 @@ export class BacteriaSoundWorld implements SoundWorld {
       },
       buildGenerativeCallbacks(
         {
-          noteOn: (note, velocity) => this.noteOn(note, velocity),
+          noteOn: (note, velocity) => this.playNote(note, velocity, false),
           noteOff: (note) => this.noteOff(note),
         },
         this.eventSink,

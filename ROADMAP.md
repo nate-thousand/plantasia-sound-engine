@@ -32,8 +32,8 @@ A grill on "what is the next milestone" closed with these. They rank everything 
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.0.0-beta.1` |
-| **Honest integration target** | `1.0.0-beta.1` — **shipped** |
+| **Package version (package.json)** | `1.0.0-beta.2` |
+| **Honest integration target** | `1.0.0`, see decisions table |
 | **Production branch** | `main` — v1 preset API + mold profiles |
 | **Active development branch** | `v2-sound-world-engine` |
 | **v1 freeze tag** | `v1-sound-engine-baseline` |
@@ -56,9 +56,10 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `v0.2.0` | Sound Worlds API, mold profile exports, preset validation |
 | `v1-sound-engine-baseline` | Frozen engine before v2 refactor |
 | `v2.0.0` | **Deprecated** — Sound World architecture landed; premature major tag |
-| `v1.0.0-beta.1` | **Current** — honest Sound World integration beta (Phases 17–21) |
+| `1.0.0-beta.1` | Honest Sound World integration beta (Phases 17 to 21) |
+| `1.0.0-beta.2` | **Current**: master bus analysis, Bacteria recursion fix, demo control surface |
 
-**Plantasonic should pin:** `1.0.0-beta.1` or a commit SHA on `v2-sound-world-engine` — not `v2.0.0`.
+**Plantasonic should pin:** `1.0.0-beta.2` or a commit SHA on `v2-sound-world-engine`, not `v2.0.0`.
 
 ---
 

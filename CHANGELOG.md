@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [1.0.0-beta.2] - 2026-09-18
+
+### Fixed
+
+- **Master bus** (`src/engine/masterBus.ts`): every output path (v1 synth chain, Plantasonic and Juno raw Web Audio graphs, all four species) now terminates in one Gain with a shared analyser and meter. `getWaveform()` and `getLevel()` read it, so hosts and the demo stage see the whole engine instead of only the v1 chain
+- **Bacteria stack overflow**: a host `noteOn` spawned a particle swarm through the generator, whose notes called `noteOn` again without bound. Loading Bacteria while any generative playback ran threw `Maximum call stack size exceeded`. Generator notes now play particles without re-spawning the swarm
+- **Bacteria Freeverb rebuild per note**: `dampening` was written on every note, and Tone 15 rebuilds the comb filters on each write. It is now written only when the value changes
+- **Demo RMS and band meters** read 100 in silence because the waveform math subtracted 0.5 from samples already centred on 0
+
+### Removed
+
+- Dead per-species `Tone.Analyser` nodes in `seed`, `flowers`, `mold`, `bacteria` effects chains (never read; the master bus analyser replaces them)
+
+### Changed
+
+- `ROADMAP.md` opens with the 2026-09-18 decisions table that ranks the 1.0.0 and 1.1.0 milestones
+- Demo Audio Analysis hint and `docs/DEMO_CONTROL_AUDIT.md` mark the stage as working for all paths
+
+### Added (shipped after beta.1, previously unreleased)
 
 - **Complete demo control surface** (`demo/`) — definitive test bench for all wired engine capabilities
   - Collapsible sections: Presets, Sound Worlds, Musical, Layers, Timbre, Effects, Generative, Ecology, Botanical, Audio, Reactive (scaffold), MIDI, Keyboard, Performance, Utilities, Debug

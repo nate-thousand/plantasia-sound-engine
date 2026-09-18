@@ -34,7 +34,6 @@ export type BacteriaEffectsNodes = {
   delayWetLfo: Tone.LFO;
   roomLfo: Tone.LFO;
   master: Tone.Gain;
-  analyser: Tone.Analyser;
 };
 
 export function createBacteriaEffects(): BacteriaEffectsNodes {
@@ -83,7 +82,6 @@ export function createBacteriaEffects(): BacteriaEffectsNodes {
   });
 
   const master = new Tone.Gain(BACTERIA_MASTER_GAIN);
-  const analyser = new Tone.Analyser('waveform', 1024);
 
   panModLfo.start();
   delayWetLfo.start();
@@ -103,7 +101,6 @@ export function createBacteriaEffects(): BacteriaEffectsNodes {
     delayWetLfo,
     roomLfo,
     master,
-    analyser,
   };
 }
 
@@ -116,8 +113,7 @@ export function connectBacteriaEffects(
   effects.autoPanner.connect(effects.microDelay);
   effects.microDelay.connect(effects.roomVerb);
   effects.roomVerb.connect(effects.master);
-  effects.master.connect(effects.analyser);
-  effects.analyser.connect(getMasterBus());
+  effects.master.connect(getMasterBus());
 }
 
 export function disposeBacteriaEffects(nodes: BacteriaEffectsNodes): void {
@@ -133,7 +129,6 @@ export function disposeBacteriaEffects(nodes: BacteriaEffectsNodes): void {
   nodes.microDelay.dispose();
   nodes.roomVerb.dispose();
   nodes.master.dispose();
-  nodes.analyser.dispose();
 }
 
 export type BacteriaEffectsLevels = {
@@ -169,5 +164,8 @@ export function applyBacteriaEffectsLevels(
   );
   setRampParam(audioStarted, effects.roomVerb.wet as unknown as RampParam, levels.roomWet);
   setRampParam(audioStarted, effects.roomVerb.roomSize as unknown as RampParam, levels.roomSize);
-  effects.roomVerb.dampening = levels.roomDampening;
+  // Freeverb rebuilds its comb filters on every dampening write, so skip unchanged values.
+  if (Math.abs(Number(effects.roomVerb.dampening) - levels.roomDampening) > 1) {
+    effects.roomVerb.dampening = levels.roomDampening;
+  }
 }

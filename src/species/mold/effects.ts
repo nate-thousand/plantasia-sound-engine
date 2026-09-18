@@ -71,7 +71,6 @@ export type MoldEffectsNodes = {
   vibratoDepthLfo: Tone.LFO;
   panLfo: Tone.LFO;
   master: Tone.Gain;
-  analyser: Tone.Analyser;
 };
 
 export function createMoldEffects(): MoldEffectsNodes {
@@ -123,7 +122,6 @@ export function createMoldEffects(): MoldEffectsNodes {
 
   const panner = new Tone.Panner(0);
   const master = new Tone.Gain(MOLD_MASTER_GAIN);
-  const analyser = new Tone.Analyser('waveform', 1024);
 
   const wowLfo = new Tone.LFO({ frequency: 0.07, ...lfoSpan(0.002), type: 'sine' });
   const flutterLfo = new Tone.LFO({ frequency: 3.8, ...lfoSpan(0.0008), type: 'sine' });
@@ -173,7 +171,6 @@ export function createMoldEffects(): MoldEffectsNodes {
     vibratoDepthLfo,
     panLfo,
     master,
-    analyser,
   };
 }
 
@@ -189,8 +186,7 @@ export function connectMoldEffects(input: Tone.ToneAudioNode, effects: MoldEffec
   effects.vibrato.connect(effects.reverb);
   effects.reverb.connect(effects.panner);
   effects.panner.connect(effects.master);
-  effects.master.connect(effects.analyser);
-  effects.analyser.connect(getMasterBus());
+  effects.master.connect(getMasterBus());
 }
 
 export function disposeMoldEffects(nodes: MoldEffectsNodes): void {
@@ -219,7 +215,6 @@ export function disposeMoldEffects(nodes: MoldEffectsNodes): void {
   nodes.reverb.dispose();
   nodes.panner.dispose();
   nodes.master.dispose();
-  nodes.analyser.dispose();
 }
 
 export type MoldEffectsLevels = {
