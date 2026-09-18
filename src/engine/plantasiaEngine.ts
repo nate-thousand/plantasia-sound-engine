@@ -23,7 +23,13 @@ import {
   type CreateSpeciesManagerOptions,
 } from './createSpeciesManager.js';
 import type { SpeciesManager } from './SpeciesManager.js';
-import type { EcologicalControl, SpeciesId, SoundWorld, SoundWorldMetadata } from './SoundWorld.js';
+import type {
+  EcologicalControl,
+  SpeciesId,
+  SoundWorld,
+  SoundWorldMetadata,
+  SoundWorldStartOptions,
+} from './SoundWorld.js';
 import type { EngineState } from './EngineLifecycle.js';
 import { resolvePresetToSpecies } from './resolvePresetToSpecies.js';
 import type { EcologyControlState } from './EcologyControls.js';
@@ -156,9 +162,13 @@ export class PlantasiaEngine {
     }
   }
 
-  /** Start the active Sound World (awaits audio graph readiness). */
-  async start(): Promise<void> {
-    await this.species.start();
+  /**
+   * Start the active Sound World (awaits audio graph readiness).
+   * `{ generative: false }` runs the graph for played notes only; call
+   * {@link stopSpecies} then `start()` to switch generative playback on.
+   */
+  async start(options?: SoundWorldStartOptions): Promise<void> {
+    await this.species.start(options);
     this.startAnalysis();
   }
 

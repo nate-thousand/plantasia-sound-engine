@@ -78,4 +78,4 @@ export { registerBuiltinSpecies, registerFutureSpecies } from '../species/regist
 export { FUTURE_SPECIES_METADATA } from '../species/future/metadata.js';
 export { getMasterBus, getMasterBusInput, getMasterWaveform, getMasterLevel } from './masterBus.js';
 export { AudioAnalyser, BAND_EDGES_HZ, type AudioFeatures, type OnsetEvent } from './analysis/AudioAnalyser.js';
-export { audioNow } from './clock.js';
+export { audioNow, configureContextLatency, ENGINE_LOOK_AHEAD_SEC } from './clock.js';

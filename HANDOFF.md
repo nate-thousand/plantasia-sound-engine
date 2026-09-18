@@ -22,10 +22,16 @@ Next per ROADMAP decision 12: the 1.0.0 milestone (analysis API, event timing, b
 
 See the decisions table at the top of ROADMAP.md (settled 2026-09-18). 1.0.0 next, 1.1.0 is modulation. Milestone 5 retired, coming_soon species cut.
 
+## 1.0.0 progress (2026-09-18, local commits only)
+
+1. Done: analysis API (`getAudioFeatures()`, `onset` event), `time` on every event, `noteReleased`. Fifteen gates.
+2. Done: browser harness (`npm run test:browser`, `docs/PERFORMANCE.md`). Chromium: noteOn to audible 12 ms (was 102 ms; lookahead now 0.01 s), zero dropouts over 60 s. WebKit not yet run (`npx playwright install webkit` first). Control response measurement needs rework before its bar is asserted; see PERFORMANCE.md findings.
+3. Next: two tier facade and `docs/API.md` as the one page public surface, then coming_soon removal, then merge to main and tag 1.0.0.
+
 ## Suggested order
 
-1. On the user's ok: push, tag `1.0.0-beta.2`, deploy sound-engine.xyz.
-2. Start the 1.0.0 work in the order decision 12 gives.
+1. On the user's ok: push and deploy (the user said not to deploy until asked; beta.2 is tagged locally only when they say so).
+2. Continue the 1.0.0 work in the order decision 12 gives.
 3. Update the portfolio case study (`../portfolio-2.0/work/sound-engine.html`) at 1.0.0 only (decision 14).
 
 ## Rules

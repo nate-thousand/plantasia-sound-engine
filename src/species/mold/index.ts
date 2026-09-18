@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { EcologicalControl, SoundWorld } from '../../engine/SoundWorld.js';
+import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 import {
   connectMoldEffects,
@@ -79,10 +79,12 @@ export class MoldSoundWorld implements SoundWorld {
     this.audioStarted = false;
   }
 
-  start(): Promise<void> {
+  start(options?: SoundWorldStartOptions): Promise<void> {
     return this.ensureAudioStarted().then(() => {
       syncGeneratorEcology(this.generator, this.controls);
-      this.generator?.start(MOLD_DEFAULT_TEMPO);
+      if (options?.generative !== false) {
+        this.generator?.start(MOLD_DEFAULT_TEMPO);
+      }
     });
   }
 

@@ -38,6 +38,8 @@
     "test:facade": "node scripts/test-facade.mjs",
     "test:events": "node scripts/test-events.mjs",
     "test:analysis": "node scripts/test-analysis.mjs",
+    "test:browser": "npm run build && playwright test",
+    "bench": "vite --config vite.bench.config.ts --port 5194 --strictPort",
     "test:scheduler": "node scripts/test-scheduler.mjs",
     "test:midi": "node scripts/test-midi.mjs",
     "test:audio": "node scripts/validate-species-audio.mjs",
@@ -79,6 +81,7 @@
     "tone": "^15.0.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.3"
   },

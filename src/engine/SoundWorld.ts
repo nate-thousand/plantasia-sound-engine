@@ -32,12 +32,22 @@ export interface SoundWorldMetadata {
   version?: string;
 }
 
+/** Options for {@link SoundWorld.start}. */
+export interface SoundWorldStartOptions {
+  /**
+   * Start the species' generative system. Default true. Pass false for a
+   * played instrument: the audio graph runs and `noteOn` works, nothing
+   * plays on its own.
+   */
+  generative?: boolean;
+}
+
 export interface SoundWorld {
   metadata: SoundWorldMetadata;
 
   initialize(context: unknown): Promise<void> | void;
   /** May be async while the audio graph unlocks and starts generative systems. */
-  start(): void | Promise<void>;
+  start(options?: SoundWorldStartOptions): void | Promise<void>;
   stop(): void;
 
   noteOn(note: string, velocity?: number): void;

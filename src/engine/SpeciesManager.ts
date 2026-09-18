@@ -1,4 +1,4 @@
-import type { EcologicalControl, SpeciesId, SoundWorld, SoundWorldMetadata } from './SoundWorld.js';
+import type { EcologicalControl, SpeciesId, SoundWorld, SoundWorldMetadata, SoundWorldStartOptions } from './SoundWorld.js';
 import { EcologyControls, toSpeciesControlValue } from './EcologyControls.js';
 import { assertNormalizedEcologyValue } from './EcologyControlScaleError.js';
 import {
@@ -127,14 +127,14 @@ export class SpeciesManager {
   }
 
   /** Awaits species audio readiness before transitioning to `running`. */
-  async start(): Promise<void> {
+  async start(options?: SoundWorldStartOptions): Promise<void> {
     assertSpeciesLoaded(this.state, 'start()');
     if (this.state === 'running') {
       return;
     }
     const current = this.loader.getCurrent();
     if (current) {
-      await Promise.resolve(current.start());
+      await Promise.resolve(current.start(options));
     }
     this.state = 'running';
   }

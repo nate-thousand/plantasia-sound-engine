@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`noteReleased` event** for host, generative and MIDI sources (`NoteSource`)
 - `EngineEventBus.hasListeners(name)`
 - Fifteenth postbuild gate: `scripts/test-analysis.mjs`
+- **Browser performance harness**: `npm run test:browser` runs `tests/browser/performance.spec.mjs` through Playwright (Chromium and WebKit) against `bench/`; measures noteOn to audible, dropouts under a mock visual load, control response and engine main thread cost. Numbers in `docs/PERFORMANCE.md`
+- `engine.start({ generative: false })` runs the species graph for played notes without starting its generator (`SoundWorldStartOptions`)
+- `ENGINE_LOOK_AHEAD_SEC` and `configureContextLatency()`; `getMasterBus()`, `getMasterBusInput()`, `audioNow()`, `AudioAnalyser` and `BAND_EDGES_HZ` on the root export
+
+### Changed
+
+- Scheduling lookahead on the shared Tone context is 0.01 s instead of Tone's 0.1 s default. noteOn to audible in Chromium went from 102 ms to 12 ms with zero dropouts over 60 s
 - Demo: bass, mid, treble, centroid and onset meters read the engine analysis instead of waveform thirds; live feed tracks `noteReleased` and `onset`
 
 ## [1.0.0-beta.2] - 2026-09-18

@@ -8,6 +8,7 @@
  * Hosts read it through `PlantasiaEngine.getWaveform()` / `getLevel()`.
  */
 import * as Tone from 'tone';
+import { configureContextLatency } from './clock.js';
 
 /** FFT bins returned by {@link getMasterSpectrum}; fftSize is twice this. */
 export const MASTER_FFT_BINS = 1024;
@@ -25,6 +26,7 @@ function ensureMasterBus(): MasterBusNodes {
   if (nodes) {
     return nodes;
   }
+  configureContextLatency();
   const bus = new Tone.Gain(1);
   const analyser = new Tone.Analyser('waveform', 1024);
   const fft = new Tone.Analyser('fft', MASTER_FFT_BINS);

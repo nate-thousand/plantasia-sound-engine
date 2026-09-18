@@ -302,7 +302,7 @@ v2 **Phase 14** shipped the Expressive Performance Engine — see [docs/PERFORMA
 
 - [ ] Configurable polyphony limits (host-facing API)
 - [ ] Voice stealing strategy
-- [ ] CPU metering and adaptive quality
+- [x] Browser performance harness (`npm run test:browser`, [docs/PERFORMANCE.md](./docs/PERFORMANCE.md)); CPU metering in engine and adaptive quality still open
 - [ ] Preset morphing at runtime
 - [ ] Offline rendering / export
 - [x] Central scheduler — `EngineScheduler` + `Transport` on facade *(Phase 20)*

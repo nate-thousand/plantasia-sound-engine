@@ -22,3 +22,6 @@ npm-debug.log*
 # Test / coverage
 coverage/
 .vercel
+bench/results/
+test-results/
+playwright-report/

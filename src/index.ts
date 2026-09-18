@@ -32,6 +32,11 @@ export {
   registerFutureSpecies,
   Generator,
   PerformanceEngine,
+  getMasterBus,
+  getMasterBusInput,
+  audioNow,
+  AudioAnalyser,
+  BAND_EDGES_HZ,
 } from './engine/index.js';
 
 export type {

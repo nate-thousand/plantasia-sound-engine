@@ -159,6 +159,7 @@ npm run sync-presets
 npm run build
 npm run typecheck
 npm run test
+npm run test:browser # Playwright performance harness, see docs/PERFORMANCE.md
 npm run build:site   # production bundle for Vercel
 ```
 

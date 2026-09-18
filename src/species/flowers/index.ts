@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { EcologicalControl, SoundWorld } from '../../engine/SoundWorld.js';
+import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
 import {
   connectFlowersEffects,
   createFlowersEffects,
@@ -77,10 +77,12 @@ export class FlowersSoundWorld implements SoundWorld {
     this.audioStarted = false;
   }
 
-  start(): Promise<void> {
+  start(options?: SoundWorldStartOptions): Promise<void> {
     return this.ensureAudioStarted().then(() => {
       syncGeneratorEcology(this.generator, this.controls);
-      this.generator?.start(FLOWERS_DEFAULT_TEMPO);
+      if (options?.generative !== false) {
+        this.generator?.start(FLOWERS_DEFAULT_TEMPO);
+      }
     });
   }
 

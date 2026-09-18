@@ -50,6 +50,7 @@ engine.dispose();                 // → disposed
 |--------|------------------------|
 | `loadSpecies()` | Throws `EngineLifecycleError` (`ENGINE_DISPOSED`) |
 | `start()` | Throws if `idle` (`NO_SPECIES_LOADED`) or `disposed`; **async** — resolves when species audio is ready |
+| `start({ generative: false })` | Same transition; the species graph runs for `noteOn()` and nothing plays on its own. `stopSpecies()` then `start()` switches generative on |
 | `noteOn()` | Throws if not `running` (`ENGINE_NOT_STARTED` or `NO_SPECIES_LOADED`) |
 | `noteOff()` | Throws if `idle` or `disposed` |
 | `setControl()` | Throws `EcologyControlScaleError` if value ∉ [0, 1] |
