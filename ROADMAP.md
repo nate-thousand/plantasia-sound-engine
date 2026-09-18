@@ -6,6 +6,28 @@ The engine is transitioning from a **preset-centric v1 runtime** (frozen at tag 
 
 ---
 
+## Decisions (settled 2026-09-18)
+
+A grill on "what is the next milestone" closed with these. They rank everything below; where an older section disagrees, this table wins.
+
+| # | Decision | Consequence |
+| --- | --- | --- |
+| 1 | The milestone is judged against the one real host: the Plantasonic platform's `createSoundEngineAdapter()` and its audio reactive bridge. | Its measurable gaps (five controls, a placeholder analyzer, events without timing) set the work. No host drives the feature list beyond that |
+| 2 | More powerful means depth reachable from the host surface, not more species or a sequencer. | Modulation routable from controls and events comes before new species. Breadth and sequencing are not milestones |
+| 3 | The engine owns audio analysis. | `getAudioFeatures()` returns raw per frame `{ rms, peak, bass, mid, high, centroid, onset }` off the master bus (FFT 2048, fixed band edges: bass under 200 Hz, mid 200 Hz to 2 kHz, high above). One push event `onset { time, strength }`. `peak` holds with a short decay; all other smoothing is the host's |
+| 4 | Every event carries `time` in AudioContext seconds. `noteReleased` is added. | Visual hosts can place notes on the audio clock. Scheduled lookahead can arrive later without changing payload shapes |
+| 5 | Simpler means two tiers, nothing removed. `plantasia-sound-engine/public` is v2 only; the root export keeps the v1 surface as legacy. | Public tier: `createPlantasiaEngine`, `init`, `loadSpecies`, `loadDefaultSpecies`, `loadPreset`, `start`, `stop`, `dispose`, `noteOn`, `noteOff`, `allNotesOff`, `setControl`, `getControl`, `setTempo`, `on`, `off`, `getAudioFeatures`, `getWaveform`, `getLevel`, `getState`, `getCurrentSpecies`, `getAvailableSpecies`, `registerSpecies`, `enableMidi`, plus `presets` and the Plantasonic adapter. Legacy on root: `playPreset`, `updateParameter`, `applyBotanicalControls`, `setMold`, `getMold`, `triggerChord`, `getParameterMetadata`, `stopSpecies`, `initialize`, the `createXSoundWorld` factories |
+| 6 | `setControl` stays typed to the five ecology controls. | Species depth arrives as modulation in 1.1 (`modulate(source, destination)`, destinations = five controls plus `PerformanceTargets`), never as a string parameter namespace |
+| 7 | Target machines: laptop and iPad Safari. Responsive means, in order: noteOn to audible under 15 ms, zero dropouts over 60 s of Seed at default density with a mock visual loop burning 8 ms per frame, control ramps settle under 50 ms, engine main thread time per frame recorded. | Measured by a Playwright harness (Chromium and WebKit) as `npm run test:browser`, outside postbuild. Numbers recorded per release in `docs/PERFORMANCE.md`. Only the first two block a release. One manual iPad pass per release |
+| 8 | Milestone 5 (sequencing) is retired. | Scale quantizer and chord generator become host settable `GenerativePreferences` via `setGenerativePreferences()` in 1.1. Euclidean, arpeggiator, probability gates are dropped |
+| 9 | The eight `coming_soon` species are cut. `getUpcomingSpecies()` and the `'coming_soon'` status are removed at 1.0. | A registered species is playable. The species template stays for when an instrument needs a fifth |
+| 10 | MIDI: CC, aftertouch and pitch bend surface as events and modulation sources in 1.1. MIDI Learn is host UI. MPE is deferred until a controller use case exists. | Falls out of the 1.1 modulation work; no separate milestone |
+| 11 | Hosts consume a git tag. The byte identical copy vendored in plantasonic-platform is folded back here and retired. | That fold is plantasonic-platform's change, not this repo's |
+| 12 | Release sequence: `1.0.0-beta.2` now (master bus stage fix, demo RMS fix, dead per species analysers removed), then `1.0.0`, then `1.1.0`. | 1.0.0 = analysis and event timing, harness with first measured numbers, two tier facade with `docs/API.md` rewritten as the one page public surface (`API_V1.md` kept), coming_soon removal, merge `v2-sound-world-engine` into `main`, tag. In that order, so the frozen surface includes analysis and any latency problem is found first. 1.1.0 = modulation, generative preferences, MIDI sources; grilled when 1.0 ships |
+| 13 | The demo keeps its v1 sections, grouped under a Legacy (v1) heading, still wired. | The demo is a harness for everything the engine does; the heading says which half to build on |
+| 14 | The portfolio case study is updated at 1.0 only. | beta.2 changes no counts |
+| 15 | Git: commit locally on the branch. Push, tag and deploy only after the user's ok. | |
+
 ## Current status
 
 | Item | Value |
@@ -239,9 +261,9 @@ Scaffold: `src/modulation/`
 - [x] ADSR envelope (PolySynth + per-voice WAAPI envelopes)
 - [x] Random drift (Juno / Plantasonic living voice ticks, preset `drift` param)
 - [x] Expression routing (partial — v2 `ExpressionRouter` maps velocity, density, and macros to synth targets; see Phase 14)
-- [ ] Modulation matrix with multiple sources/destinations
-- [ ] Sample & hold
-- [ ] Envelope followers
+- [ ] Modulation matrix with multiple sources/destinations *(1.1, decision 6)*
+- [ ] Sample & hold *(1.1)*
+- [ ] Envelope followers *(1.1)*
 
 ---
 
@@ -250,22 +272,16 @@ Scaffold: `src/modulation/`
 Shipped in Phase 20 (scaffold + note input). Remaining items are future milestones.
 
 - [x] Web MIDI input — `engine.enableMidi()`, `engine.midi.devices` *(Phase 20)*
-- [ ] MIDI Learn for ecological / botanical controls
+- [ ] ~~MIDI Learn~~ host UI concern (decision 10)
 - [x] Velocity sensitivity — signature live voices + v2 `VelocityEngine`; Web MIDI note path via `enableMidi()`
-- [ ] Aftertouch / channel pressure
-- [ ] MPE (MIDI Polyphonic Expression)
+- [ ] Aftertouch / channel pressure as modulation sources *(1.1, decision 10)*
+- [ ] MPE deferred until a controller use case exists (decision 10)
 
 ---
 
-## Milestone 5 — Sequencing
+## Milestone 5 — Sequencing (retired, decision 8)
 
-Scaffold: `src/sequencing/` (types only)
-
-- [ ] Euclidean sequencer
-- [ ] Arpeggiator with multiple modes
-- [ ] Probability gates
-- [ ] Chord generator
-- [ ] Scale quantizer
+Scaffold `src/sequencing/` (types only) is removed with 1.0. Scale quantizer and chord generator return in 1.1 as host settable `GenerativePreferences`. Euclidean sequencer, arpeggiator and probability gates are dropped; `Generator` already covers phrase, rhythm and probability for an ambient instrument.
 
 ---
 
@@ -327,7 +343,7 @@ v2 **Phase 14** shipped the Expressive Performance Engine — see [docs/PERFORMA
 
 ### Remaining worlds
 
-- [ ] Aurora
+None planned (decision 9). The eight `coming_soon` species and Aurora are cut; a species is added when an instrument needs it.
 
 ### Future engine work
 
