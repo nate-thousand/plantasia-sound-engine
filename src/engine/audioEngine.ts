@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMasterBus, getMasterWaveform, getMasterLevel } from './masterBus.js';
 import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
 import type { BotanicalControls } from '../utils/types/botanical.js';
 import {
@@ -49,8 +50,6 @@ type EngineNodes = {
   delay: Tone.FeedbackDelay;
   reverb: Tone.Reverb;
   lfo: Tone.LFO;
-  analyser: Tone.Analyser;
-  meter: Tone.Meter;
   moldNodes: ReturnType<typeof createMoldNodes>;
 };
 
@@ -77,8 +76,6 @@ function ensureNodes(): EngineNodes {
     return nodes;
   }
 
-  const analyser = new Tone.Analyser('waveform', 1024);
-  const meter = new Tone.Meter();
   const reverb = new Tone.Reverb({ decay: 3, wet: 0.4 });
   const delay = new Tone.FeedbackDelay({ delayTime: 0.25, feedback: 0.3, wet: 0.2 });
   const filter = new Tone.Filter({ frequency: 1800, type: 'lowpass', Q: 1 });
@@ -92,13 +89,11 @@ function ensureNodes(): EngineNodes {
   synth.connect(filter);
   wireMoldChain(filter, delay, moldNodes);
   delay.connect(reverb);
-  reverb.toDestination();
-  reverb.connect(analyser);
-  reverb.connect(meter);
+  reverb.connect(getMasterBus());
   lfo.connect(filter.frequency);
   lfo.start();
 
-  nodes = { synth, filter, delay, reverb, lfo, analyser, meter, moldNodes };
+  nodes = { synth, filter, delay, reverb, lfo, moldNodes };
   return nodes;
 }
 
@@ -271,19 +266,11 @@ export function setTempo(bpm: number): void {
 }
 
 export function getWaveform(): Float32Array {
-  const engine = ensureNodes();
-  const value = engine.analyser.getValue();
-  return value instanceof Float32Array ? value : new Float32Array(0);
+  return getMasterWaveform();
 }
 
 export function getLevel(): number {
-  const engine = ensureNodes();
-  const value = engine.meter.getValue();
-  const db = typeof value === 'number' ? value : value[0] ?? -Infinity;
-  if (!Number.isFinite(db)) {
-    return 0;
-  }
-  return Math.min(1, Math.max(0, (db + 60) / 60));
+  return getMasterLevel();
 }
 
 export function updateParameter(

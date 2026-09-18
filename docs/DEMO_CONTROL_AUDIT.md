@@ -177,8 +177,8 @@ Fixed velocities in `KEY_MAP`; no octave/layout engine API wired.
 
 | Element | Source | Status |
 |---------|--------|--------|
-| Waveform canvas | `getWaveform()` | **Partial** — v1 analyser |
-| Master / Peak | `getLevel()` | **Partial** — v1 meter |
+| Waveform canvas | `getWaveform()` | **Working** — master bus analyser (all paths) |
+| Master / Peak | `getLevel()` | **Working** — master bus meter (all paths) |
 | RMS | computed from waveform | Demo-only |
 | Bass / Mid / Treble | waveform thirds | Demo-only estimate |
 | Live feed chips | engine state, events, notes | **Working** |
@@ -233,7 +233,7 @@ Distinct character: species-specific synth/generator graphs in `src/species/*` �
 
 ## Recommended engine tasks (from audit)
 
-1. **v2 analyser getters** — public `getWaveform()` / `getLevel()` for active species output
+1. ~~**v2 analyser getters**~~ — done: `src/engine/masterBus.ts` feeds every output path (v1 chain, Plantasonic, Juno, all species) into one analyser and meter
 2. **`bindSensor()`** — audio-reactive routing API
 3. **Generative host parameters** — expose memory, probability curves, phrase length on `Generator`
 4. **MIDI device selection** — pass `inputId` to `enableMidi()` from UI

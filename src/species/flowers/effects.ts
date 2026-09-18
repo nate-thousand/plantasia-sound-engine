@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 import { FLOWERS_RELEASE } from './synth.js';
 
@@ -111,7 +112,7 @@ export function connectFlowersEffects(
   effects.reverb.connect(effects.widener);
   effects.widener.connect(effects.master);
   effects.master.connect(effects.analyser);
-  effects.analyser.toDestination();
+  effects.analyser.connect(getMasterBus());
 }
 
 export function disposeFlowersEffects(nodes: FlowersEffectsNodes): void {

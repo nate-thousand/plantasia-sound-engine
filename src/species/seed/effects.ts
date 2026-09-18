@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 
 /**
@@ -75,7 +76,7 @@ export function connectSeedEffects(input: Tone.ToneAudioNode, effects: SeedEffec
   effects.delay.connect(effects.reverb);
   effects.reverb.connect(effects.master);
   effects.master.connect(effects.analyser);
-  effects.analyser.toDestination();
+  effects.analyser.connect(getMasterBus());
 }
 
 export function disposeSeedEffects(nodes: SeedEffectsNodes): void {

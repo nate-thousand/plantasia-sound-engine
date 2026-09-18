@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMasterBusInput } from '../engine/masterBus.js';
 import type {
   PlantasonicConfig,
   PlantasonicEvolutionConfig,
@@ -265,7 +266,7 @@ export function createPlantasonicGraph(audioCtx: AudioContext): PlantasonicGraph
 
   widthPanner.connect(compressor);
   compressor.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
+  masterGain.connect(getMasterBusInput());
 
   return {
     audioCtx,

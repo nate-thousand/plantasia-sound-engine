@@ -340,7 +340,7 @@ export function buildUI(bridge, callbacks) {
 
   // --- Audio ---
   root.appendChild(createSection('audio', 'Audio Analysis', (body) => {
-    body.appendChild(hint('engine.getWaveform() / getLevel() — v1 analyser path. May not reflect v2 species output. Bass/mid/treble derived from waveform thirds in demo only.'));
+    body.appendChild(hint('engine.getWaveform() / getLevel() read the master bus, so every path (v1 presets, Plantasonic, Juno, v2 species) shows here. Bass/mid/treble derived from waveform thirds in demo only.'));
     body.appendChild(buttonRow([
       { label: 'Trigger chord (v1)', id: 'btn-trigger-chord', onClick: () => {
         if (!bridge.audioStarted) { callbacks.onStatus('Start Audio first', 'error'); return; }

@@ -39,9 +39,9 @@ export function createVisualizer(bridge, elements) {
     if (!data.length) return;
     const third = Math.floor(data.length / 3);
     let b = 0, m = 0, t = 0;
-    for (let i = 0; i < third; i++) b += Math.abs(data[i] - 0.5);
-    for (let i = third; i < third * 2; i++) m += Math.abs(data[i] - 0.5);
-    for (let i = third * 2; i < data.length; i++) t += Math.abs(data[i] - 0.5);
+    for (let i = 0; i < third; i++) b += Math.abs(data[i]);
+    for (let i = third; i < third * 2; i++) m += Math.abs(data[i]);
+    for (let i = third * 2; i < data.length; i++) t += Math.abs(data[i]);
     bass = b / third * 4;
     mid = m / third * 4;
     treble = t / (data.length - third * 2) * 4;
@@ -82,7 +82,7 @@ export function createVisualizer(bridge, elements) {
         drawWaveform(wf);
         analyzeBands(wf);
         let sum = 0;
-        for (let i = 0; i < wf.length; i++) sum += (wf[i] - 0.5) ** 2;
+        for (let i = 0; i < wf.length; i++) sum += wf[i] ** 2;
         rms = Math.sqrt(sum / wf.length) * 4;
       }
       const level = bridge.engine.getLevel();

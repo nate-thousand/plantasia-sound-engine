@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 import { MOLD_DRONE_RELEASE } from './synth.js';
 
@@ -189,7 +190,7 @@ export function connectMoldEffects(input: Tone.ToneAudioNode, effects: MoldEffec
   effects.reverb.connect(effects.panner);
   effects.panner.connect(effects.master);
   effects.master.connect(effects.analyser);
-  effects.analyser.toDestination();
+  effects.analyser.connect(getMasterBus());
 }
 
 export function disposeMoldEffects(nodes: MoldEffectsNodes): void {
