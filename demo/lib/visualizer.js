@@ -3,11 +3,7 @@
 export function createVisualizer(bridge, elements) {
   const { waveformCanvas, liveFeed, meters } = elements;
   const wfCtx = waveformCanvas.getContext('2d');
-  let peak = 0;
-  let rms = 0;
-  let bass = 0;
-  let mid = 0;
-  let treble = 0;
+  let onsetFlash = 0;
   let animId = 0;
 
   function setMeter(name, value) {
@@ -33,18 +29,6 @@ export function createVisualizer(bridge, elements) {
       else wfCtx.lineTo(x, y);
     }
     wfCtx.stroke();
-  }
-
-  function analyzeBands(data) {
-    if (!data.length) return;
-    const third = Math.floor(data.length / 3);
-    let b = 0, m = 0, t = 0;
-    for (let i = 0; i < third; i++) b += Math.abs(data[i]);
-    for (let i = third; i < third * 2; i++) m += Math.abs(data[i]);
-    for (let i = third * 2; i < data.length; i++) t += Math.abs(data[i]);
-    bass = b / third * 4;
-    mid = m / third * 4;
-    treble = t / (data.length - third * 2) * 4;
   }
 
   function updateLiveFeed() {
@@ -80,19 +64,17 @@ export function createVisualizer(bridge, elements) {
       const wf = bridge.engine.getWaveform();
       if (wf.length) {
         drawWaveform(wf);
-        analyzeBands(wf);
-        let sum = 0;
-        for (let i = 0; i < wf.length; i++) sum += wf[i] ** 2;
-        rms = Math.sqrt(sum / wf.length) * 4;
       }
-      const level = bridge.engine.getLevel();
-      peak = Math.max(peak * 0.95, level);
-      setMeter('master', level);
-      setMeter('peak', peak);
-      setMeter('rms', rms);
-      setMeter('bass', bass);
-      setMeter('mid', mid);
-      setMeter('treble', treble);
+      const f = bridge.engine.getAudioFeatures();
+      setMeter('master', bridge.engine.getLevel());
+      setMeter('peak', f.peak);
+      setMeter('rms', f.rms * 4);
+      setMeter('bass', f.bass);
+      setMeter('mid', f.mid);
+      setMeter('treble', f.high);
+      setMeter('centroid', f.centroid);
+      onsetFlash = Math.max(f.onset, onsetFlash * 0.85);
+      setMeter('onset', onsetFlash);
     }
     updateLiveFeed();
     animId = requestAnimationFrame(tick);

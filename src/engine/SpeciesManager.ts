@@ -156,6 +156,8 @@ export class SpeciesManager {
 
   noteOff(note: string): void {
     assertSpeciesLoaded(this.state, 'noteOff()');
+    const speciesId = this.loader.getCurrentMetadata()?.id ?? null;
+    this.events?.emit('noteReleased', { note, source: 'host', speciesId });
     this.loader.getCurrent()?.noteOff(note);
   }
 

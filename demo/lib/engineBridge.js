@@ -87,6 +87,7 @@ export class EngineBridge {
     };
     this.performanceMode = 'v2';
     this.eventLog = [];
+    this.lastOnset = null;
     this.activeNotes = new Set();
     this.midiActivity = [];
     this.keyboardActivity = [];
@@ -153,14 +154,19 @@ export class EngineBridge {
   }
 
   subscribeEvents(onEvent) {
-    const names = ['speciesChanged', 'notePlayed', 'controlChanged', 'generatorEvent', 'densityChanged'];
+    const names = ['speciesChanged', 'notePlayed', 'noteReleased', 'controlChanged', 'generatorEvent', 'densityChanged', 'onset'];
     for (const name of names) {
       const unsub = this.engine.on(name, (payload) => {
         onEvent(name, payload);
         this.logEvent(name, payload);
         if (name === 'notePlayed' && payload.note) {
           this.activeNotes.add(payload.note);
-          setTimeout(() => this.activeNotes.delete(payload.note), 800);
+        }
+        if (name === 'noteReleased' && payload.note) {
+          this.activeNotes.delete(payload.note);
+        }
+        if (name === 'onset') {
+          this.lastOnset = payload;
         }
       });
       this._unsubs.push(unsub);

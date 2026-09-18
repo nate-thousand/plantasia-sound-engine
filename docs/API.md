@@ -432,14 +432,26 @@ engine.setTempo(96);     // BPM
 
 Transport state is independent of audio context lifecycle. `play()` resumes generative scheduling; `pause()` suspends it without releasing held notes unless configured otherwise.
 
-### Metering and visualization
+### Metering and analysis
 
-Hosts read output state without touching the audio graph.
+Hosts read output state without touching the audio graph. Every path (v1 presets, Plantasonic and Juno graphs, all species) terminates in one master bus, so these read the whole engine.
 
 ```typescript
-const waveform = engine.getWaveform();  // Float32Array for scopes
-const level = engine.getLevel();        // 0–1 normalized output
+const waveform = engine.getWaveform();  // Float32Array, -1..1, for scopes
+const level = engine.getLevel();        // 0..1 from a -60 dB floor
+
+const f = engine.getAudioFeatures();
+// f.time      AudioContext seconds the frame was read at
+// f.rms       0..1 waveform RMS
+// f.peak      0..1 level with hold and decay
+// f.bass      0..1 peak bin under 200 Hz (-80 dB floor)
+// f.mid       0..1 peak bin 200 Hz to 2 kHz
+// f.high      0..1 peak bin above 2 kHz
+// f.centroid  0..1 spectral centroid, log scale 20 Hz to Nyquist
+// f.onset     0..1 onset strength this frame, 0 when none
 ```
+
+Values are raw for the frame; the host owns smoothing. `peak` is the one exception and decays at 2.5 units per second. Reads within the same frame return the same object, so polling from a render loop costs one analysis per frame. Band edges are exported as `BAND_EDGES_HZ`.
 
 ### MIDI
 
@@ -455,51 +467,27 @@ MIDI input routes through the Note API and ecological control mapping. MPE and a
 
 ### Events
 
-The engine emits typed events for decoupled UI and visualization.
+Typed events for decoupled UI and visualization. Every payload carries `time`, the AudioContext second it happened at, so a visual host can place notes against sound rather than wall time.
 
 ```typescript
-engine.on('speciesChanged', (event) => {
-  // event.species: SpeciesId
-  // event.visual: PresetVisualConfig | undefined
-});
-
-engine.on('notePlayed', (event) => {
-  // event.note, event.velocity, event.species
-});
-
-engine.on('noteReleased', (event) => {
-  // event.note
-});
-
-engine.on('transportStarted', () => {});
-engine.on('transportStopped', () => {});
-
-engine.on('midiConnected', (event) => {
-  // event.deviceId, event.name
-});
-
-engine.on('midiDisconnected', (event) => {
-  // event.deviceId
-});
-
-engine.on('parameterChanged', (event) => {
-  // event.id: 'growth' | 'bloom' | 'roots' | 'mold' | 'bacteria'
-  // event.value: number
-});
+engine.on('notePlayed', ({ note, velocity, source, speciesId, time }) => {});
+engine.on('noteReleased', ({ note, source, speciesId, time }) => {});
+engine.on('onset', ({ strength, time }) => {});
+const off = engine.on('controlChanged', ({ control, value }) => {});
+off();
 ```
 
-| Event | When emitted |
-|-------|--------------|
-| `speciesChanged` | `loadSpecies()` completes |
-| `notePlayed` | `noteOn()` triggers a voice |
-| `noteReleased` | `noteOff()` releases a voice |
-| `transportStarted` | `play()` called |
-| `transportStopped` | `pause()` or transport `stop()` |
-| `midiConnected` | MIDI device attached |
-| `midiDisconnected` | MIDI device removed |
-| `parameterChanged` | Any ecological control changes |
+| Event | Payload (plus `time`) | When emitted |
+|-------|------|--------------|
+| `speciesChanged` | `speciesId`, `previousSpeciesId`, `presetId?` | `loadSpecies()` or `loadPreset()` completes |
+| `notePlayed` | `note`, `velocity`, `source`, `speciesId` | a voice starts; `source` is `host`, `generative` or `midi` |
+| `noteReleased` | `note`, `source`, `speciesId` | a voice is released, same three sources |
+| `controlChanged` | `control`, `value`, `speciesId` | `setControl()` |
+| `generatorEvent` | `kind`, `note?`, `velocity?`, `intensity?`, `speciesId` | the generative engine plans a phrase, chord, drone, ornament, glitch or silence |
+| `densityChanged` | `density`, `speciesId` | the performance engine's density estimate moves |
+| `onset` | `strength` | the analyser detects a transient on the master bus (spectral flux over an adaptive threshold, 80 ms cooldown). Runs while the engine is `running`, and on every `getAudioFeatures()` read |
 
-Hosts subscribe to events; the engine never calls into host UI code directly.
+Hosts subscribe to events; the engine never calls into host UI code directly. `engine.events.hasListeners(name)` tells a host whether anything is subscribed.
 
 ### Example integration
 
@@ -584,22 +572,24 @@ export interface SoundWorld {
 }
 ```
 
-### Engine events (draft)
+### Engine events
 
 ```typescript
+type TimedEvent = { time: number };
+type NoteSource = 'host' | 'generative' | 'midi';
+
 type EngineEventMap = {
-  speciesChanged: { species: SpeciesId; visual?: PresetVisualConfig };
-  notePlayed: { note: string | number; velocity: number; species: SpeciesId };
-  noteReleased: { note: string | number };
-  transportStarted: Record<string, never>;
-  transportStopped: Record<string, never>;
-  midiConnected: { deviceId: string; name: string };
-  midiDisconnected: { deviceId: string };
-  parameterChanged: { id: EcologicalControl; value: number };
+  speciesChanged: TimedEvent & { speciesId: SpeciesId; previousSpeciesId: SpeciesId | null; presetId?: string };
+  notePlayed: TimedEvent & { note: string; velocity: number; source: NoteSource; speciesId: SpeciesId | null };
+  noteReleased: TimedEvent & { note: string; source: NoteSource; speciesId: SpeciesId | null };
+  controlChanged: TimedEvent & { control: EcologicalControl; value: number; speciesId: SpeciesId | null };
+  generatorEvent: TimedEvent & { kind: GenerativeEventKind; note?: string; velocity?: number; intensity?: number; speciesId: SpeciesId | null };
+  densityChanged: TimedEvent & { density: number; speciesId: SpeciesId | null };
+  onset: TimedEvent & { strength: number };
 };
 ```
 
-Full type exports will ship from `plantasia-sound-engine` once v2 is implemented. Hosts should import types from the package barrel, not from `src/`.
+Exported from `plantasia-sound-engine/public` as `EngineEventMap`, `EngineEventName`, `EngineEventHandler`, `EngineEventInput`, `TimedEvent`, `NoteSource`, and `AudioFeatures`, `OnsetEvent`, `BAND_EDGES_HZ`.
 
 ---
 

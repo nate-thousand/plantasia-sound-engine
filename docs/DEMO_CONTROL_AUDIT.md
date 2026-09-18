@@ -179,8 +179,7 @@ Fixed velocities in `KEY_MAP`; no octave/layout engine API wired.
 |---------|--------|--------|
 | Waveform canvas | `getWaveform()` | **Working** — master bus analyser (all paths) |
 | Master / Peak | `getLevel()` | **Working** — master bus meter (all paths) |
-| RMS | computed from waveform | Demo-only |
-| Bass / Mid / Treble | waveform thirds | Demo-only estimate |
+| RMS / Bass / Mid / Treble / Centroid / Onset | `getAudioFeatures()` | **Working**: engine analysis, master bus |
 | Live feed chips | engine state, events, notes | **Working** |
 
 ### Debug panel

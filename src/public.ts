@@ -13,7 +13,16 @@ export {
   type EngineEventMap,
   type EngineEventName,
   type EngineEventHandler,
+  type EngineEventInput,
+  type NoteSource,
+  type TimedEvent,
 } from './engine/events/EngineEventBus.js';
+
+export {
+  BAND_EDGES_HZ,
+  type AudioFeatures,
+  type OnsetEvent,
+} from './engine/analysis/AudioAnalyser.js';
 
 export {
   createEngineScheduler,

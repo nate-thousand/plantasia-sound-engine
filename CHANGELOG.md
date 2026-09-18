@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Audio analysis API**: `engine.getAudioFeatures()` returns `{ time, rms, peak, bass, mid, high, centroid, onset }` per frame from the master bus (`src/engine/analysis/AudioAnalyser.ts`). Raw values; `peak` holds and decays. `BAND_EDGES_HZ` exported
+- **`onset` event**: spectral flux over an adaptive threshold, emitted while the engine is running and on every `getAudioFeatures()` read
+- **`time` on every event**: AudioContext seconds, stamped by the bus when the emitter does not supply one (`TimedEvent`, `EngineEventInput`)
+- **`noteReleased` event** for host, generative and MIDI sources (`NoteSource`)
+- `EngineEventBus.hasListeners(name)`
+- Fifteenth postbuild gate: `scripts/test-analysis.mjs`
+- Demo: bass, mid, treble, centroid and onset meters read the engine analysis instead of waveform thirds; live feed tracks `noteReleased` and `onset`
+
 ## [1.0.0-beta.2] - 2026-09-18
 
 ### Fixed

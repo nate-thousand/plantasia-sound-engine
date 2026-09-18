@@ -14,7 +14,10 @@ export function buildGenerativeCallbacks(
       events?.emitNotePlayed({ note, velocity, source: 'generative' });
       handlers.noteOn(note, velocity);
     },
-    noteOff: handlers.noteOff,
+    noteOff: (note) => {
+      events?.emitNoteReleased({ note, source: 'generative' });
+      handlers.noteOff(note);
+    },
     onGeneratorEvent: (payload) => events?.emitGeneratorEvent(payload),
     onGlitch: (intensity) => {
       events?.emitGeneratorEvent({ kind: 'glitch', intensity });

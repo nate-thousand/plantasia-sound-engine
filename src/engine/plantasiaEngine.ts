@@ -35,6 +35,10 @@ import {
 import { createEngineScheduler, type EngineScheduler } from './scheduler/EngineScheduler.js';
 import { Transport } from './scheduler/Transport.js';
 import { createWebMidiManager, type WebMidiManager } from '../midi/WebMidiManager.js';
+import { AudioAnalyser, type AudioFeatures } from './analysis/AudioAnalyser.js';
+
+/** How often the engine reads the master bus for onsets while running. */
+const ANALYSIS_TICK_MS = 16;
 
 export type CreatePlantasiaEngineOptions = CreateSpeciesManagerOptions;
 
@@ -65,6 +69,8 @@ export class PlantasiaEngine {
   readonly midi: WebMidiManager;
 
   private readonly species: SpeciesManager;
+  private readonly analyser = new AudioAnalyser();
+  private analysisTimer: number | null = null;
   private midiBound = false;
 
   constructor(options: CreatePlantasiaEngineOptions = {}) {
@@ -77,6 +83,7 @@ export class PlantasiaEngine {
       events: this.events,
       scheduler: this.scheduler,
     });
+    this.analyser.onOnset((event) => this.events.emit('onset', event));
   }
 
   // --- v2 Sound World API (preferred) ---
@@ -152,11 +159,43 @@ export class PlantasiaEngine {
   /** Start the active Sound World (awaits audio graph readiness). */
   async start(): Promise<void> {
     await this.species.start();
+    this.startAnalysis();
   }
 
   /** Stop generative playback on the active Sound World. Idempotent. */
   stopSpecies(): void {
     this.species.stop();
+    this.stopAnalysis();
+  }
+
+  /**
+   * Per frame features from the master bus: `{ time, rms, peak, bass, mid, high, centroid, onset }`.
+   * Raw values, except `peak` which holds and decays. Poll from your render loop.
+   */
+  getAudioFeatures(): AudioFeatures {
+    return this.analyser.read();
+  }
+
+  private startAnalysis(): void {
+    if (this.analysisTimer !== null) {
+      return;
+    }
+    this.analyser.reset();
+    this.analysisTimer = this.scheduler.setInterval(
+      () => {
+        this.analyser.read();
+      },
+      ANALYSIS_TICK_MS,
+      'analysis',
+    );
+  }
+
+  private stopAnalysis(): void {
+    if (this.analysisTimer === null) {
+      return;
+    }
+    this.scheduler.clearInterval(this.analysisTimer);
+    this.analysisTimer = null;
   }
 
   noteOn(note: string, velocity = 1): void {
@@ -193,6 +232,8 @@ export class PlantasiaEngine {
         this.species.getLoader().getCurrent()?.noteOn(note, velocity);
       },
       onNoteOff: (note) => {
+        const speciesId = this.getCurrentSpecies()?.id ?? null;
+        this.events.emit('noteReleased', { note, source: 'midi', speciesId });
         this.species.getLoader().getCurrent()?.noteOff(note);
       },
     });
@@ -205,6 +246,8 @@ export class PlantasiaEngine {
       this.midi.disconnect();
       this.midiBound = false;
     }
+    this.stopAnalysis();
+    this.analyser.dispose();
     this.transport.dispose();
     this.species.dispose();
     this.scheduler.dispose();
@@ -225,6 +268,7 @@ export class PlantasiaEngine {
   stop(): void {
     this.species.stop();
     this.species.allNotesOff();
+    this.stopAnalysis();
     stopAudio();
   }
 

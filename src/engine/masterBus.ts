@@ -9,9 +9,13 @@
  */
 import * as Tone from 'tone';
 
+/** FFT bins returned by {@link getMasterSpectrum}; fftSize is twice this. */
+export const MASTER_FFT_BINS = 1024;
+
 type MasterBusNodes = {
   bus: Tone.Gain;
   analyser: Tone.Analyser;
+  fft: Tone.Analyser;
   meter: Tone.Meter;
 };
 
@@ -23,11 +27,14 @@ function ensureMasterBus(): MasterBusNodes {
   }
   const bus = new Tone.Gain(1);
   const analyser = new Tone.Analyser('waveform', 1024);
+  const fft = new Tone.Analyser('fft', MASTER_FFT_BINS);
+  fft.smoothing = 0;
   const meter = new Tone.Meter();
   bus.toDestination();
   bus.connect(analyser);
+  bus.connect(fft);
   bus.connect(meter);
-  nodes = { bus, analyser, meter };
+  nodes = { bus, analyser, fft, meter };
   return nodes;
 }
 
@@ -45,6 +52,22 @@ export function getMasterBusInput(): AudioNode {
 export function getMasterWaveform(): Float32Array {
   const value = ensureMasterBus().analyser.getValue();
   return value instanceof Float32Array ? value : new Float32Array(0);
+}
+
+/** Magnitude spectrum in dB per bin from the master bus (unsmoothed). */
+export function getMasterSpectrum(): Float32Array {
+  const value = ensureMasterBus().fft.getValue();
+  return value instanceof Float32Array ? value : new Float32Array(0);
+}
+
+/** Sample rate of the audio context the master bus lives in (0 when unknown). */
+export function getMasterSampleRate(): number {
+  try {
+    const rate = Tone.getContext().sampleRate;
+    return Number.isFinite(rate) ? rate : 0;
+  } catch {
+    return 0;
+  }
 }
 
 /** Master level normalised 0..1 from a -60 dB floor. */
