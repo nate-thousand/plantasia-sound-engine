@@ -25,14 +25,14 @@ WebKit needs its browser once: `npx playwright install webkit`.
 
 ### 1.0.0 work, 2026-09-18
 
-Apple M1, macOS 26.5.2, Playwright 1.63, sample rate 44100, engine at commit after the analysis API. Engine lookahead 0.01 s (`ENGINE_LOOK_AHEAD_SEC`).
+Apple M1, macOS 26.5.2, Playwright 1.63, sample rate 44100, 60 s long run, engine lookahead 0.01 s (`ENGINE_LOOK_AHEAD_SEC`). Chromium baseLatency 5.8 ms, WebKit 2.9 ms.
 
 | Browser | noteOn to audible (median, runs) | Dropouts in 60 s | fps under 8 ms burn | Engine ms per frame (max) |
 | --- | --- | --- | --- | --- |
-| Chromium 153 | 12.1 ms (12.1, 14.9, 17.8, 12.0, 11.7) | 0 | 60.0 | 0.079 (0.40) |
-| WebKit | not yet run | | | |
+| Chromium 153 | 12.1 ms (12.1, 12.1, 12.2, 12.1, 11.8) | 0 | 60.0 | 0.079 (0.50) |
+| WebKit 26.6 (Playwright 2359) | 12.1 ms (12.1, 12.1, 12.1, 11.3, 11.8) | 0 | 60.0 | 0.072 (1.00) |
 
-Control response, Chromium, Seed:
+Control response as first measured (single feature per control, superseded by finding 4), Chromium, Seed:
 
 | Control | Feature | Result |
 | --- | --- | --- |
