@@ -158,7 +158,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     this.applyEcology(resolution.ecology);
   }
 
-  /** Root only. Apply several ecological controls at once (0–1). */
+  /** Root only. Apply several ecological controls at once (0..1). */
   applyEcology(ecology: Partial<EcologyControlState>): void {
     for (const [control, value] of Object.entries(ecology) as [EcologicalControl, number][]) {
       if (value !== undefined) {
@@ -230,7 +230,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     this.species.setControl(control, value);
   }
 
-  /** Current value of an ecological control (0–1). */
+  /** Current value of an ecological control (0..1). */
   getControl(control: EcologicalControl): number {
     return this.species.getControl(control);
   }
