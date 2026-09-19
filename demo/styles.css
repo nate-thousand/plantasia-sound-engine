@@ -499,3 +499,17 @@ textarea {
 .not-wired label {
   color: var(--muted);
 }
+
+.group-heading {
+  padding: 0.75rem 0.75rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+  background: #0003;
+}
+
+.group-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #4ade80);
+}

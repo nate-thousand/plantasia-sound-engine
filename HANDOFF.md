@@ -26,7 +26,8 @@ See the decisions table at the top of ROADMAP.md (settled 2026-09-18). 1.0.0 nex
 
 1. Done: analysis API (`getAudioFeatures()`, `onset` event), `time` on every event, `noteReleased`. Fifteen gates.
 2. Done: browser harness (`npm run test:browser`, `docs/PERFORMANCE.md`). Chromium: noteOn to audible 12 ms (was 102 ms; lookahead now 0.01 s), zero dropouts over 60 s. WebKit not yet run (`npx playwright install webkit` first). Control response measurement needs rework before its bar is asserted; see PERFORMANCE.md findings.
-3. Next: two tier facade and `docs/API.md` as the one page public surface, then coming_soon removal, then merge to main and tag 1.0.0.
+3. Done: two tier facade (`PlantasiaEngineApi`, `public.ts` rewritten, `docs/API.md` one page, demo grouped).
+4. Next: coming_soon removal (`getUpcomingSpecies`, `'coming_soon'` status, placeholder species, demo Upcoming list), then merge to main and tag 1.0.0.
 
 ## Suggested order
 

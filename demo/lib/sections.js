@@ -134,3 +134,17 @@ export function hint(text, kind = '') {
   p.textContent = text;
   return p;
 }
+
+/** Divider between the public tier and legacy sections of the panel. */
+export function groupHeading(title, text) {
+  const el = document.createElement('div');
+  el.className = 'group-heading';
+  const h = document.createElement('div');
+  h.className = 'group-title';
+  h.textContent = title;
+  el.appendChild(h);
+  if (text) {
+    el.appendChild(hint(text));
+  }
+  return el;
+}

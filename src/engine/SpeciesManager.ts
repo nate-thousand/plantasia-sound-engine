@@ -168,6 +168,11 @@ export class SpeciesManager {
     this.loader.getCurrent()?.allNotesOff();
   }
 
+  /** Current normalized value (0–1) of an ecological control. */
+  getControl(control: EcologicalControl): number {
+    return this.ecologyControls.get(control);
+  }
+
   /**
    * Set an ecological control (normalized 0–1).
    * Stored centrally and routed to the active species when present.

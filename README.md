@@ -14,16 +14,19 @@ The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature g
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
 
 const engine = createPlantasiaEngine();
-await engine.initialize();       // user gesture required
+await engine.init();                    // user gesture required
 await engine.loadPreset('plantasonic'); // or loadSpecies('seed')
-await engine.start();
+await engine.start();                   // or start({ generative: false }) for a played instrument
 
-engine.setControl('bloom', 0.65);  // 0–1 only
+engine.setControl('bloom', 0.65);  // 0..1 only
 engine.noteOn('C4', 0.8);
 
-engine.on('notePlayed', ({ note, velocity }) => { /* visuals */ });
-engine.on('densityChanged', ({ density }) => { /* motion */ });
+engine.on('notePlayed', ({ note, velocity, time }) => { /* visuals */ });
+engine.on('onset', ({ strength }) => { /* transients */ });
+const { bass, mid, high } = engine.getAudioFeatures(); // per frame, from the master bus
 ```
+
+Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the twenty four method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
 
 ```bash
 npm install
@@ -44,7 +47,8 @@ npm run example:basic-engine
 | [docs/LIFECYCLE.md](./docs/LIFECYCLE.md) | Engine state machine |
 | [docs/EVENTS.md](./docs/EVENTS.md) | Semantic event bus |
 | [docs/SCHEDULER.md](./docs/SCHEDULER.md) | Scheduler + transport + MIDI |
-| [docs/API.md](./docs/API.md) | v2 public API + v1 compatibility |
+| [docs/API.md](./docs/API.md) | The public tier on one page |
+| [docs/API_V2_DRAFT.md](./docs/API_V2_DRAFT.md) | Earlier architecture notes, superseded |
 | [docs/DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md) | Demo control wiring audit (validation pass) |
 | [docs/SPECIES.md](./docs/SPECIES.md) | Seed, Flowers, Mold, Bacteria |
 | [ROADMAP.md](./ROADMAP.md) | Milestones and release history |
@@ -55,24 +59,20 @@ npm run example:basic-engine
 **Slim surface (recommended):**
 
 ```typescript
-import {
-  createPlantasiaEngine,
-  createPlantasonicAdapter,
-  resolvePresetToSpecies,
-  EngineEventBus,
-} from 'plantasia-sound-engine/public';
+import { createPlantasiaEngine, createPlantasonicAdapter, presets } from 'plantasia-sound-engine/public';
 ```
 
-**Full surface** (v1 + v2 internals): `import { … } from 'plantasia-sound-engine'`
+**Root export** (public tier plus v1 and internals): `import { … } from 'plantasia-sound-engine'`
 
-| Export | Description |
-|--------|-------------|
-| `createPlantasiaEngine()` | Unified facade — v2 lifecycle + v1 preset compat |
-| `createPlantasonicAdapter()` | Preset metadata + v2 audio for Plantasonic hosts |
-| `resolvePresetToSpecies()` | Map legacy preset id → species + ecology |
-| `engine.on()` / `engine.events` | Semantic events for visualization |
-| `engine.scheduler` / `engine.transport` | Central timing |
-| `engine.enableMidi()` | Web MIDI input (browser) |
+| Export | Tier | Description |
+|--------|------|-------------|
+| `createPlantasiaEngine()` | public | The engine: lifecycle, notes, ecology, species, events, analysis, MIDI |
+| `createPlantasonicAdapter()` | public | Preset metadata + v2 audio for Plantasonic hosts |
+| `presets`, `getPresetById()` | public | Shipped presets |
+| `engine.getAudioFeatures()` | public | Per frame bands, centroid, onset from the master bus |
+| `resolvePresetToSpecies()` | root | Map legacy preset id to species + ecology |
+| `EngineEventBus`, `engine.scheduler`, `engine.transport` | root | Timing and event internals |
+| `playPreset()`, `applyBotanicalControls()`, `setMold()` | root, legacy | v1 preset graph ([docs/API_V1.md](./docs/API_V1.md)) |
 
 See [docs/API.md](./docs/API.md) for the full contract.
 

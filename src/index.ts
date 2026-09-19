@@ -182,3 +182,28 @@ export type {
   PlantasonicGraph,
   PlantasonicLiveVoice,
 } from './synths/plantasonicAudio.js';
+
+// Engine internals a host may reach for (root tier only)
+export {
+  EngineEventBus,
+  type EngineEventMap,
+  type EngineEventName,
+  type EngineEventHandler,
+  type EngineEventInput,
+  type EngineEventSink,
+  type NoteSource,
+  type TimedEvent,
+} from './engine/events/EngineEventBus.js';
+export {
+  createEngineScheduler,
+  EngineScheduler,
+  Transport,
+  type TransportState,
+} from './engine/scheduler/index.js';
+export {
+  createPlantasonicAdapter,
+  PlantasonicAdapter,
+  type PlantasonicLoadResult,
+} from './integration/plantasonicAdapter.js';
+export type { PlantasiaEngineApi, SoundWorldStartOptions } from './engine/index.js';
+export type { AudioFeatures, OnsetEvent } from './engine/analysis/AudioAnalyser.js';

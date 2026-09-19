@@ -9,6 +9,7 @@ import {
   checkboxField,
   buttonRow,
   hint,
+  groupHeading,
 } from './sections.js';
 import {
   LAYER_DEFS,
@@ -54,6 +55,8 @@ export function buildUI(bridge, callbacks) {
       }
     }
   }
+
+  root.appendChild(groupHeading('Public tier (v2)', 'The twenty four method surface of plantasia-sound-engine/public: species, ecology, notes, events, analysis, MIDI.'));
 
   // --- Presets ---
   root.appendChild(createSection('presets', 'Presets', (body) => {
@@ -250,54 +253,7 @@ export function buildUI(bridge, callbacks) {
   rebuildLayers();
 
   // --- Timbre ---
-  root.appendChild(createSection('timbre', 'Timbre', (body) => {
-    refs.sliders = refs.sliders ?? {};
-    body.appendChild(hint('v2 path: FM→ecology.bacteria, mod speed→botanical.life, stereo→ecology.roots, resonance→botanical.resonance. v1 path (Play Preset Chord): filter/attack/release/oscillator via updateParameter().'));
-
-    const timbreWired = [
-      ['filterCutoff', 'Filter cutoff (Hz)', 150, 9000, 10, { v1Only: true }],
-      ['resonance', 'Resonance → botanical.resonance', 0, 100, 1, {}],
-      ['attack', 'Attack', 0.01, 2, 0.01, { v1Only: true }],
-      ['release', 'Release', 0.1, 4, 0.05, { v1Only: true }],
-      ['fmAmount', 'FM amount → ecology.bacteria', 0, 100, 1, {}],
-      ['modSpeed', 'Mod speed → botanical.life', 0, 100, 1, {}],
-      ['stereoSpread', 'Stereo spread → ecology.roots', 0, 100, 1, {}],
-    ];
-    for (const [id, label, min, max, step, opts] of timbreWired) {
-      const r = rangeField(label, `timbre-${id}`, min, max, step, bridge.timbre[id], (v) => {
-        bridge.timbre[id] = v;
-        bridge.applyTimbreControls();
-      }, opts);
-      refs.sliders['timbre_' + id] = { input: r.input, out: r.out, getValue: () => bridge.timbre[id] };
-      body.appendChild(r.field);
-    }
-
-    const osc = selectField('Oscillator', 'osc-type', [
-      { value: 'sine', label: 'Sine' },
-      { value: 'triangle', label: 'Triangle' },
-      { value: 'sawtooth', label: 'Sawtooth' },
-      { value: 'square', label: 'Square' },
-    ], 'sawtooth', (v) => { if (bridge.audioStarted) bridge.engine.updateParameter('oscillator', v); }, { v1Only: true });
-    body.appendChild(osc.field);
-  }));
-
   // --- Effects ---
-  root.appendChild(createSection('effects', 'Effects', (body) => {
-    body.appendChild(hint('Reverb/delay: v1 updateParameter + botanical.space. Distortion: engine.setMold(). Species FX chains have no per-effect host API.'));
-    const effectList = [
-      ['reverb', 'Reverb mix', {}],
-      ['delay', 'Delay mix', {}],
-      ['distortion', 'Distortion → mold', {}],
-    ];
-    for (const [id, label, opts] of effectList) {
-      const r = rangeField(label, `fx-${id}`, 0, 100, 1, bridge.effects[id] ?? 50, (v) => {
-        bridge.effects[id] = v;
-        bridge.applyEffectsControls();
-      }, opts);
-      body.appendChild(r.field);
-    }
-  }));
-
   // --- Generative ---
   root.appendChild(createSection('generative', 'Generative Engine', (body) => {
     body.appendChild(hint('Generative engine reads ecology via setControl(). Sliders map to ecology + botanical proxies.'));
@@ -327,17 +283,6 @@ export function buildUI(bridge, callbacks) {
   }));
 
   // --- Botanical (v1) ---
-  root.appendChild(createSection('botanical', 'Botanical Controls (v1)', (body) => {
-    body.appendChild(hint('engine.applyBotanicalControls() — v1 audio graph. Audible on Play Preset Chord. Mold also syncs ecology.mold.'));
-    for (const key of ['energy', 'growth', 'density', 'evolution', 'random', 'life', 'space', 'texture', 'harmony', 'resonance', 'mold']) {
-      const r = rangeField(key, `bot-${key}`, 0, 100, 1, bridge.botanical[key], (v) => {
-        if (key === 'mold') bridge.setMold(v);
-        else bridge.setBotanical(key, v);
-      });
-      body.appendChild(r.field);
-    }
-  }));
-
   // --- Audio ---
   root.appendChild(createSection('audio', 'Audio Analysis', (body) => {
     body.appendChild(hint('engine.getAudioFeatures() and getWaveform() read the master bus, so every path (v1 presets, Plantasonic, Juno, v2 species) shows here. Bass under 200 Hz, mid to 2 kHz, treble above; centroid on a log scale; onset is the spectral flux detector in the engine (also an event).'));
@@ -451,6 +396,70 @@ export function buildUI(bridge, callbacks) {
     importArea.id = 'import-json-area';
     body.appendChild(importArea);
   }));
+
+  // --- Legacy (v1) ---
+  // ROADMAP decision 13: the v1 preset graph stays wired in the demo, grouped
+  // here so a visitor can see which half of the engine to build on.
+  root.appendChild(groupHeading('Legacy (v1)', 'Root export only: playPreset(), updateParameter(), applyBotanicalControls(), setMold(). Audible through Play Preset Chord. New hosts build on the sections above (plantasia-sound-engine/public).'));
+
+  root.appendChild(createSection('timbre', 'Timbre', (body) => {
+    refs.sliders = refs.sliders ?? {};
+    body.appendChild(hint('v2 path: FM→ecology.bacteria, mod speed→botanical.life, stereo→ecology.roots, resonance→botanical.resonance. v1 path (Play Preset Chord): filter/attack/release/oscillator via updateParameter().'));
+
+    const timbreWired = [
+      ['filterCutoff', 'Filter cutoff (Hz)', 150, 9000, 10, { v1Only: true }],
+      ['resonance', 'Resonance → botanical.resonance', 0, 100, 1, {}],
+      ['attack', 'Attack', 0.01, 2, 0.01, { v1Only: true }],
+      ['release', 'Release', 0.1, 4, 0.05, { v1Only: true }],
+      ['fmAmount', 'FM amount → ecology.bacteria', 0, 100, 1, {}],
+      ['modSpeed', 'Mod speed → botanical.life', 0, 100, 1, {}],
+      ['stereoSpread', 'Stereo spread → ecology.roots', 0, 100, 1, {}],
+    ];
+    for (const [id, label, min, max, step, opts] of timbreWired) {
+      const r = rangeField(label, `timbre-${id}`, min, max, step, bridge.timbre[id], (v) => {
+        bridge.timbre[id] = v;
+        bridge.applyTimbreControls();
+      }, opts);
+      refs.sliders['timbre_' + id] = { input: r.input, out: r.out, getValue: () => bridge.timbre[id] };
+      body.appendChild(r.field);
+    }
+
+    const osc = selectField('Oscillator', 'osc-type', [
+      { value: 'sine', label: 'Sine' },
+      { value: 'triangle', label: 'Triangle' },
+      { value: 'sawtooth', label: 'Sawtooth' },
+      { value: 'square', label: 'Square' },
+    ], 'sawtooth', (v) => { if (bridge.audioStarted) bridge.engine.updateParameter('oscillator', v); }, { v1Only: true });
+    body.appendChild(osc.field);
+  }));
+
+  root.appendChild(createSection('effects', 'Effects', (body) => {
+    body.appendChild(hint('Reverb/delay: v1 updateParameter + botanical.space. Distortion: engine.setMold(). Species FX chains have no per-effect host API.'));
+    const effectList = [
+      ['reverb', 'Reverb mix', {}],
+      ['delay', 'Delay mix', {}],
+      ['distortion', 'Distortion → mold', {}],
+    ];
+    for (const [id, label, opts] of effectList) {
+      const r = rangeField(label, `fx-${id}`, 0, 100, 1, bridge.effects[id] ?? 50, (v) => {
+        bridge.effects[id] = v;
+        bridge.applyEffectsControls();
+      }, opts);
+      body.appendChild(r.field);
+    }
+  }));
+
+  root.appendChild(createSection('botanical', 'Botanical Controls (v1)', (body) => {
+    body.appendChild(hint('engine.applyBotanicalControls() — v1 audio graph. Audible on Play Preset Chord. Mold also syncs ecology.mold.'));
+    for (const key of ['energy', 'growth', 'density', 'evolution', 'random', 'life', 'space', 'texture', 'harmony', 'resonance', 'mold']) {
+      const r = rangeField(key, `bot-${key}`, 0, 100, 1, bridge.botanical[key], (v) => {
+        if (key === 'mold') bridge.setMold(v);
+        else bridge.setBotanical(key, v);
+      });
+      body.appendChild(r.field);
+    }
+  }));
+
 
   // --- Debug ---
   root.appendChild(createSection('debug', 'Debug Panel', (body) => {

@@ -19,8 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `engine.start({ generative: false })` runs the species graph for played notes without starting its generator (`SoundWorldStartOptions`)
 - `ENGINE_LOOK_AHEAD_SEC` and `configureContextLatency()`; `getMasterBus()`, `getMasterBusInput()`, `audioNow()`, `AudioAnalyser` and `BAND_EDGES_HZ` on the root export
 
+- **Two tier facade** (ROADMAP decision 5): `plantasia-sound-engine/public` now types the engine as `PlantasiaEngineApi` (exported as `PlantasiaEngine` there): twenty four methods, presets, adapter, events, features, errors. The root export keeps the full class with the v1 preset path and internals; `initialize` is deprecated in favour of `init`. `engine.getControl(control)` added. `docs/API.md` rewritten as the one page public surface; the earlier draft moved to `docs/API_V2_DRAFT.md`
+- Demo: sections grouped under Public tier (v2) and Legacy (v1) headings (decision 13)
+
 ### Changed
 
+- `plantasia-sound-engine/public` no longer exports `resolvePresetToSpecies`, `PRESET_SPECIES_MAP`, the species factories, `EngineEventBus`, or the scheduler classes; all remain on the root export
 - Scheduling lookahead on the shared Tone context is 0.01 s instead of Tone's 0.1 s default. noteOn to audible in Chromium went from 102 ms to 12 ms with zero dropouts over 60 s
 - Demo: bass, mid, treble, centroid and onset meters read the engine analysis instead of waveform thirds; live feed tracks `noteReleased` and `onset`
 

@@ -17,24 +17,32 @@ async function main() {
   const facade = await import(join(root, 'dist/public.js'));
   const full = await import(join(root, 'dist/index.js'));
 
+  // Public tier (ROADMAP decision 5): what ships, and what does not.
   for (const name of [
     'createPlantasiaEngine',
-    'resolvePresetToSpecies',
-    'PRESET_SPECIES_MAP',
-    'createSeedSoundWorld',
+    'presets',
+    'getPresetById',
+    'resolvePresetId',
+    'createPlantasonicAdapter',
+    'ECOLOGICAL_CONTROLS',
+    'BAND_EDGES_HZ',
+    'EngineLifecycleError',
   ]) {
     assert(typeof facade[name] !== 'undefined', `public export missing: ${name}`);
   }
+  for (const name of ['resolvePresetToSpecies', 'PRESET_SPECIES_MAP', 'createSeedSoundWorld', 'EngineEventBus', 'Transport']) {
+    assert(typeof facade[name] === 'undefined', `public export should be root only: ${name}`);
+    assert(typeof full[name] !== 'undefined', `root export missing: ${name}`);
+  }
 
   assert(typeof full.createPlantasiaEngine === 'function', 'root still exports facade');
-  assert(typeof full.resolvePresetToSpecies === 'function', 'root exports resolvePresetToSpecies');
 
-  const resolution = facade.resolvePresetToSpecies('plantasonic');
+  const resolution = full.resolvePresetToSpecies('plantasonic');
   assert(resolution.speciesId === 'seed', 'plantasonic maps to seed');
   assert(resolution.presetId === 'plantasonic', 'canonical preset id');
   assert(resolution.ecology.growth >= 0 && resolution.ecology.growth <= 1, 'ecology normalized');
 
-  const moss = facade.resolvePresetToSpecies('moss');
+  const moss = full.resolvePresetToSpecies('moss');
   assert(moss.presetId === 'seed', 'moss alias resolves to seed preset');
   assert(moss.speciesId === 'seed', 'moss maps to seed species');
 
@@ -76,9 +84,20 @@ async function main() {
   }
   assert(noteBeforeStart, 'facade noteOn before start throws');
 
-  assert(typeof engine.initialize === 'function', 'initialize alias exists');
-  assert(typeof engine.loadSpecies === 'function', 'loadSpecies on facade');
-  assert(typeof engine.setControl === 'function', 'setControl on facade');
+  // The twenty four public tier methods (decision 5) are all callable.
+  const PUBLIC_METHODS = [
+    'init', 'loadSpecies', 'loadDefaultSpecies', 'loadPreset', 'start', 'stop', 'dispose', 'getState',
+    'noteOn', 'noteOff', 'allNotesOff', 'setControl', 'getControl', 'setTempo',
+    'getCurrentSpecies', 'getAvailableSpecies', 'registerSpecies',
+    'on', 'off', 'getAudioFeatures', 'getWaveform', 'getLevel', 'enableMidi',
+  ];
+  for (const name of PUBLIC_METHODS) {
+    assert(typeof engine[name] === 'function', `public method missing: ${name}`);
+  }
+  assert(PUBLIC_METHODS.length === 23, 'twenty three methods plus createPlantasiaEngine');
+  engine.setControl('bloom', 0.61);
+  assert(Math.abs(engine.getControl('bloom') - 0.61) < 1e-9, 'getControl reads back setControl');
+  assert(typeof engine.initialize === 'function', 'initialize alias kept on root instance');
 
   engine.dispose();
   console.log('[test-facade] OK — unified facade validated');

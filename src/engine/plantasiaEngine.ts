@@ -42,6 +42,7 @@ import { createEngineScheduler, type EngineScheduler } from './scheduler/EngineS
 import { Transport } from './scheduler/Transport.js';
 import { createWebMidiManager, type WebMidiManager } from '../midi/WebMidiManager.js';
 import { AudioAnalyser, type AudioFeatures } from './analysis/AudioAnalyser.js';
+import type { PlantasiaEngineApi } from './PlantasiaEngineApi.js';
 
 /** How often the engine reads the master bus for onsets while running. */
 const ANALYSIS_TICK_MS = 16;
@@ -50,9 +51,13 @@ export type CreatePlantasiaEngineOptions = CreateSpeciesManagerOptions;
 
 /**
  * Unified host facade — v2 Sound World lifecycle + v1 preset compatibility.
- * Prefer this entry point over {@link createSpeciesManager} for new integrations.
+ *
+ * Two tiers (ROADMAP decision 5): the methods of {@link PlantasiaEngineApi}
+ * are the public surface and the only ones `plantasia-sound-engine/public`
+ * types. Everything below the "root only" and "legacy" markers ships from the
+ * root export for existing hosts and the demo.
  */
-export class PlantasiaEngine {
+export class PlantasiaEngine implements PlantasiaEngineApi {
   /** Preset definitions shipped with the engine (v1). */
   readonly presets = presets;
 
@@ -104,7 +109,7 @@ export class PlantasiaEngine {
     return this.species.getAvailableSpecies();
   }
 
-  /** Coming soon species when registered via {@link CreatePlantasiaEngineOptions.includeFuture}. */
+  /** Root only. Coming soon species when registered via {@link CreatePlantasiaEngineOptions.includeFuture}. */
   getUpcomingSpecies(): SoundWorldMetadata[] {
     return this.species.getUpcomingSpecies();
   }
@@ -124,12 +129,12 @@ export class PlantasiaEngine {
     this.events.off(event, handler);
   }
 
-  /** Unlock the audio context (requires user gesture in browsers). Alias: {@link initialize}. */
+  /** Unlock the audio context (requires user gesture in browsers). */
   async init(): Promise<void> {
     return initAudio();
   }
 
-  /** Alias for {@link init} — v2 lifecycle naming. */
+  /** @deprecated Root only. Use {@link init}. */
   async initialize(): Promise<void> {
     return this.init();
   }
@@ -153,7 +158,7 @@ export class PlantasiaEngine {
     this.applyEcology(resolution.ecology);
   }
 
-  /** Apply normalized ecological control state (0–1). */
+  /** Root only. Apply several ecological controls at once (0–1). */
   applyEcology(ecology: Partial<EcologyControlState>): void {
     for (const [control, value] of Object.entries(ecology) as [EcologicalControl, number][]) {
       if (value !== undefined) {
@@ -172,7 +177,7 @@ export class PlantasiaEngine {
     this.startAnalysis();
   }
 
-  /** Stop generative playback on the active Sound World. Idempotent. */
+  /** Root only. Stop generative playback on the active Sound World. Idempotent. Public tier hosts use {@link stop}. */
   stopSpecies(): void {
     this.species.stop();
     this.stopAnalysis();
@@ -225,6 +230,11 @@ export class PlantasiaEngine {
     this.species.setControl(control, value);
   }
 
+  /** Current value of an ecological control (0–1). */
+  getControl(control: EcologicalControl): number {
+    return this.species.getControl(control);
+  }
+
   /** Register an external Sound World plugin at runtime. */
   registerSpecies(factory: () => SoundWorld): void {
     this.species.registerFactory(factory);
@@ -264,7 +274,7 @@ export class PlantasiaEngine {
     this.events.clear();
   }
 
-  // --- v1 preset API (legacy — preserved) ---
+  // --- v1 preset API (legacy, root export only, preserved) ---
 
   /** Apply preset synth settings and trigger a chord (v1 path). */
   playPreset(preset: PlantasiaPreset): void {
@@ -272,8 +282,8 @@ export class PlantasiaEngine {
   }
 
   /**
-   * Stop all audio — v1 preset voices and active v2 species playback.
-   * Prefer {@link stopSpecies} when only the Sound World layer should stop.
+   * Stop playback and release every voice: the active species (state returns
+   * to `loaded`) and any v1 preset voices. Public tier.
    */
   stop(): void {
     this.species.stop();
