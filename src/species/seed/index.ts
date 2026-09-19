@@ -1,5 +1,7 @@
 import * as Tone from 'tone';
 import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
+import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
+import { ChangeGate, mergeModulationTargets } from '../../shared/modulationFrame.js';
 import {
   connectSeedEffects,
   createSeedEffects,
@@ -58,6 +60,8 @@ export class SeedSoundWorld implements SoundWorld {
   private effects: SeedEffectsNodes | null = null;
   private generator: SeedGenerator | null = null;
   private controls: SeedControlState = { ...DEFAULT_CONTROLS };
+  private modulation: SpeciesModulationFrame | null = null;
+  private readonly gate = new ChangeGate();
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: SeedPerformanceBase | null = null;
@@ -110,6 +114,11 @@ export class SeedSoundWorld implements SoundWorld {
 
   allNotesOff(): void {
     this.synth?.poly.releaseAll();
+  }
+
+  applyModulation(frame: SpeciesModulationFrame): void {
+    this.modulation = frame.routes > 0 ? frame : null;
+    this.applyEcologicalControls(frame.rampSec);
   }
 
   setControl(control: EcologicalControl, value: number): void {
@@ -171,6 +180,8 @@ export class SeedSoundWorld implements SoundWorld {
   }
 
   private teardownGraph(): void {
+    this.gate.reset();
+    this.modulation = null;
     this.performance?.reset();
     this.performance = null;
     this.performanceBase = null;
@@ -186,19 +197,27 @@ export class SeedSoundWorld implements SoundWorld {
     }
   }
 
-  private applyEcologicalControls(): void {
+  /** Host controls, or the modulated values of the current frame. */
+  private effectiveControls(): SeedControlState {
+    return this.modulation?.controls ?? this.controls;
+  }
+
+  private applyEcologicalControls(rampSec = 0.2): void {
     if (!this.synth || !this.effects) {
       return;
     }
 
-    const growth = this.controls.growth / 100;
-    const bloom = this.controls.bloom / 100;
-    const roots = this.controls.roots / 100;
-    const mold = this.controls.mold / 100;
-    const bacteria = this.controls.bacteria / 100;
+    const controls = this.effectiveControls();
+    const growth = controls.growth / 100;
+    const bloom = controls.bloom / 100;
+    const roots = controls.roots / 100;
+    const mold = controls.mold / 100;
+    const bacteria = controls.bacteria / 100;
 
     const polyphony = Math.round(3 + growth * (SEED_MAX_POLYPHONY - 3));
-    this.synth.poly.maxPolyphony = polyphony;
+    if (this.gate.changed('polyphony', polyphony, 0.5)) {
+      this.synth.poly.maxPolyphony = polyphony;
+    }
 
     const filterOpen =
       SEED_FILTER_HZ * (1 + growth * 0.22 + bloom * 0.12) * (1 - roots * 0.1);
@@ -222,12 +241,12 @@ export class SeedSoundWorld implements SoundWorld {
       driftLfoRate: bacteria > 0.01 ? 0.04 + bacteria * 0.12 : 0,
     };
 
-    syncGeneratorEcology(this.generator, this.controls);
-    syncPerformanceEcology(this.performance, this.controls);
-    this.applyPerformanceModulation();
+    syncGeneratorEcology(this.generator, controls);
+    syncPerformanceEcology(this.performance, controls);
+    this.applyPerformanceModulation(rampSec);
   }
 
-  private applyPerformanceModulation(): void {
+  private applyPerformanceModulation(rampSec = 0.2): void {
     if (!this.synth || !this.effects || !this.performance || !this.performanceBase) {
       return;
     }
@@ -235,8 +254,10 @@ export class SeedSoundWorld implements SoundWorld {
       this.synth,
       this.effects,
       this.performanceBase,
-      this.performance.getTargets(),
+      mergeModulationTargets(this.performance.getTargets(), this.modulation),
       this.audioStarted,
+      rampSec,
+      this.gate,
     );
   }
 }

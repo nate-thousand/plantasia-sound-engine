@@ -1,5 +1,6 @@
 import type { EcologicalControl, SpeciesId, SoundWorld, SoundWorldMetadata, SoundWorldStartOptions } from './SoundWorld.js';
-import { EcologyControls, toSpeciesControlValue } from './EcologyControls.js';
+import { ECOLOGICAL_CONTROLS, EcologyControls, toSpeciesControlValue, type EcologyControlState } from './EcologyControls.js';
+import type { ModulationFrame } from './modulation/types.js';
 import { assertNormalizedEcologyValue } from './EcologyControlScaleError.js';
 import {
   assertEngineRunning,
@@ -167,6 +168,24 @@ export class SpeciesManager {
   /** Current normalized value (0..1) of an ecological control. */
   getControl(control: EcologicalControl): number {
     return this.ecologyControls.get(control);
+  }
+
+  /** Snapshot of every control's base value. */
+  getControlState(): EcologyControlState {
+    return { ...this.ecologyControls.getState() };
+  }
+
+  /** Hand a modulation frame to the loaded species, converted to its 0..100 scale. */
+  applyModulation(frame: ModulationFrame, rampSec: number): void {
+    const active = this.loader.getCurrent();
+    if (!active?.applyModulation || this.state !== 'running') {
+      return;
+    }
+    const controls = {} as Record<EcologicalControl, number>;
+    for (const control of ECOLOGICAL_CONTROLS) {
+      controls[control] = toSpeciesControlValue(frame.controls[control]);
+    }
+    active.applyModulation({ controls, targets: frame.targets, rampSec, routes: frame.routes });
   }
 
   /**

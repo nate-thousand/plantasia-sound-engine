@@ -1,5 +1,7 @@
 import * as Tone from 'tone';
 import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
+import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
+import { ChangeGate, mergeModulationTargets } from '../../shared/modulationFrame.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 import {
   connectMoldEffects,
@@ -64,6 +66,8 @@ export class MoldSoundWorld implements SoundWorld {
   private effects: MoldEffectsNodes | null = null;
   private generator: MoldGenerator | null = null;
   private controls: MoldControlState = { ...DEFAULT_CONTROLS };
+  private modulation: SpeciesModulationFrame | null = null;
+  private readonly gate = new ChangeGate();
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: MoldPerformanceBase | null = null;
@@ -104,7 +108,7 @@ export class MoldSoundWorld implements SoundWorld {
     this.eventSink?.emitDensityChanged({
       density: this.performance?.getDensityEngine().getState().averageDensity ?? 0,
     });
-    const roots = this.controls.roots / 100;
+    const roots = this.effectiveControls().roots / 100;
     const transpose = roots > 0.35 ? -12 : roots > 0.15 ? -7 : 0;
     const pitched = Tone.Frequency(note).transpose(transpose).toNote();
     const layers = this.layerLevels();
@@ -117,7 +121,7 @@ export class MoldSoundWorld implements SoundWorld {
     }
     this.performance?.noteOff(note);
     this.applyPerformanceModulation();
-    const roots = this.controls.roots / 100;
+    const roots = this.effectiveControls().roots / 100;
     const transpose = roots > 0.35 ? -12 : roots > 0.15 ? -7 : 0;
     const pitched = Tone.Frequency(note).transpose(transpose).toNote();
     triggerMoldRelease(this.synth, pitched);
@@ -127,6 +131,11 @@ export class MoldSoundWorld implements SoundWorld {
     if (this.synth) {
       releaseAllMold(this.synth);
     }
+  }
+
+  applyModulation(frame: SpeciesModulationFrame): void {
+    this.modulation = frame.routes > 0 ? frame : null;
+    this.applyEcologicalControls(frame.rampSec);
   }
 
   setControl(control: EcologicalControl, value: number): void {
@@ -144,7 +153,7 @@ export class MoldSoundWorld implements SoundWorld {
   }
 
   private layerLevels(): { fmLevel: number; harmonicLevel: number; noiseLevel: number } {
-    const growth = this.controls.growth / 100;
+    const growth = this.effectiveControls().growth / 100;
     return {
       fmLevel: 0.15 + growth * 0.75,
       harmonicLevel: 0.08 + growth * 0.65,
@@ -203,6 +212,8 @@ export class MoldSoundWorld implements SoundWorld {
   }
 
   private teardownGraph(): void {
+    this.gate.reset();
+    this.modulation = null;
     this.performance?.reset();
     this.performance = null;
     this.performanceBase = null;
@@ -218,27 +229,35 @@ export class MoldSoundWorld implements SoundWorld {
     }
   }
 
-  private applyEcologicalControls(): void {
+  /** Host controls, or the modulated values of the current frame. */
+  private effectiveControls(): MoldControlState {
+    return this.modulation?.controls ?? this.controls;
+  }
+
+  private applyEcologicalControls(rampSec = 0.2): void {
     if (!this.synth || !this.effects) {
       return;
     }
 
-    const growth = this.controls.growth / 100;
-    const bloom = this.controls.bloom / 100;
-    const roots = this.controls.roots / 100;
-    const mold = this.controls.mold / 100;
-    const bacteria = this.controls.bacteria / 100;
+    const controls = this.effectiveControls();
+    const growth = controls.growth / 100;
+    const bloom = controls.bloom / 100;
+    const roots = controls.roots / 100;
+    const mold = controls.mold / 100;
+    const bacteria = controls.bacteria / 100;
 
     const polyphony = Math.round(2 + growth * (MOLD_MAX_POLYPHONY - 2));
-    this.synth.dronePoly.maxPolyphony = polyphony;
-    this.synth.fmPoly.maxPolyphony = polyphony;
-    this.synth.harmonicPoly.maxPolyphony = polyphony;
+    if (this.gate.changed('polyphony', polyphony, 0.5)) {
+      this.synth.dronePoly.maxPolyphony = polyphony;
+      this.synth.fmPoly.maxPolyphony = polyphony;
+      this.synth.harmonicPoly.maxPolyphony = polyphony;
+    }
 
     const bandCenter = MOLD_BANDPASS_HZ * (0.75 + roots * 0.35) * (1 + bloom * 0.28);
     const filterDepth = 0.22 + mold * 0.28 + bacteria * 0.08;
     const layers = this.layerLevels();
-    this.synth.fmPoly.volume.value = Tone.gainToDb(layers.fmLevel);
-    this.synth.harmonicPoly.volume.value = Tone.gainToDb(layers.harmonicLevel);
+    setRampParam(this.audioStarted, this.synth.fmPoly.volume as unknown as RampParam, Tone.gainToDb(layers.fmLevel), rampSec);
+    setRampParam(this.audioStarted, this.synth.harmonicPoly.volume as unknown as RampParam, Tone.gainToDb(layers.harmonicLevel), rampSec);
 
     const preBandCenter = MOLD_PRE_BANDPASS_HZ * (0.7 + bloom * 0.55) * (0.85 + roots * 0.25);
 
@@ -269,12 +288,12 @@ export class MoldSoundWorld implements SoundWorld {
 
     setRampParam(this.audioStarted, this.synth.noiseGain.gain as unknown as RampParam, layers.noiseLevel);
 
-    syncGeneratorEcology(this.generator, this.controls);
-    syncPerformanceEcology(this.performance, this.controls);
-    this.applyPerformanceModulation();
+    syncGeneratorEcology(this.generator, controls);
+    syncPerformanceEcology(this.performance, controls);
+    this.applyPerformanceModulation(rampSec);
   }
 
-  private applyPerformanceModulation(): void {
+  private applyPerformanceModulation(rampSec = 0.2): void {
     if (!this.synth || !this.effects || !this.performance || !this.performanceBase) {
       return;
     }
@@ -282,8 +301,10 @@ export class MoldSoundWorld implements SoundWorld {
       this.synth,
       this.effects,
       this.performanceBase,
-      this.performance.getTargets(),
+      mergeModulationTargets(this.performance.getTargets(), this.modulation),
       this.audioStarted,
+      rampSec,
+      this.gate,
     );
   }
 }

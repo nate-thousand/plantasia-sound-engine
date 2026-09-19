@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Modulation engine** (1.1 step 1, ROADMAP decisions for 1.1.0): `engine.modulate(source, destination, depth)` with descriptor sources `lfo`, `sample-hold`, `follower` (MIDI sources typed, active after step 3), destinations the five controls or `target:<PerformanceTargets key>`, `MODULATION_TARGET_SPANS`, `removeModulation`, `getModulationRoutes`, `getModulationState`, `modulationChanged` event. Additive on the host's base; ticks at 30 Hz on the scheduler while running
+- `SoundWorld.applyModulation(frame)` optional hook, implemented by all four species with a one tick ramp and change gated `PolySynth.set` calls; documented in the species template
+- `Transport.getPlayCount()` for beat synced sources
+- Sixteenth gate `scripts/test-modulation.mjs`
+
 ## [1.0.0] - 2026-09-18
 
 First stable release of the Sound World engine. The public tier (`plantasia-sound-engine/public`) is the frozen surface: twenty four methods, presets, events, audio features. Measured in Chromium and WebKit: noteOn to audible 12 ms, zero dropouts over 60 s under a mock visual load ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)). Branch `v2-sound-world-engine` merges into `main` at this tag.

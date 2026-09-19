@@ -36,6 +36,21 @@ export {
   type OnsetEvent,
 } from './engine/analysis/AudioAnalyser.js';
 
+// Modulation (1.1)
+export {
+  MODULATABLE_TARGETS,
+  MODULATION_TARGET_SPANS,
+  ModulationRouteError,
+  type ModulationSourceDescriptor,
+  type ModulationDestination,
+  type ModulationRoute,
+  type ModulationRouteConfig,
+  type ModulationState,
+  type ModulatableTarget,
+  type LfoShape,
+  type FollowerBand,
+} from './engine/modulation/index.js';
+
 // Lifecycle, errors, control ids
 export {
   DEFAULT_SPECIES_ID,
@@ -53,6 +68,7 @@ export type {
   SoundWorld,
   SoundWorldMetadata,
   SoundWorldStartOptions,
+  SpeciesModulationFrame,
 } from './engine/index.js';
 
 // Presets

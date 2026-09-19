@@ -1,5 +1,6 @@
 import type { PerformanceTargets } from '../../engine/performance/types.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { ChangeGate } from '../../shared/modulationFrame.js';
 import {
   applyBacteriaEffectsLevels,
   type BacteriaEffectsLevels,
@@ -20,17 +21,19 @@ export function applyBacteriaPerformance(
   base: BacteriaPerformanceBase,
   targets: PerformanceTargets,
   audioStarted: boolean,
+  rampSec = 0.2,
+  gate?: ChangeGate,
 ): void {
   const highpass =
-    base.highpassHz * targets.filterCutoffMult * (1 + targets.brightnessAdd * 0.12);
-  setRampParam(audioStarted, synth.highpass.frequency as unknown as RampParam, highpass);
+    base.highpassHz * Math.max(0.05, targets.filterCutoffMult) * (1 + targets.brightnessAdd * 0.12);
+  setRampParam(audioStarted, synth.highpass.frequency as unknown as RampParam, highpass, rampSec);
 
   const filterDepth = base.filterDepth + targets.instabilityAdd * 0.12;
   synth.filterDriftLfo.min = highpass * (1 - filterDepth);
   synth.filterDriftLfo.max = highpass * (1 + filterDepth);
 
   const panRate = base.panRate * targets.particleRateMult;
-  setRampParam(audioStarted, synth.panDriftLfo.frequency as unknown as RampParam, panRate);
+  setRampParam(audioStarted, synth.panDriftLfo.frequency as unknown as RampParam, panRate, rampSec);
 
   applyBacteriaEffectsLevels(
     effects,
@@ -42,6 +45,8 @@ export function applyBacteriaPerformance(
       roomWet: Math.min(0.85, base.effectLevels.roomWet + targets.reverbWetAdd),
     },
     audioStarted,
+    rampSec,
+    gate,
   );
 }
 

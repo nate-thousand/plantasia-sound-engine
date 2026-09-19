@@ -1,5 +1,8 @@
 import * as Tone from 'tone';
 import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
+import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
+import { ChangeGate, mergeModulationTargets } from '../../shared/modulationFrame.js';
 import {
   connectFlowersEffects,
   createFlowersEffects,
@@ -62,6 +65,8 @@ export class FlowersSoundWorld implements SoundWorld {
   private effects: FlowersEffectsNodes | null = null;
   private generator: FlowersGenerator | null = null;
   private controls: FlowersControlState = { ...DEFAULT_CONTROLS };
+  private modulation: SpeciesModulationFrame | null = null;
+  private readonly gate = new ChangeGate();
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: FlowersPerformanceBase | null = null;
@@ -118,6 +123,11 @@ export class FlowersSoundWorld implements SoundWorld {
     if (this.synth) {
       releaseAllFlowers(this.synth);
     }
+  }
+
+  applyModulation(frame: SpeciesModulationFrame): void {
+    this.modulation = frame.routes > 0 ? frame : null;
+    this.applyEcologicalControls(frame.rampSec);
   }
 
   setControl(control: EcologicalControl, value: number): void {
@@ -179,6 +189,8 @@ export class FlowersSoundWorld implements SoundWorld {
   }
 
   private teardownGraph(): void {
+    this.gate.reset();
+    this.modulation = null;
     this.performance?.reset();
     this.performance = null;
     this.performanceBase = null;
@@ -194,26 +206,34 @@ export class FlowersSoundWorld implements SoundWorld {
     }
   }
 
-  private applyEcologicalControls(): void {
+  /** Host controls, or the modulated values of the current frame. */
+  private effectiveControls(): FlowersControlState {
+    return this.modulation?.controls ?? this.controls;
+  }
+
+  private applyEcologicalControls(rampSec = 0.2): void {
     if (!this.synth || !this.effects) {
       return;
     }
 
-    const growth = this.controls.growth / 100;
-    const bloom = this.controls.bloom / 100;
-    const roots = this.controls.roots / 100;
-    const mold = this.controls.mold / 100;
-    const bacteria = this.controls.bacteria / 100;
+    const controls = this.effectiveControls();
+    const growth = controls.growth / 100;
+    const bloom = controls.bloom / 100;
+    const roots = controls.roots / 100;
+    const mold = controls.mold / 100;
+    const bacteria = controls.bacteria / 100;
 
     const polyphony = Math.round(4 + growth * (FLOWERS_MAX_POLYPHONY - 4));
-    this.synth.sawPoly.maxPolyphony = polyphony;
-    this.synth.pwmPoly.maxPolyphony = polyphony;
-    this.synth.subPoly.maxPolyphony = polyphony;
+    if (this.gate.changed('polyphony', polyphony, 0.5)) {
+      this.synth.sawPoly.maxPolyphony = polyphony;
+      this.synth.pwmPoly.maxPolyphony = polyphony;
+      this.synth.subPoly.maxPolyphony = polyphony;
+    }
 
     const filterOpen = FLOWERS_FILTER_HZ * (1 + bloom * 0.35 + growth * 0.12);
     const filterDepth = 0.14 + bloom * 0.12 + mold * 0.06;
     const subLevel = FLOWERS_SUB_LEVEL * (0.6 + roots * 0.85);
-    this.synth.subPoly.volume.value = Tone.gainToDb(subLevel);
+    setRampParam(this.audioStarted, this.synth.subPoly.volume as unknown as RampParam, Tone.gainToDb(subLevel), rampSec);
 
     const pwmWidth = 0.85 + mold * 0.22;
     const detuneSpread = 18 + mold * 14;
@@ -238,12 +258,12 @@ export class FlowersSoundWorld implements SoundWorld {
       },
     };
 
-    syncGeneratorEcology(this.generator, this.controls);
-    syncPerformanceEcology(this.performance, this.controls);
-    this.applyPerformanceModulation();
+    syncGeneratorEcology(this.generator, controls);
+    syncPerformanceEcology(this.performance, controls);
+    this.applyPerformanceModulation(rampSec);
   }
 
-  private applyPerformanceModulation(): void {
+  private applyPerformanceModulation(rampSec = 0.2): void {
     if (!this.synth || !this.effects || !this.performance || !this.performanceBase) {
       return;
     }
@@ -251,8 +271,10 @@ export class FlowersSoundWorld implements SoundWorld {
       this.synth,
       this.effects,
       this.performanceBase,
-      this.performance.getTargets(),
+      mergeModulationTargets(this.performance.getTargets(), this.modulation),
       this.audioStarted,
+      rampSec,
+      this.gate,
     );
   }
 }

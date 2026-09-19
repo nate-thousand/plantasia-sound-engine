@@ -42,6 +42,17 @@ import { createEngineScheduler, type EngineScheduler } from './scheduler/EngineS
 import { Transport } from './scheduler/Transport.js';
 import { createWebMidiManager, type WebMidiManager } from '../midi/WebMidiManager.js';
 import { AudioAnalyser, type AudioFeatures } from './analysis/AudioAnalyser.js';
+import { ModulationEngine } from './modulation/ModulationEngine.js';
+import type { ModulationEnvironment } from './modulation/sources.js';
+import {
+  MODULATION_RAMP_SEC,
+  MODULATION_TICK_MS,
+  type ModulationDestination,
+  type ModulationRoute,
+  type ModulationRouteConfig,
+  type ModulationSourceDescriptor,
+  type ModulationState,
+} from './modulation/types.js';
 import type { PlantasiaEngineApi } from './PlantasiaEngineApi.js';
 
 /** How often the engine reads the master bus for onsets while running. */
@@ -81,7 +92,10 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
 
   private readonly species: SpeciesManager;
   private readonly analyser = new AudioAnalyser();
+  private readonly modulation: ModulationEngine;
   private analysisTimer: number | null = null;
+  private modulationTimer: number | null = null;
+  private lastModulationTick = 0;
   private midiBound = false;
 
   constructor(options: CreatePlantasiaEngineOptions = {}) {
@@ -95,6 +109,15 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
       scheduler: this.scheduler,
     });
     this.analyser.onOnset((event) => this.events.emit('onset', event));
+
+    const env: ModulationEnvironment = {
+      bpm: () => this.transport.getBpm(),
+      transportPlayCount: () => this.transport.getPlayCount(),
+      features: () => this.analyser.read(),
+      midi: () => null,
+    };
+    this.modulation = new ModulationEngine(env, () => this.species.getControlState());
+    this.modulation.onChange((routes) => this.events.emit('modulationChanged', { routes }));
   }
 
   // --- v2 Sound World API (preferred) ---
@@ -171,12 +194,67 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   async start(options?: SoundWorldStartOptions): Promise<void> {
     await this.species.start(options);
     this.startAnalysis();
+    this.startModulation();
   }
 
   /** Root only. Stop generative playback on the active Sound World. Idempotent. Public tier hosts use {@link stop}. */
   stopSpecies(): void {
     this.species.stop();
     this.stopAnalysis();
+    this.stopModulation();
+  }
+
+  // --- modulation (1.1) ---
+
+  /**
+   * Route a modulation source to an ecology control or a performance target.
+   * Adds to the host's base value; `setControl` and `getControl` are untouched.
+   */
+  modulate(source: ModulationSourceDescriptor, destination: ModulationDestination, depth: number): ModulationRoute {
+    return this.modulation.modulate(source, destination, depth);
+  }
+
+  /** Remove a route by id. Returns false when there was none. */
+  removeModulation(id: string): boolean {
+    return this.modulation.remove(id);
+  }
+
+  /** Every route as serializable config. */
+  getModulationRoutes(): ModulationRouteConfig[] {
+    return this.modulation.list();
+  }
+
+  /** Current source values, base and modulated controls, target offsets. Poll per frame. */
+  getModulationState(): ModulationState {
+    return this.modulation.getState();
+  }
+
+  private startModulation(): void {
+    if (this.modulationTimer !== null) {
+      return;
+    }
+    this.lastModulationTick = performance.now();
+    this.modulationTimer = this.scheduler.setInterval(
+      () => {
+        const now = performance.now();
+        const dt = Math.min(0.25, (now - this.lastModulationTick) / 1000);
+        this.lastModulationTick = now;
+        const frame = this.modulation.tick(dt);
+        if (frame) {
+          this.species.applyModulation(frame, MODULATION_RAMP_SEC);
+        }
+      },
+      MODULATION_TICK_MS,
+      'modulation',
+    );
+  }
+
+  private stopModulation(): void {
+    if (this.modulationTimer === null) {
+      return;
+    }
+    this.scheduler.clearInterval(this.modulationTimer);
+    this.modulationTimer = null;
   }
 
   /**
@@ -264,6 +342,8 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     }
     this.stopAnalysis();
     this.analyser.dispose();
+    this.stopModulation();
+    this.modulation.dispose();
     this.transport.dispose();
     this.species.dispose();
     this.scheduler.dispose();
@@ -285,6 +365,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     this.species.stop();
     this.species.allNotesOff();
     this.stopAnalysis();
+    this.stopModulation();
     stopAudio();
   }
 

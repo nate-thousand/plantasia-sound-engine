@@ -401,7 +401,44 @@ async function abControls(options = {}) {
   return out;
 }
 
-window.bench = { run, probe, probeControl, abControls };
+/**
+ * Exploratory: hold a note with an LFO routed to a control or target and
+ * sample the modulation state and features. Confirms modulation reaches the
+ * graph in a real browser.
+ */
+async function probeModulation(options = {}) {
+  const { species = 'seed', destination = 'target:filterCutoffMult', hz = 0.5, depth = 1, ms = 3000, note = 'E3' } = options;
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies(species);
+  await engine.start({ generative: false });
+  engine.noteOn(note, 0.9);
+  await wait(1200);
+  const baseline = [];
+  for (let i = 0; i < 20; i++) { baseline.push(engine.getAudioFeatures().centroid); await wait(50); }
+  const route = engine.modulate({ id: 'probe', type: 'lfo', hz, shape: 'sine' }, destination, depth);
+  const series = [];
+  const p0 = performance.now();
+  while (performance.now() - p0 < ms) {
+    const st = engine.getModulationState();
+    const f = engine.getAudioFeatures();
+    series.push({ t: +((performance.now() - p0) / 1000).toFixed(2), src: +st.sources.probe.value.toFixed(2), off: +(st.targets.filterCutoffMult ?? 0).toFixed(2), bloom: +st.controls.bloom.modulated.toFixed(2), centroid: +f.centroid.toFixed(3), high: +f.high.toFixed(3) });
+    await wait(50);
+  }
+  route.remove();
+  engine.noteOff(note);
+  engine.dispose();
+  const spread = (arr) => +(Math.max(...arr) - Math.min(...arr)).toFixed(3);
+  return {
+    baselineCentroidSpread: spread(baseline),
+    modulatedCentroidSpread: spread(series.map((s) => s.centroid)),
+    modulatedHighSpread: spread(series.map((s) => s.high)),
+    sourceRange: [Math.min(...series.map((s) => s.src)), Math.max(...series.map((s) => s.src))],
+    sample: series.filter((_, i) => i % 8 === 0),
+  };
+}
+
+window.bench = { run, probe, probeControl, abControls, probeModulation };
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });

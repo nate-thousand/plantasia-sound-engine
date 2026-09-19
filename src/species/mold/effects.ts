@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { ChangeGate } from '../../shared/modulationFrame.js';
 import { MOLD_DRONE_RELEASE } from './synth.js';
 
 /** Tone.js rejects LFO output when min === max. */
@@ -242,35 +243,44 @@ export function applyMoldEffectsLevels(
   dronePoly: Tone.PolySynth,
   levels: MoldEffectsLevels,
   audioStarted: boolean,
+  rampSec = 0.2,
+  gate?: ChangeGate,
 ): void {
-  effects.tapeSaturation.distortion = levels.tapeDrive;
-  effects.softDistortion.distortion = levels.softDistDrive;
+  if (!gate || gate.changed('tapeDrive', levels.tapeDrive, 0.01)) {
+    effects.tapeSaturation.distortion = levels.tapeDrive;
+  }
+  if (!gate || gate.changed('softDistDrive', levels.softDistDrive, 0.01)) {
+    effects.softDistortion.distortion = levels.softDistDrive;
+  }
 
-  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet);
-  setRampParam(audioStarted, effects.softDistortion.wet as unknown as RampParam, levels.softDistWet);
-  setRampParam(audioStarted, effects.bitCrusher.wet as unknown as RampParam, levels.bitCrushWet);
+  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet, rampSec);
+  setRampParam(audioStarted, effects.softDistortion.wet as unknown as RampParam, levels.softDistWet, rampSec);
+  setRampParam(audioStarted, effects.bitCrusher.wet as unknown as RampParam, levels.bitCrushWet, rampSec);
   effects.bitCrusher.bits.value = levels.bitCrushBits;
 
-  setRampParam(audioStarted, effects.comb.resonance as unknown as RampParam, levels.combResonance);
-  setRampParam(audioStarted, effects.microDelay.wet as unknown as RampParam, levels.microDelayWet);
+  setRampParam(audioStarted, effects.comb.resonance as unknown as RampParam, levels.combResonance, rampSec);
+  setRampParam(audioStarted, effects.microDelay.wet as unknown as RampParam, levels.microDelayWet, rampSec);
   setRampParam(
     audioStarted,
     effects.microDelay.feedback as unknown as RampParam,
     levels.microDelayFeedback,
+    rampSec,
   );
   setRampParam(
     audioStarted,
     effects.feedbackDelay.wet as unknown as RampParam,
     levels.feedbackDelayWet,
+    rampSec,
   );
   setRampParam(
     audioStarted,
     effects.feedbackDelay.feedback as unknown as RampParam,
     levels.feedbackDelayFeedback,
+    rampSec,
   );
-  setRampParam(audioStarted, effects.vibrato.wet as unknown as RampParam, levels.vibratoWet);
-  setRampParam(audioStarted, effects.vibrato.depth as unknown as RampParam, levels.vibratoDepth);
-  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet);
+  setRampParam(audioStarted, effects.vibrato.wet as unknown as RampParam, levels.vibratoWet, rampSec);
+  setRampParam(audioStarted, effects.vibrato.depth as unknown as RampParam, levels.vibratoDepth, rampSec);
+  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet, rampSec);
 
   const wowSpan = lfoSpan(levels.wowDepth);
   effects.wowLfo.min = wowSpan.min;

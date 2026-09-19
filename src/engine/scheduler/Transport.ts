@@ -8,6 +8,7 @@ export type TransportState = 'stopped' | 'playing' | 'paused';
 export class Transport {
   private bpm = 120;
   private state: TransportState = 'stopped';
+  private playCount = 0;
   private tickTimer: ReturnType<typeof setTimeout> | null = null;
   private tickHandlers = new Set<(timeMs: number) => void>();
 
@@ -38,7 +39,13 @@ export class Transport {
       return;
     }
     this.state = 'playing';
+    this.playCount += 1;
     this.scheduleNextTick();
+  }
+
+  /** Number of times `play()` has started playback. Beat synced modulation resets phase when it changes. */
+  getPlayCount(): number {
+    return this.playCount;
   }
 
   pause(): void {

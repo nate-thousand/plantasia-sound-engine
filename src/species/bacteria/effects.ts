@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { ChangeGate } from '../../shared/modulationFrame.js';
 
 /**
  * Bacteria effects — delicate spatial color; detail must remain audible.
@@ -147,23 +148,29 @@ export function applyBacteriaEffectsLevels(
   effects: BacteriaEffectsNodes,
   levels: BacteriaEffectsLevels,
   audioStarted: boolean,
+  rampSec = 0.2,
+  gate?: ChangeGate,
 ): void {
-  effects.saturation.distortion = levels.satDrive;
-  setRampParam(audioStarted, effects.saturation.wet as unknown as RampParam, levels.satWet);
-  setRampParam(audioStarted, effects.autoPanner.depth as unknown as RampParam, levels.pannerDepth);
+  if (!gate || gate.changed('satDrive', levels.satDrive, 0.01)) {
+    effects.saturation.distortion = levels.satDrive;
+  }
+  setRampParam(audioStarted, effects.saturation.wet as unknown as RampParam, levels.satWet, rampSec);
+  setRampParam(audioStarted, effects.autoPanner.depth as unknown as RampParam, levels.pannerDepth, rampSec);
   setRampParam(
     audioStarted,
     effects.autoPanner.frequency as unknown as RampParam,
     levels.pannerRate,
+    rampSec,
   );
-  setRampParam(audioStarted, effects.microDelay.wet as unknown as RampParam, levels.delayWet);
+  setRampParam(audioStarted, effects.microDelay.wet as unknown as RampParam, levels.delayWet, rampSec);
   setRampParam(
     audioStarted,
     effects.microDelay.feedback as unknown as RampParam,
     levels.delayFeedback,
+    rampSec,
   );
-  setRampParam(audioStarted, effects.roomVerb.wet as unknown as RampParam, levels.roomWet);
-  setRampParam(audioStarted, effects.roomVerb.roomSize as unknown as RampParam, levels.roomSize);
+  setRampParam(audioStarted, effects.roomVerb.wet as unknown as RampParam, levels.roomWet, rampSec);
+  setRampParam(audioStarted, effects.roomVerb.roomSize as unknown as RampParam, levels.roomSize, rampSec);
   // Freeverb rebuilds its comb filters on every dampening write, so skip unchanged values.
   if (Math.abs(Number(effects.roomVerb.dampening) - levels.roomDampening) > 1) {
     effects.roomVerb.dampening = levels.roomDampening;

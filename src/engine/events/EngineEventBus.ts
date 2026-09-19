@@ -1,6 +1,7 @@
 import type { EcologicalControl, SpeciesId } from '../SoundWorld.js';
 import type { GenerativeEventKind } from '../generative/types.js';
 import { audioNow } from '../clock.js';
+import type { ModulationRouteConfig } from '../modulation/types.js';
 
 /** Every event carries the AudioContext time it happened at. */
 export type TimedEvent = {
@@ -47,6 +48,10 @@ export type EngineEventMap = {
   onset: TimedEvent & {
     /** 0..1, how far the spectral flux exceeded the adaptive threshold. */
     strength: number;
+  };
+  /** A modulation route was added, changed or removed. Never per tick. */
+  modulationChanged: TimedEvent & {
+    routes: ModulationRouteConfig[];
   };
 };
 

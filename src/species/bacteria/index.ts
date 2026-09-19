@@ -1,5 +1,8 @@
 import * as Tone from 'tone';
 import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
+import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
+import { ChangeGate, mergeModulationTargets } from '../../shared/modulationFrame.js';
 import {
   connectBacteriaEffects,
   createBacteriaEffects,
@@ -61,6 +64,8 @@ export class BacteriaSoundWorld implements SoundWorld {
   private effects: BacteriaEffectsNodes | null = null;
   private generator: BacteriaGenerator | null = null;
   private controls: BacteriaControlState = { ...DEFAULT_CONTROLS };
+  private modulation: SpeciesModulationFrame | null = null;
+  private readonly gate = new ChangeGate();
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
   private performanceBase: BacteriaPerformanceBase | null = null;
@@ -115,7 +120,7 @@ export class BacteriaSoundWorld implements SoundWorld {
       this.generator?.triggerAtNote(note, shaped);
     }
     triggerBacteriaParticle(this.synth, 'sine', note, shaped * 0.45);
-    const bacteria = this.controls.bacteria / 100;
+    const bacteria = this.effectiveControls().bacteria / 100;
     const prob =
       targets !== undefined
         ? bacteriaParticleProbability(bacteria, targets)
@@ -134,6 +139,11 @@ export class BacteriaSoundWorld implements SoundWorld {
     if (this.synth) {
       releaseAllBacteria(this.synth);
     }
+  }
+
+  applyModulation(frame: SpeciesModulationFrame): void {
+    this.modulation = frame.routes > 0 ? frame : null;
+    this.applyEcologicalControls(frame.rampSec);
   }
 
   setControl(control: EcologicalControl, value: number): void {
@@ -199,6 +209,8 @@ export class BacteriaSoundWorld implements SoundWorld {
   }
 
   private teardownGraph(): void {
+    this.gate.reset();
+    this.modulation = null;
     this.performance?.reset();
     this.performance = null;
     this.performanceBase = null;
@@ -214,35 +226,46 @@ export class BacteriaSoundWorld implements SoundWorld {
     }
   }
 
-  private applyEcologicalControls(): void {
+  /** Host controls, or the modulated values of the current frame. */
+  private effectiveControls(): BacteriaControlState {
+    return this.modulation?.controls ?? this.controls;
+  }
+
+  private applyEcologicalControls(rampSec = 0.2): void {
     if (!this.synth || !this.effects) {
       return;
     }
 
-    const growth = this.controls.growth / 100;
-    const bloom = this.controls.bloom / 100;
-    const roots = this.controls.roots / 100;
-    const mold = this.controls.mold / 100;
-    const bacteria = this.controls.bacteria / 100;
+    const controls = this.effectiveControls();
+    const growth = controls.growth / 100;
+    const bloom = controls.bloom / 100;
+    const roots = controls.roots / 100;
+    const mold = controls.mold / 100;
+    const bacteria = controls.bacteria / 100;
 
     const polyphony = Math.round(4 + growth * (BACTERIA_MAX_POLYPHONY - 4));
-    this.synth.fmPoly.maxPolyphony = polyphony;
-    this.synth.sinePoly.maxPolyphony = polyphony;
+    if (this.gate.changed('polyphony', polyphony, 0.5)) {
+      this.synth.fmPoly.maxPolyphony = polyphony;
+      this.synth.sinePoly.maxPolyphony = polyphony;
+    }
 
     const highpass =
       BACTERIA_HIGHPASS_HZ * (0.75 + bloom * 0.45) * (1 - roots * 0.18);
     const filterDepth = 0.18 + bacteria * 0.22 + mold * 0.12;
     const panRate = 0.06 + bacteria * 0.18 + mold * 0.08;
 
-    this.synth.fmPoly.volume.value = Tone.gainToDb(0.12 + growth * 0.18 + bloom * 0.08);
-    this.synth.sinePoly.volume.value = Tone.gainToDb(0.14 + growth * 0.12);
-    this.synth.noiseSynth.volume.value = -14 + mold * 6 + bacteria * 4;
+    setRampParam(this.audioStarted, this.synth.fmPoly.volume as unknown as RampParam, Tone.gainToDb(0.12 + growth * 0.18 + bloom * 0.08), rampSec);
+    setRampParam(this.audioStarted, this.synth.sinePoly.volume as unknown as RampParam, Tone.gainToDb(0.14 + growth * 0.12), rampSec);
+    setRampParam(this.audioStarted, this.synth.noiseSynth.volume as unknown as RampParam, -14 + mold * 6 + bacteria * 4, rampSec);
 
-    this.synth.pluck.set({
-      dampening: 4200 + bloom * 2800,
-      resonance: 0.28 + bloom * 0.35,
-      release: 0.05 + bloom * 0.08 + roots * 0.06,
-    });
+    const pluckDampening = 4200 + bloom * 2800;
+    if (this.gate.changed('pluckDampening', pluckDampening, 20)) {
+      this.synth.pluck.set({
+        dampening: pluckDampening,
+        resonance: 0.28 + bloom * 0.35,
+        release: 0.05 + bloom * 0.08 + roots * 0.06,
+      });
+    }
 
     this.performanceBase = {
       highpassHz: highpass,
@@ -261,12 +284,12 @@ export class BacteriaSoundWorld implements SoundWorld {
       },
     };
 
-    syncGeneratorEcology(this.generator, this.controls);
-    syncPerformanceEcology(this.performance, this.controls);
-    this.applyPerformanceModulation();
+    syncGeneratorEcology(this.generator, controls);
+    syncPerformanceEcology(this.performance, controls);
+    this.applyPerformanceModulation(rampSec);
   }
 
-  private applyPerformanceModulation(): void {
+  private applyPerformanceModulation(rampSec = 0.2): void {
     if (!this.synth || !this.effects || !this.performance || !this.performanceBase) {
       return;
     }
@@ -274,8 +297,10 @@ export class BacteriaSoundWorld implements SoundWorld {
       this.synth,
       this.effects,
       this.performanceBase,
-      this.performance.getTargets(),
+      mergeModulationTargets(this.performance.getTargets(), this.modulation),
       this.audioStarted,
+      rampSec,
+      this.gate,
     );
   }
 }
