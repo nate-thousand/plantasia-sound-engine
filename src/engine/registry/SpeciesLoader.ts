@@ -1,23 +1,6 @@
 import type { SoundWorld, SoundWorldMetadata, SpeciesId } from '../SoundWorld.js';
-import { isSpeciesLoadable } from '../SoundWorld.js';
 import type { SpeciesRegistry } from './SpeciesRegistry.js';
 import { assertValidSpecies, SpeciesValidationError } from './Validation.js';
-
-export class SpeciesNotLoadableError extends Error {
-  readonly speciesId: SpeciesId;
-  readonly status: string;
-
-  constructor(metadata: SoundWorldMetadata) {
-    const status = metadata.status ?? 'coming_soon';
-    super(
-      `Species "${metadata.id}" is not loadable (status: ${status}). ` +
-        (status === 'coming_soon' ? 'This Sound World is coming soon.' : 'This Sound World is disabled.'),
-    );
-    this.name = 'SpeciesNotLoadableError';
-    this.speciesId = metadata.id;
-    this.status = status;
-  }
-}
 
 export class SpeciesLoadError extends Error {
   readonly speciesId: SpeciesId;
@@ -70,17 +53,12 @@ export class SpeciesLoader {
 
   /**
    * Load a species by ID — disposes previous, validates, initializes.
-   * @throws SpeciesNotLoadableError for coming_soon / disabled species
    * @throws SpeciesLoadError on factory or initialize failures
    */
   async load(id: SpeciesId, context?: unknown): Promise<SoundWorld> {
     const metadata = this.registry.getMetadata(id);
     if (!metadata) {
       throw new Error(`Unknown species: ${id}`);
-    }
-
-    if (!isSpeciesLoadable(metadata)) {
-      throw new SpeciesNotLoadableError(metadata);
     }
 
     this.disposeCurrent();

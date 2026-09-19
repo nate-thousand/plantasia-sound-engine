@@ -37,7 +37,6 @@ async function main() {
     'PerformanceEngine',
     'SpeciesRegistry',
     'registerBuiltinSpecies',
-    'registerFutureSpecies',
     'resolvePresetToSpecies',
     'PRESET_SPECIES_MAP',
   ];
@@ -58,17 +57,14 @@ async function main() {
   const plantasonic = pkg.resolvePresetToSpecies('plantasonic');
   assert(plantasonic.speciesId === 'seed', 'plantasonic preset maps to seed');
 
-  // --- Registry (playable default; future opt-in) ---
+  // --- Registry: every registered species is playable (decision 9) ---
   const registry = pkg.createSpeciesRegistry();
-  assert(registry.listActive().length === 4, 'four active in default registry');
-  assert(registry.list().length === 4, 'default registry excludes coming_soon');
-
-  const registryWithFuture = pkg.createSpeciesRegistry({ includeFuture: true });
-  assert(registryWithFuture.list().length >= 12, 'includeFuture adds placeholders');
-  assert(registryWithFuture.has('tundra'), 'future species when opted in');
+  assert(registry.list().length === 4, 'four species in the default registry');
+  assert(!registry.has('tundra'), 'no placeholder species');
+  assert(typeof pkg.registerFutureSpecies === 'undefined', 'registerFutureSpecies removed');
 
   // --- Species manager init + switching ---
-  const manager = pkg.createSpeciesManager({ includeFuture: true });
+  const manager = pkg.createSpeciesManager();
   assert(manager.getActiveSpecies().length === 4, 'manager active list');
   assert(manager.getAvailableSpecies().length === 4, 'available is playable-only');
 
@@ -98,13 +94,13 @@ async function main() {
   }
   assert(unknownError, 'unknown species throws');
 
-  let notLoadable = false;
+  let formerPlaceholderUnknown = false;
   try {
     await manager.loadSpecies('ocean');
   } catch (error) {
-    notLoadable = error?.name === 'SpeciesNotLoadableError';
+    formerPlaceholderUnknown = /Unknown species/.test(error?.message ?? '');
   }
-  assert(notLoadable, 'coming_soon species rejected');
+  assert(formerPlaceholderUnknown, 'former placeholder ids are simply unknown');
 
   // --- Lifecycle throws ---
   const lifecycleManager = pkg.createSpeciesManager();

@@ -77,27 +77,22 @@ Species internals still receive 0–100 via `toSpeciesControlValue()` — hosts 
 
 ### `ReservedSpeciesIdError`
 
-Built-in IDs (`seed`, `flowers`, `mold`, `bacteria`, and future placeholders like `canopy`, `tundra`, …) are reserved. Custom plugins must use namespaced IDs:
+Built-in IDs (`seed`, `flowers`, `mold`, `bacteria`) are reserved. Custom plugins must use namespaced IDs:
 
 - `plantasonic.my-species`
 - `custom.my-species`
 
 Bootstrap uses `registerBuiltinSpecies()` with an internal `builtin: true` flag — do not re-register reserved IDs from host code.
 
-## Playable-only default registry
+## Registry
 
-`createSpeciesManager()` registers **four active species only**. `coming_soon` placeholders are **not** in the default registry.
+`createSpeciesManager()` registers the four built in species. Every registered species is playable; there is no placeholder status (ROADMAP decision 9).
 
 ```typescript
-manager.getAvailableSpecies(); // same as getActiveSpecies() — playable only
-
-// Opt-in for discovery UIs / docs:
-createSpeciesManager({ includeFuture: true });
-registerFutureSpecies(registry);
-manager.getAllRegisteredSpecies(); // includes placeholders when registered
+manager.getAvailableSpecies(); // seed, flowers, mold, bacteria plus anything registered
 ```
 
-Loading a species that is not registered throws from the loader (`Unknown species`). Loading a registered `coming_soon` species throws `SpeciesNotLoadableError`.
+Loading a species that is not registered throws from the loader (`Unknown species`).
 
 ## Singleton exports (deprecated)
 

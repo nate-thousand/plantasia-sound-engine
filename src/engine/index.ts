@@ -58,24 +58,20 @@ export {
   assertCustomSpeciesId,
 } from './reservedSpeciesIds.js';
 export { createSpeciesManager, loadDefaultSpecies, type CreateSpeciesManagerOptions } from './createSpeciesManager.js';
-export { createSpeciesRegistry, type CreateSpeciesRegistryOptions } from './createSpeciesRegistry.js';
+export { createSpeciesRegistry } from './createSpeciesRegistry.js';
 export {
   SpeciesRegistry,
   SpeciesLoader,
   SpeciesValidationError,
-  SpeciesNotLoadableError,
   SpeciesLoadError,
   DuplicateSpeciesError,
-  createStubSoundWorld,
   assertValidSpecies,
-  assertValidPlaceholderMetadata,
   validateMetadata,
   validateSoundWorld,
   type SpeciesFactory,
   type SpeciesRegistration,
 } from './registry/index.js';
-export { registerBuiltinSpecies, registerFutureSpecies } from '../species/registerBuiltinSpecies.js';
-export { FUTURE_SPECIES_METADATA } from '../species/future/metadata.js';
+export { registerBuiltinSpecies } from '../species/registerBuiltinSpecies.js';
 export { getMasterBus, getMasterBusInput, getMasterWaveform, getMasterLevel } from './masterBus.js';
 export { AudioAnalyser, BAND_EDGES_HZ, type AudioFeatures, type OnsetEvent } from './analysis/AudioAnalyser.js';
 export { audioNow, configureContextLatency, ENGINE_LOOK_AHEAD_SEC } from './clock.js';

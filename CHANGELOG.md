@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Two tier facade** (ROADMAP decision 5): `plantasia-sound-engine/public` now types the engine as `PlantasiaEngineApi` (exported as `PlantasiaEngine` there): twenty four methods, presets, adapter, events, features, errors. The root export keeps the full class with the v1 preset path and internals; `initialize` is deprecated in favour of `init`. `engine.getControl(control)` added. `docs/API.md` rewritten as the one page public surface; the earlier draft moved to `docs/API_V2_DRAFT.md`
 - Demo: sections grouped under Public tier (v2) and Legacy (v1) headings (decision 13)
 
+### Removed
+
+- **Placeholder species** (ROADMAP decision 9): the eight `coming_soon` entries (canopy, moss, spores, mycelium, desert, ocean, rainforest, tundra), `SoundWorldMetadata.status`, `SpeciesStatus`, `getUpcomingSpecies()`, `listUpcoming()`, `registerPlaceholder()`, `createStubSoundWorld()`, `assertValidPlaceholderMetadata()`, `SpeciesNotLoadableError`, `registerFutureSpecies()`, `FUTURE_SPECIES_METADATA`, and the `includeFuture` option on `createSpeciesManager()` and `createSpeciesRegistry()`. A registered species is playable. The former placeholder ids are no longer reserved
+
 ### Changed
 
 - `plantasia-sound-engine/public` no longer exports `resolvePresetToSpecies`, `PRESET_SPECIES_MAP`, the species factories, `EngineEventBus`, or the scheduler classes; all remain on the root export

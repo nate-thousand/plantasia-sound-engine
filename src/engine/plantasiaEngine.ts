@@ -109,10 +109,6 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return this.species.getAvailableSpecies();
   }
 
-  /** Root only. Coming soon species when registered via {@link CreatePlantasiaEngineOptions.includeFuture}. */
-  getUpcomingSpecies(): SoundWorldMetadata[] {
-    return this.species.getUpcomingSpecies();
-  }
 
   /** Active species metadata, or null when none loaded. */
   getCurrentSpecies(): SoundWorldMetadata | null {

@@ -1,16 +1,11 @@
 import { SpeciesManager, DEFAULT_SPECIES_ID } from './SpeciesManager.js';
-import {
-  registerBuiltinSpecies,
-  registerFutureSpecies,
-} from '../species/registerBuiltinSpecies.js';
+import { registerBuiltinSpecies } from '../species/registerBuiltinSpecies.js';
 import type { EngineEventBus } from './events/EngineEventBus.js';
 import type { EngineScheduler } from './scheduler/EngineScheduler.js';
 
 export { DEFAULT_SPECIES_ID };
 
 export type CreateSpeciesManagerOptions = {
-  /** Register coming_soon placeholder metadata (default: false). */
-  includeFuture?: boolean;
   /** Shared semantic event bus (provided by {@link PlantasiaEngine}). */
   events?: EngineEventBus;
   /** Root scheduler (provided by {@link PlantasiaEngine}). */
@@ -19,12 +14,9 @@ export type CreateSpeciesManagerOptions = {
 
 /** Create a SpeciesManager with built-in playable species registered. */
 export function createSpeciesManager(options: CreateSpeciesManagerOptions = {}): SpeciesManager {
-  const { includeFuture = false, events, scheduler } = options;
+  const { events, scheduler } = options;
   const manager = new SpeciesManager(undefined, { events, scheduler });
   registerBuiltinSpecies(manager.getRegistry());
-  if (includeFuture) {
-    registerFutureSpecies(manager.getRegistry());
-  }
   return manager;
 }
 

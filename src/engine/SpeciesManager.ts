@@ -67,7 +67,7 @@ export class SpeciesManager {
     this.registry.register({ factory });
   }
 
-  /** Playable species only (status `active`). Default host-facing discovery list. */
+  /** Every registered species; a registered species is playable. */
   getAvailableSpecies(): SoundWorldMetadata[] {
     return this.registry.listActive();
   }
@@ -77,12 +77,8 @@ export class SpeciesManager {
     return this.getAvailableSpecies();
   }
 
-  /** Coming soon / disabled species registered on this manager (empty unless future species were registered). */
-  getUpcomingSpecies(): SoundWorldMetadata[] {
-    return this.registry.listUpcoming();
-  }
 
-  /** All registered species metadata, including upcoming placeholders when registered. */
+  /** All registered species metadata. Same as {@link getAvailableSpecies}; kept for callers of the older name. */
   getAllRegisteredSpecies(): SoundWorldMetadata[] {
     return this.registry.list();
   }

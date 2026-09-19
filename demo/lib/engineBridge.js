@@ -22,7 +22,7 @@ const TEMP_PRESET_KEY = 'plantasia-demo-temp-preset';
 
 export class EngineBridge {
   constructor() {
-    this.engine = new PlantasiaEngine({ includeFuture: true });
+    this.engine = new PlantasiaEngine();
     this.audioStarted = false;
     this.generativeRunning = false;
     this.currentPresetId = this.engine.presets[0]?.id ?? 'seed';

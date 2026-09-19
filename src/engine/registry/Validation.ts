@@ -2,7 +2,6 @@ import {
   ECOLOGICAL_CONTROLS_LIST,
   type SoundWorld,
   type SoundWorldMetadata,
-  type SpeciesStatus,
 } from '../SoundWorld.js';
 
 export class SpeciesValidationError extends Error {
@@ -36,8 +35,6 @@ const REQUIRED_METHODS: (keyof SoundWorld)[] = [
   'setControl',
   'dispose',
 ];
-
-const VALID_STATUSES: SpeciesStatus[] = ['active', 'coming_soon', 'disabled'];
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
@@ -96,10 +93,6 @@ export function validateMetadata(metadata: unknown): string[] {
     issues.push(...validateSpeciesId(meta.id));
   }
 
-  if (meta.status !== undefined && !VALID_STATUSES.includes(meta.status)) {
-    issues.push(`metadata.status must be one of: ${VALID_STATUSES.join(', ')}`);
-  }
-
   return issues;
 }
 
@@ -134,11 +127,6 @@ export function validateSoundWorld(world: unknown): string[] {
  */
 export function validateEcologicalControls(world: SoundWorld): string[] {
   const issues: string[] = [];
-  const status = world.metadata.status ?? 'active';
-
-  if (status !== 'active') {
-    return issues;
-  }
 
   for (const control of ECOLOGICAL_CONTROLS_LIST) {
     try {
@@ -153,7 +141,7 @@ export function validateEcologicalControls(world: SoundWorld): string[] {
 }
 
 export type ValidationOptions = {
-  /** When true, ecological setControl smoke test runs (default: true for active species). */
+  /** When true, ecological setControl smoke test runs (default: true). */
   testControls?: boolean;
 };
 
@@ -163,9 +151,8 @@ export function assertValidSpecies(
   options: ValidationOptions = {},
 ): void {
   const issues = validateSoundWorld(world);
-  const status = world.metadata?.status ?? 'active';
 
-  if (issues.length === 0 && status === 'active') {
+  if (issues.length === 0) {
     const testControls = options.testControls ?? true;
     if (testControls) {
       issues.push(...validateEcologicalControls(world));
@@ -181,22 +168,5 @@ export function assertValidSpecies(
   }
 }
 
-/** Validate metadata-only registration (coming_soon / disabled placeholders). */
-export function assertValidPlaceholderMetadata(metadata: SoundWorldMetadata): void {
-  const issues = validateMetadata(metadata);
-  const status = metadata.status ?? 'active';
-
-  if (status === 'active') {
-    issues.push('placeholder registration requires status "coming_soon" or "disabled"');
-  }
-
-  if (issues.length > 0) {
-    throw new SpeciesValidationError(
-      `Invalid placeholder species "${metadata.id}": ${issues[0]}`,
-      issues,
-      metadata.id,
-    );
-  }
-}
 
 export { ECOLOGICAL_CONTROLS_LIST as ECOLOGICAL_CONTROLS };

@@ -54,12 +54,11 @@ export const YOUR_SOUND_WORLD_METADATA: SoundWorldMetadata = {
   description: '...',           // non-empty paragraph
   inspiration: ['refs'],        // non-empty array
   character: ['tags'],          // non-empty array
-  status: 'active',             // omit or 'active' when shippable
   version: '0.1.0',             // optional semver
 };
 ```
 
-For WIP plugins use `status: 'coming_soon'` until audio is complete.
+Register a species only when it plays. There is no placeholder status; keep work in progress unregistered.
 
 ---
 
@@ -144,7 +143,6 @@ Common failures and fixes:
 | `species.noteOn must be a function` | Implement all SoundWorld methods |
 | `setControl("growth") threw` | Handle all five controls without throwing |
 | `Species "x" is already registered` | Choose a unique ID |
-| `Species "x" is not loadable (status: coming_soon)` | Set `status: 'active'` when ready |
 
 ---
 

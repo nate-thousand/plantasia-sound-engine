@@ -83,7 +83,7 @@ See [docs/API.md](./docs/API.md) for the full contract.
 | Section | Controls |
 |---------|----------|
 | **Presets** | Category filter, browser, prev/next/random, favorites, temp save, copy JSON |
-| **Sound Worlds** | Active species, upcoming species, preset→species mapping via `loadPreset()` |
+| **Sound Worlds** | Active species, preset→species mapping via `loadPreset()` |
 | **Musical** | Tempo, swing, density, complexity, transport play/pause/stop |
 | **Layers** | Per-species layer cards (drone, pulse, melody, …) routed via ecology proxies |
 | **Timbre** | Filter, envelope, detune, FM, modulation, drift, stereo — v1 `updateParameter` + botanical |

@@ -180,15 +180,11 @@ export function buildUI(bridge, callbacks) {
       speciesSelect.select.appendChild(new Option(s.name, s.id));
     }
 
-    refs.upcomingEl = document.createElement('div');
-    body.appendChild(refs.upcomingEl);
-
     function updateSpeciesMeta() {
       const s = bridge.engine.getCurrentSpecies();
       if (s) {
         refs.speciesMeta.textContent = `${s.concept} — ${s.description}`;
       }
-      refs.upcomingEl.replaceChildren(hint('Upcoming: ' + bridge.engine.getUpcomingSpecies().map((u) => u.name).join(', ') || 'none'));
     }
     updateSpeciesMeta();
     refs.updateSpeciesMeta = updateSpeciesMeta;

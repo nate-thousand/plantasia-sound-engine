@@ -23,7 +23,6 @@ flowchart TB
     F[flowers]
     M[mold]
     B[bacteria]
-    U[future placeholders]
   end
 
   SM --> SR
@@ -45,11 +44,8 @@ Central discovery and registration:
 | Responsibility | API |
 |----------------|-----|
 | Register a species | `register({ factory })` or `register(soundWorld)` |
-| Register coming_soon placeholder | `registerPlaceholder(metadata)` |
 | Prevent duplicate IDs | throws `DuplicateSpeciesError` |
-| List all species | `list()` |
-| List loadable species | `listActive()` |
-| List upcoming | `listUpcoming()` |
+| List species | `list()` (every registered species is playable) |
 | Create instance | `create(id)` |
 
 Registration validates:
@@ -66,8 +62,7 @@ Registration validates:
 Lifecycle management:
 
 1. Look up species in registry
-2. Reject `coming_soon` / `disabled` with `SpeciesNotLoadableError`
-3. Dispose previous species
+2. Dispose previous species
 4. Instantiate via factory
 5. Validate compatibility
 6. Call `initialize(context)`
@@ -84,7 +79,6 @@ Errors surface as `SpeciesLoadError` or `SpeciesValidationError` with an `issues
 | `validateSoundWorld()` | Interface methods present |
 | `validateEcologicalControls()` | setControl smoke test |
 | `assertValidSpecies()` | Throws `SpeciesValidationError` |
-| `assertValidPlaceholderMetadata()` | Metadata-only for coming_soon |
 
 ---
 
@@ -97,8 +91,8 @@ register → list → load → initialize → start → (play) → stop → disp
 ```
 
 1. **Register** — at startup via `registerBuiltinSpecies(registry)` or custom plugins
-2. **Discover** — `manager.getAvailableSpecies()` / `getUpcomingSpecies()`
-3. **Load** — `manager.loadSpecies(id)` — only `status: 'active'` (or omitted)
+2. **Discover** — `manager.getAvailableSpecies()`
+3. **Load** — `manager.loadSpecies(id)`
 4. **Play** — `noteOn`, `setControl`, generative `start()`
 5. **Switch** — previous species disposed automatically
 6. **Dispose** — `manager.dispose()` clears registry and active species
@@ -107,13 +101,7 @@ register → list → load → initialize → start → (play) → stop → disp
 
 ## Species status
 
-| Status | Loadable | Purpose |
-|--------|----------|---------|
-| `active` (default) | Yes | Full Sound World |
-| `coming_soon` | No | Metadata-only placeholder |
-| `disabled` | No | Hidden / WIP template |
-
-Eight future species register as `coming_soon`: canopy, moss, spores, mycelium, desert, ocean, rainforest, tundra.
+There is none. A registered species is playable (ROADMAP decision 9, 2026-09-18). The earlier `coming_soon` and `disabled` placeholders, `registerPlaceholder()`, `listUpcoming()` and `SpeciesNotLoadableError` are gone; a species that is not ready is not registered.
 
 ---
 
@@ -158,7 +146,7 @@ Copy `src/templates/species-template/` to bootstrap a new species. See [CREATING
 ## Testing
 
 ```bash
-npm run test:registry   # Registry, validation, placeholders
+npm run test:registry   # Registry, validation
 npm run test:species    # Active species load + note smoke test
 ```
 

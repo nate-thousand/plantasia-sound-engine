@@ -9,8 +9,6 @@ export type EcologicalControl =
   | 'bacteria';
 
 /** Lifecycle status for registered species. */
-export type SpeciesStatus = 'active' | 'coming_soon' | 'disabled';
-
 export const ECOLOGICAL_CONTROLS_LIST: readonly EcologicalControl[] = [
   'growth',
   'bloom',
@@ -26,8 +24,6 @@ export interface SoundWorldMetadata {
   description: string;
   inspiration: string[];
   character: string[];
-  /** Defaults to `active` when omitted. */
-  status?: SpeciesStatus;
   /** Semantic version or milestone tag for the species plugin. */
   version?: string;
 }
@@ -64,6 +60,3 @@ export const BUILTIN_ACTIVE_SPECIES = ['seed', 'flowers', 'mold', 'bacteria'] as
 
 export type BuiltinActiveSpeciesId = (typeof BUILTIN_ACTIVE_SPECIES)[number];
 
-export function isSpeciesLoadable(metadata: SoundWorldMetadata): boolean {
-  return (metadata.status ?? 'active') === 'active';
-}

@@ -1,19 +1,11 @@
 import type { SoundWorld, SoundWorldMetadata, SpeciesId } from '../SoundWorld.js';
-import { isSpeciesLoadable } from '../SoundWorld.js';
 import { assertCustomSpeciesId } from '../reservedSpeciesIds.js';
-import {
-  assertValidPlaceholderMetadata,
-  assertValidSpecies,
-  SpeciesValidationError,
-  validateMetadata,
-} from './Validation.js';
+import { assertValidSpecies, SpeciesValidationError } from './Validation.js';
 
 export type SpeciesFactory = () => SoundWorld;
 
 export type SpeciesRegistration = {
   factory: SpeciesFactory;
-  /** When true, skip full SoundWorld validation (metadata-only placeholders). */
-  placeholder?: boolean;
   /** Engine bootstrap only — allows reserved built-in IDs. */
   builtin?: boolean;
 };
@@ -46,8 +38,8 @@ export class SpeciesRegistry {
       return;
     }
 
-    const { factory, placeholder = false, builtin = false } = input as SpeciesRegistration;
-    this.registerFactory(factory, placeholder, builtin);
+    const { factory, builtin = false } = input as SpeciesRegistration;
+    this.registerFactory(factory, builtin);
   }
 
   private registerInstance(world: SoundWorld, builtin: boolean): void {
@@ -59,18 +51,13 @@ export class SpeciesRegistry {
       throw new DuplicateSpeciesError(id);
     }
 
-    const status = world.metadata.status ?? 'active';
-    if (status === 'coming_soon' || status === 'disabled') {
-      assertValidPlaceholderMetadata(world.metadata);
-    } else {
-      assertValidSpecies(world);
-    }
+    assertValidSpecies(world);
 
     this.factories.set(id, () => world);
     this.metadataCache.set(id, { ...world.metadata });
   }
 
-  private registerFactory(factory: SpeciesFactory, placeholder: boolean, builtin: boolean): void {
+  private registerFactory(factory: SpeciesFactory, builtin: boolean): void {
     let preview: SoundWorld;
     try {
       preview = factory();
@@ -96,36 +83,11 @@ export class SpeciesRegistry {
       throw new DuplicateSpeciesError(id);
     }
 
-    const status = preview.metadata.status ?? 'active';
-
-    if (placeholder || status === 'coming_soon' || status === 'disabled') {
-      assertValidPlaceholderMetadata({ ...preview.metadata, status: status === 'active' ? 'coming_soon' : status });
-    } else {
-      assertValidSpecies(preview);
-    }
+    assertValidSpecies(preview);
 
     this.factories.set(id, factory);
     this.metadataCache.set(id, { ...preview.metadata });
     preview.dispose();
-  }
-
-  /** Register metadata-only placeholder without a full SoundWorld factory. */
-  registerPlaceholder(metadata: SoundWorldMetadata, factory?: SpeciesFactory, builtin = false): void {
-    assertValidPlaceholderMetadata(metadata);
-    if (!builtin) {
-      assertCustomSpeciesId(metadata.id);
-    }
-
-    if (this.factories.has(metadata.id)) {
-      throw new DuplicateSpeciesError(metadata.id);
-    }
-
-    const create =
-      factory ??
-      (() => createStubSoundWorld(metadata));
-
-    this.factories.set(metadata.id, create);
-    this.metadataCache.set(metadata.id, { ...metadata });
   }
 
   has(id: SpeciesId): boolean {
@@ -136,19 +98,14 @@ export class SpeciesRegistry {
     return this.metadataCache.get(id);
   }
 
-  /** All registered species metadata (active, coming_soon, disabled). */
+  /** All registered species metadata. Every registered species is playable. */
   list(): SoundWorldMetadata[] {
     return Array.from(this.metadataCache.values());
   }
 
-  /** Only species with status `active` (loadable). */
+  /** Same as {@link list}; kept for callers of the older name. */
   listActive(): SoundWorldMetadata[] {
-    return this.list().filter(isSpeciesLoadable);
-  }
-
-  /** Species marked coming_soon or disabled. */
-  listUpcoming(): SoundWorldMetadata[] {
-    return this.list().filter((m) => !isSpeciesLoadable(m));
+    return this.list();
   }
 
   ids(): SpeciesId[] {
@@ -167,33 +124,4 @@ export class SpeciesRegistry {
     this.factories.clear();
     this.metadataCache.clear();
   }
-}
-
-/** Minimal no-op SoundWorld for coming_soon placeholders. */
-export function createStubSoundWorld(metadata: SoundWorldMetadata): SoundWorld {
-  const meta: SoundWorldMetadata = {
-    ...metadata,
-    status: metadata.status ?? 'coming_soon',
-  };
-
-  const issues = validateMetadata(meta);
-  if (issues.length > 0) {
-    throw new SpeciesValidationError(
-      `Invalid stub metadata: ${issues[0]}`,
-      issues,
-      meta.id,
-    );
-  }
-
-  return {
-    metadata: meta,
-    initialize: async () => {},
-    start: () => {},
-    stop: () => {},
-    noteOn: () => {},
-    noteOff: () => {},
-    allNotesOff: () => {},
-    setControl: () => {},
-    dispose: () => {},
-  };
 }

@@ -148,13 +148,9 @@ async function main() {
   // default manager: playable only
   const builtin = createSpeciesManager();
   assert(builtin.getAvailableSpecies().length === 4, 'default manager lists four playable species');
-  assert(builtin.getUpcomingSpecies().length === 0, 'no upcoming without includeFuture');
-
-  const withFuture = createSpeciesManager({ includeFuture: true });
-  assert(withFuture.getUpcomingSpecies().length > 0, 'includeFuture registers placeholders');
+  assert(typeof builtin.getUpcomingSpecies === 'undefined', 'no upcoming species API (decision 9)');
 
   builtin.dispose();
-  withFuture.dispose();
 
   console.log('[test-lifecycle] OK — lifecycle contract validated');
 }

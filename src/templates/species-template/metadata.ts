@@ -24,7 +24,6 @@ export const TEMPLATE_SOUND_WORLD_METADATA: SoundWorldMetadata = {
   description: 'Placeholder description for a new Sound World plugin.',
   inspiration: ['your inspiration here'],
   character: ['character', 'tags'],
-  status: 'disabled',
   version: '0.0.0-template',
 };
 

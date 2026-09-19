@@ -1,12 +1,8 @@
 import type { SpeciesId } from './SoundWorld.js';
 import { BUILTIN_ACTIVE_SPECIES } from './SoundWorld.js';
-import { FUTURE_SPECIES_METADATA } from '../species/future/metadata.js';
 
 /** Built-in species IDs reserved by the engine — custom plugins must not collide. */
-export const RESERVED_BUILTIN_SPECIES_IDS: ReadonlySet<SpeciesId> = new Set([
-  ...BUILTIN_ACTIVE_SPECIES,
-  ...FUTURE_SPECIES_METADATA.map((metadata) => metadata.id),
-]);
+export const RESERVED_BUILTIN_SPECIES_IDS: ReadonlySet<SpeciesId> = new Set(BUILTIN_ACTIVE_SPECIES);
 
 /** Recommended namespace prefixes for third-party species plugins. */
 export const RECOMMENDED_SPECIES_ID_PREFIXES = ['plantasonic.', 'custom.'] as const;

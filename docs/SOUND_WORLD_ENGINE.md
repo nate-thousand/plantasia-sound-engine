@@ -311,7 +311,6 @@ Sound Worlds are **plugins** registered via `SpeciesRegistry`. The engine core n
 - **Registry** — validate, discover, prevent duplicate IDs
 - **Loader** — load/dispose lifecycle with clear errors
 - **Template** — `src/templates/species-template/` for new species
-- **Future placeholders** — canopy, moss, spores, mycelium, desert, ocean, rainforest, tundra (`coming_soon`)
 
 See [PLUGIN_ARCHITECTURE.md](./PLUGIN_ARCHITECTURE.md) and [CREATING_A_SPECIES.md](./CREATING_A_SPECIES.md). Validate: `npm run test:registry`.
 

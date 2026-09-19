@@ -166,7 +166,7 @@ Raw per frame; the host owns smoothing. Reads within one frame return the same o
 `import { createPlantasiaEngine } from 'plantasia-sound-engine'` returns the same instance typed as the full class. On top of the public tier it carries:
 
 - Legacy v1 preset path, documented in [API_V1.md](./API_V1.md): `playPreset`, `triggerChord`, `updateParameter`, `applyBotanicalControls`, `setMold`, `getMold`, `getParameterMetadata`, `presets`, `initialBotanicalControls`, `defaultNotePool`.
-- Root only conveniences: `initialize` (alias of `init`), `stopSpecies`, `applyEcology`, `getUpcomingSpecies`, `events`, `scheduler`, `transport`, `midi`.
+- Root only conveniences: `initialize` (alias of `init`), `stopSpecies`, `applyEcology`, `events`, `scheduler`, `transport`, `midi`.
 - Engine internals: `EngineEventBus`, `EngineScheduler`, `Transport`, `SpeciesManager`, `createSpeciesManager`, species factories, `resolvePresetToSpecies`, `getMasterBus`, `AudioAnalyser`, `configureContextLatency`, the generative and performance engines.
 
 Nothing on the root is scheduled for removal. New hosts should not need it.
