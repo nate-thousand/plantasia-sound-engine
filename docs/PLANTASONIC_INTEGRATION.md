@@ -60,7 +60,7 @@ Full sonic confirmation still requires browser: `npm run example:basic-engine`
 
 ## Semver
 
-Current integration tag: **`1.0.0-beta.2`** (first honest beta was `1.0.0-beta.1`)
+Current integration tag: **`1.0.0`**
 
 Do not use tag `v2.0.0` for Plantasonic pinning — see [MIGRATION_V1_TO_V2.md](./MIGRATION_V1_TO_V2.md).
 
@@ -68,7 +68,7 @@ Do not use tag `v2.0.0` for Plantasonic pinning — see [MIGRATION_V1_TO_V2.md](
 
 v2 species audio runs **in parallel** with v1 WAAPI graphs. Plantasonic can adopt incrementally:
 
-1. Pin `1.0.0-beta.2` (or commit SHA on `v2-sound-world-engine`)
+1. Pin `1.0.0`
 2. Wire `createPlantasonicAdapter()` for new sessions
 3. Subscribe visuals to semantic events (Phase 19)
 4. Retire v1 audio path per preset when sonic parity is confirmed

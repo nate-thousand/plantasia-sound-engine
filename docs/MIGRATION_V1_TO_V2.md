@@ -35,7 +35,8 @@ This is a **staged replacement**, not a hard cutover. Plantasonic keeps working 
 | `v2-sound-world-engine` | Active Sound World development |
 | `v2.0.0` | **Deprecated** — architecture milestone only; not integration-ready |
 | `1.0.0-beta.1` | First honest Sound World beta (Phases 17 to 21) |
-| `1.0.0-beta.2` | **Current**: master bus analysis for every output path |
+| `1.0.0-beta.2` | Master bus analysis for every output path |
+| `1.0.0` | **Current**: stable public tier, analysis API, performance harness |
 
 **Plantasonic should pin:** a corrected prerelease tag or explicit commit SHA after Phase 17 ships — never `v2.0.0`.
 

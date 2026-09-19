@@ -32,16 +32,17 @@ A grill on "what is the next milestone" closed with these. They rank everything 
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.0.0-beta.2` |
-| **Honest integration target** | `1.0.0`, see decisions table |
-| **Production branch** | `main` — v1 preset API + mold profiles |
-| **Active development branch** | `v2-sound-world-engine` |
+| **Package version (package.json)** | `1.0.0` |
+| **Honest integration target** | `1.0.0`, shipped; `1.1.0` is modulation (decision 12) |
+| **Production branch** | `main` (from 1.0.0; `v2-sound-world-engine` merges in at that tag) |
+| **Development branch until 1.0.0** | `v2-sound-world-engine` |
 | **v1 freeze tag** | `v1-sound-engine-baseline` |
 | **Deprecated tag** | `v2.0.0` — architecture milestone only; **do not pin** |
-| **Live species** | Seed, Flowers, Mold, Bacteria — integration beta |
-| **Public API today** | `createPlantasiaEngine()` facade + `plantasia-sound-engine/public` |
+| **Live species** | Seed, Flowers, Mold, Bacteria |
+| **Public API** | `plantasia-sound-engine/public`, [docs/API.md](./docs/API.md) (decision 5) |
 | **Architecture phases** | ✅ Phases 8–21 complete |
-| **Integration** | ✅ Beta ready — [PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md) |
+| **Integration** | [PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md) |
+| **Performance** | [docs/PERFORMANCE.md](./docs/PERFORMANCE.md): 12 ms noteOn to audible, zero dropouts, Chromium and WebKit |
 | **Live demo** | https://sound-engine.xyz — demo control surface (validated) |
 
 ### What shipped in 1.0.0-beta.1
@@ -57,9 +58,10 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `v1-sound-engine-baseline` | Frozen engine before v2 refactor |
 | `v2.0.0` | **Deprecated** — Sound World architecture landed; premature major tag |
 | `1.0.0-beta.1` | Honest Sound World integration beta (Phases 17 to 21) |
-| `1.0.0-beta.2` | **Current**: master bus analysis, Bacteria recursion fix, demo control surface |
+| `1.0.0-beta.2` | Master bus analysis, Bacteria recursion fix, demo control surface |
+| `1.0.0` | **Current**: analysis API, event timing, performance harness, two tier facade, placeholder species removed |
 
-**Plantasonic should pin:** `1.0.0-beta.2` or a commit SHA on `v2-sound-world-engine`, not `v2.0.0`.
+**Plantasonic should pin:** `1.0.0`, not `v2.0.0`.
 
 ---
 

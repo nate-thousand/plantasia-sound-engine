@@ -2,11 +2,11 @@
 
 **Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), unified facade, semantic events, generative composition, and expressive performance routing.
 
-**Version:** `1.0.0-beta.2` on branch `v2-sound-world-engine`: integration beta (Phases 17 to 21 complete, master bus analysis for every output path).
+**Version:** `1.0.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
 
 The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature graphs) remains available on the root export for legacy hosts.
 
-> Pin **`1.0.0-beta.2`** or a commit SHA on `v2-sound-world-engine`. Do **not** use tag `v2.0.0` for integration.
+> Pin **`1.0.0`**. Do **not** use tag `v2.0.0` for integration.
 
 ## Quick start (v2 — recommended)
 
@@ -133,7 +133,7 @@ Performance macros route differently per active species (`seed`, `flowers`, `mol
 ```json
 {
   "dependencies": {
-    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#v2-sound-world-engine"
+    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.0.0"
   }
 }
 ```

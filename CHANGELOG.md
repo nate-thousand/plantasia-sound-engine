@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-18
+
+First stable release of the Sound World engine. The public tier (`plantasia-sound-engine/public`) is the frozen surface: twenty four methods, presets, events, audio features. Measured in Chromium and WebKit: noteOn to audible 12 ms, zero dropouts over 60 s under a mock visual load ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)). Branch `v2-sound-world-engine` merges into `main` at this tag.
+
 ### Added
 
 - **Audio analysis API**: `engine.getAudioFeatures()` returns `{ time, rms, peak, bass, mid, high, centroid, onset }` per frame from the master bus (`src/engine/analysis/AudioAnalyser.ts`). Raw values; `peak` holds and decays. `BAND_EDGES_HZ` exported

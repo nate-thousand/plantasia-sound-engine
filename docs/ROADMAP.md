@@ -9,6 +9,6 @@
 | [PLANTASONIC_INTEGRATION.md](./PLANTASONIC_INTEGRATION.md) | Host integration guide |
 | [ENGINE_AUDIT.md](./ENGINE_AUDIT.md) §8 | v2.0 release audit |
 
-**Current release:** `1.0.0-beta.2`, Phases 8 to 21 complete. Live demo: https://sound-engine.xyz
+**Current release:** `1.0.0`. Live demo: https://sound-engine.xyz
 
 **Next work:** Milestones 1–7 remaining items (MIDI Learn, sequencing, preset UI, Aurora species, etc.) — see [ROADMAP.md](../ROADMAP.md).
