@@ -29,6 +29,7 @@ export interface SoundWorldMetadata {
 }
 
 import type { SpeciesModulationFrame } from './modulation/types.js';
+import type { GenerativePreferences } from './generative/types.js';
 
 /** Options for {@link SoundWorld.start}. */
 export interface SoundWorldStartOptions {
@@ -62,6 +63,14 @@ export interface SoundWorld {
    * without this method are unaffected by modulation.
    */
   applyModulation?(frame: SpeciesModulationFrame): void;
+
+  /**
+   * Optional (1.1). Merge host preferences over the species' own generative
+   * defaults. Species with a `Generator` forward to `Generator.setPreferences`.
+   */
+  setGenerativePreferences?(partial: Partial<GenerativePreferences>): void;
+  /** Optional (1.1). Effective generative preferences after host overrides. */
+  getGenerativePreferences?(): Readonly<GenerativePreferences>;
 
   dispose(): void;
 }

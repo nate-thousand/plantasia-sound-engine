@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
 import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
+import type { GenerativePreferences } from '../../engine/generative/types.js';
 import { ChangeGate, mergeModulationTargets } from '../../shared/modulationFrame.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 import {
@@ -16,6 +17,7 @@ import {
   MOLD_DEFAULT_SCALE,
   MOLD_SOUND_WORLD_METADATA,
   MOLD_SUPPORTED_CONTROLS,
+  MOLD_GENERATIVE_PREFERENCES,
 } from './metadata.js';
 import {
   createMoldSynth,
@@ -67,6 +69,7 @@ export class MoldSoundWorld implements SoundWorld {
   private generator: MoldGenerator | null = null;
   private controls: MoldControlState = { ...DEFAULT_CONTROLS };
   private modulation: SpeciesModulationFrame | null = null;
+  private preferenceOverrides: Partial<GenerativePreferences> = {};
   private readonly gate = new ChangeGate();
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
@@ -131,6 +134,15 @@ export class MoldSoundWorld implements SoundWorld {
     if (this.synth) {
       releaseAllMold(this.synth);
     }
+  }
+
+  setGenerativePreferences(partial: Partial<GenerativePreferences>): void {
+    this.preferenceOverrides = { ...this.preferenceOverrides, ...partial };
+    this.generator?.setPreferences(partial);
+  }
+
+  getGenerativePreferences(): Readonly<GenerativePreferences> {
+    return this.generator?.getPreferences() ?? { ...MOLD_GENERATIVE_PREFERENCES, ...this.preferenceOverrides };
   }
 
   applyModulation(frame: SpeciesModulationFrame): void {
@@ -204,6 +216,10 @@ export class MoldSoundWorld implements SoundWorld {
       ),
       { scheduler: this.scheduler },
     );
+
+    if (Object.keys(this.preferenceOverrides).length > 0) {
+      this.generator.setPreferences(this.preferenceOverrides);
+    }
 
     this.performance = new PerformanceEngine(MOLD_EXPRESSION_PROFILE);
     syncPerformanceEcology(this.performance, this.controls);

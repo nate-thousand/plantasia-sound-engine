@@ -69,6 +69,9 @@ export type {
   SoundWorldMetadata,
   SoundWorldStartOptions,
   SpeciesModulationFrame,
+  GenerativePreferences,
+  HarmonyStyle,
+  RhythmStyle,
 } from './engine/index.js';
 
 // MIDI control messages (event payload shape)

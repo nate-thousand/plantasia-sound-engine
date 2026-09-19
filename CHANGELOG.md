@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SoundWorld.applyModulation(frame)` optional hook, implemented by all four species with a one tick ramp and change gated `PolySynth.set` calls; documented in the species template
 - `Transport.getPlayCount()` for beat synced sources
 - **MIDI control input** (1.1 step 3): `WebMidiManager` decodes CC, channel pressure and pitch bend (0..1, 0..1, -1..1; channels 1..16), keeps the last value per control and channel (`read()`), and takes raw bytes through `feed()`. Facade emits `midiControl { kind, controller?, value, channel, time }` and offers root only `feedMidi(bytes)` for bridges and the harness. `midi-cc`, `midi-aftertouch` and `midi-bend` modulation sources are live after `enableMidi()` or `feedMidi()`
-- Sixteenth gate `scripts/test-modulation.mjs`
+- **Generative preferences** (1.1 step 4): `setGenerativePreferences(partial)` and `getGenerativePreferences()`. Host overrides merge over every species' defaults on load and follow the player across species. Tempo, density, probability bias and drone preference apply now; scale, alternate scale, voicings, phrase length, harmony and rhythm style land at the next phrase boundary (`Generator.setPreferences`). Optional `SoundWorld.setGenerativePreferences` / `getGenerativePreferences` hooks, implemented by all four species
+- Sixteenth and seventeenth gates `scripts/test-modulation.mjs`, `scripts/test-preferences.mjs`
 
 ## [1.0.0] - 2026-09-18
 

@@ -2,6 +2,7 @@ import * as Tone from 'tone';
 import type { EcologicalControl, SoundWorld, SoundWorldStartOptions } from '../../engine/SoundWorld.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
 import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
+import type { GenerativePreferences } from '../../engine/generative/types.js';
 import { ChangeGate, mergeModulationTargets } from '../../shared/modulationFrame.js';
 import {
   connectBacteriaEffects,
@@ -15,6 +16,7 @@ import {
   BACTERIA_DEFAULT_SCALE,
   BACTERIA_SOUND_WORLD_METADATA,
   BACTERIA_SUPPORTED_CONTROLS,
+  BACTERIA_GENERATIVE_PREFERENCES,
 } from './metadata.js';
 import {
   BACTERIA_HIGHPASS_HZ,
@@ -65,6 +67,7 @@ export class BacteriaSoundWorld implements SoundWorld {
   private generator: BacteriaGenerator | null = null;
   private controls: BacteriaControlState = { ...DEFAULT_CONTROLS };
   private modulation: SpeciesModulationFrame | null = null;
+  private preferenceOverrides: Partial<GenerativePreferences> = {};
   private readonly gate = new ChangeGate();
   private audioStarted = false;
   private performance: PerformanceEngine | null = null;
@@ -141,6 +144,15 @@ export class BacteriaSoundWorld implements SoundWorld {
     }
   }
 
+  setGenerativePreferences(partial: Partial<GenerativePreferences>): void {
+    this.preferenceOverrides = { ...this.preferenceOverrides, ...partial };
+    this.generator?.setPreferences(partial);
+  }
+
+  getGenerativePreferences(): Readonly<GenerativePreferences> {
+    return this.generator?.getPreferences() ?? { ...BACTERIA_GENERATIVE_PREFERENCES, ...this.preferenceOverrides };
+  }
+
   applyModulation(frame: SpeciesModulationFrame): void {
     this.modulation = frame.routes > 0 ? frame : null;
     this.applyEcologicalControls(frame.rampSec);
@@ -200,6 +212,10 @@ export class BacteriaSoundWorld implements SoundWorld {
       ),
       { scheduler: this.scheduler },
     );
+
+    if (Object.keys(this.preferenceOverrides).length > 0) {
+      this.generator.setPreferences(this.preferenceOverrides);
+    }
 
     this.performance = new PerformanceEngine(BACTERIA_EXPRESSION_PROFILE);
     syncPerformanceEcology(this.performance, this.controls);

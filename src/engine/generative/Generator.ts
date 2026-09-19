@@ -22,6 +22,14 @@ export type GeneratorOptions = {
  * Central generative orchestration — schedules composition events without
  * knowing about oscillators or Tone.js. Species supply {@link GenerativePreferences}.
  */
+/** Preference keys that apply immediately; the rest wait for a phrase boundary. */
+const IMMEDIATE_PREFERENCE_KEYS: ReadonlySet<keyof GenerativePreferences> = new Set<keyof GenerativePreferences>([
+  'preferredTempo',
+  'preferredDensity',
+  'probabilityBias',
+  'dronePreference',
+]);
+
 export class Generator {
   private readonly harmony = new HarmonyEngine();
   private readonly rhythm = new RhythmEngine();
@@ -36,12 +44,58 @@ export class Generator {
   private backgroundTimerId: number | null = null;
   private releaseTimerIds = new Set<number>();
 
+  private preferences: GenerativePreferences;
+  /** Preference changes that wait for the next phrase boundary (decision 10 for 1.1.0). */
+  private pendingPreferences: Partial<GenerativePreferences> | null = null;
+
   constructor(
-    private readonly preferences: GenerativePreferences,
+    preferences: GenerativePreferences,
     private readonly callbacks: GenerativeCallbacks,
     options: GeneratorOptions = {},
   ) {
+    this.preferences = { ...preferences };
     this.scheduler = options.scheduler ?? createEngineScheduler();
+  }
+
+  /**
+   * Update preferences at runtime. Tempo, density, probability bias and drone
+   * preference apply now; scale, alternate scale, voicings, phrase length,
+   * harmony style and rhythm style apply at the next phrase boundary so a
+   * phrase in flight is not broken mid way. When the generator is not
+   * running everything applies now.
+   */
+  setPreferences(partial: Partial<GenerativePreferences>): void {
+    const immediate: Partial<GenerativePreferences> = {};
+    const boundary: Partial<GenerativePreferences> = {};
+    for (const [key, value] of Object.entries(partial) as [keyof GenerativePreferences, unknown][]) {
+      if (value === undefined) {
+        continue;
+      }
+      if (IMMEDIATE_PREFERENCE_KEYS.has(key)) {
+        (immediate as Record<string, unknown>)[key] = value;
+      } else {
+        (boundary as Record<string, unknown>)[key] = value;
+      }
+    }
+    this.preferences = { ...this.preferences, ...immediate };
+    if (Object.keys(boundary).length === 0) {
+      return;
+    }
+    if (!this.running) {
+      this.applyBoundaryPreferences(boundary);
+      return;
+    }
+    this.pendingPreferences = { ...(this.pendingPreferences ?? {}), ...boundary };
+  }
+
+  getPreferences(): Readonly<GenerativePreferences> {
+    return { ...this.preferences, ...(this.pendingPreferences ?? {}) };
+  }
+
+  private applyBoundaryPreferences(partial: Partial<GenerativePreferences>): void {
+    this.preferences = { ...this.preferences, ...partial };
+    // The active phrase was composed against the old scale or length.
+    this.phraseEngine.reset();
   }
 
   setEcology(partial: Partial<GenerativeEcology>): void {
@@ -153,6 +207,11 @@ export class Generator {
   }
 
   private compose(plan: ReturnType<RhythmEngine['nextPlan']>): void {
+    if (this.pendingPreferences) {
+      const pending = this.pendingPreferences;
+      this.pendingPreferences = null;
+      this.applyBoundaryPreferences(pending);
+    }
     const { ecology, preferences: prefs, memory, harmony, probability, phraseEngine } = this;
 
     if (probability.roll('glitch', ecology, prefs, memory)) {

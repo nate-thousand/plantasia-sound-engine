@@ -8,6 +8,7 @@
  * should not need anything beyond this interface.
  */
 import type { AudioFeatures } from './analysis/AudioAnalyser.js';
+import type { GenerativePreferences } from './generative/types.js';
 import type {
   ModulationDestination,
   ModulationRoute,
@@ -87,6 +88,13 @@ export interface PlantasiaEngineApi {
   getWaveform(): Float32Array;
   /** Master level 0..1 from a -60 dB floor. */
   getLevel(): number;
+
+  // --- generative preferences (1.1) ---
+
+  /** Merge host preferences (scale, voicings, phrase length, styles, tempo, density) over species defaults; they follow the player across species. */
+  setGenerativePreferences(partial: Partial<GenerativePreferences>): void;
+  /** Effective preferences of the loaded species, or the host overrides alone when none is loaded. */
+  getGenerativePreferences(): Partial<GenerativePreferences>;
 
   // --- modulation (1.1) ---
 

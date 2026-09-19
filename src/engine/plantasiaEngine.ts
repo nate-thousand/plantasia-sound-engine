@@ -33,6 +33,7 @@ import type {
 import type { EngineState } from './EngineLifecycle.js';
 import { resolvePresetToSpecies } from './resolvePresetToSpecies.js';
 import type { EcologyControlState } from './EcologyControls.js';
+import type { GenerativePreferences } from './generative/types.js';
 import {
   EngineEventBus,
   type EngineEventHandler,
@@ -203,6 +204,23 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     this.species.stop();
     this.stopAnalysis();
     this.stopModulation();
+  }
+
+  // --- generative preferences (1.1) ---
+
+  /**
+   * Merge host preferences over the loaded species' defaults, and over every
+   * species loaded afterwards. Scale, voicings, phrase length, harmony and
+   * rhythm style land at the next phrase boundary; tempo, density,
+   * probability bias and drone preference land now.
+   */
+  setGenerativePreferences(partial: Partial<GenerativePreferences>): void {
+    this.species.setGenerativePreferences(partial);
+  }
+
+  /** Effective preferences of the loaded species, or the host overrides alone when none is loaded. */
+  getGenerativePreferences(): Partial<GenerativePreferences> {
+    return this.species.getGenerativePreferences();
   }
 
   // --- modulation (1.1) ---
