@@ -71,6 +71,9 @@ export type {
   SpeciesModulationFrame,
 } from './engine/index.js';
 
+// MIDI control messages (event payload shape)
+export type { MidiControlKind, MidiControlMessage } from './midi/WebMidiManager.js';
+
 // Presets
 export { presets, getPresetById } from './presets/loader.js';
 export { resolvePresetId } from './presets/aliases.js';

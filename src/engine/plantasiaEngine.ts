@@ -40,7 +40,7 @@ import {
 } from './events/EngineEventBus.js';
 import { createEngineScheduler, type EngineScheduler } from './scheduler/EngineScheduler.js';
 import { Transport } from './scheduler/Transport.js';
-import { createWebMidiManager, type WebMidiManager } from '../midi/WebMidiManager.js';
+import { createWebMidiManager, type MidiControlMessage, type WebMidiManager } from '../midi/WebMidiManager.js';
 import { AudioAnalyser, type AudioFeatures } from './analysis/AudioAnalyser.js';
 import { ModulationEngine } from './modulation/ModulationEngine.js';
 import type { ModulationEnvironment } from './modulation/sources.js';
@@ -114,7 +114,8 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
       bpm: () => this.transport.getBpm(),
       transportPlayCount: () => this.transport.getPlayCount(),
       features: () => this.analyser.read(),
-      midi: () => null,
+      midi: (kind, controller, channel) =>
+        this.midi.isConnected() ? this.midi.read(kind, controller, channel) : null,
     };
     this.modulation = new ModulationEngine(env, () => this.species.getControlState());
     this.modulation.onChange((routes) => this.events.emit('modulationChanged', { routes }));
@@ -316,8 +317,14 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
 
   /** Connect Web MIDI note input to the active Sound World. */
   async enableMidi(): Promise<boolean> {
-    const connected = await this.midi.connect({
-      onNoteOn: (note, velocity) => {
+    const connected = await this.midi.connect(this.midiHandlers());
+    this.midiBound = connected;
+    return connected;
+  }
+
+  private midiHandlers() {
+    return {
+      onNoteOn: (note: string, velocity: number) => {
         if (this.getState() !== 'running') {
           return;
         }
@@ -325,14 +332,27 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
         this.events.emit('notePlayed', { note, velocity, source: 'midi', speciesId });
         this.species.getLoader().getCurrent()?.noteOn(note, velocity);
       },
-      onNoteOff: (note) => {
+      onNoteOff: (note: string) => {
         const speciesId = this.getCurrentSpecies()?.id ?? null;
         this.events.emit('noteReleased', { note, source: 'midi', speciesId });
         this.species.getLoader().getCurrent()?.noteOff(note);
       },
-    });
-    this.midiBound = connected;
-    return connected;
+      onControl: (message: MidiControlMessage) => {
+        this.events.emit('midiControl', message);
+      },
+    };
+  }
+
+  /**
+   * Root only. Feed raw MIDI bytes without Web MIDI hardware (a WebSocket
+   * bridge, a virtual controller, the harness). Notes and controls take the
+   * same path as `enableMidi()` input.
+   */
+  feedMidi(data: Uint8Array | number[]): void {
+    if (!this.midi.isConnected()) {
+      this.midi.attach(this.midiHandlers());
+    }
+    this.midi.feed(data);
   }
 
   dispose(): void {

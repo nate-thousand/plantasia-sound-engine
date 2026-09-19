@@ -53,6 +53,13 @@ export type EngineEventMap = {
   modulationChanged: TimedEvent & {
     routes: ModulationRouteConfig[];
   };
+  /** A MIDI control message: CC and aftertouch 0..1, pitch bend -1..1, channel 1..16. Hosts build MIDI Learn on this. */
+  midiControl: TimedEvent & {
+    kind: 'cc' | 'aftertouch' | 'bend';
+    controller?: number;
+    value: number;
+    channel: number;
+  };
 };
 
 export type EngineEventName = keyof EngineEventMap;

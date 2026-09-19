@@ -438,7 +438,56 @@ async function probeModulation(options = {}) {
   };
 }
 
-window.bench = { run, probe, probeControl, abControls, probeModulation };
+/**
+ * Mod wheel to audible (decision 12 for 1.1.0). Holds a note, routes a
+ * midi-cc source to target:filterCutoffMult at depth -1 (wheel up closes the
+ * filter), feeds CC1 at 0 then steps it to 127, and reports the time from
+ * the step to the first frame where the high band has moved a fifth of the
+ * way to its final value.
+ */
+async function measureWheelResponse(engine, { runs = 5, note = 'E3' } = {}) {
+  const results = [];
+  engine.modulate({ id: 'wheel', type: 'midi-cc', cc: 1 }, 'target:filterCutoffMult', -1);
+  engine.noteOn(note, 0.9);
+  for (let run = 0; run < runs; run += 1) {
+    engine.feedMidi([0xb0, 1, 0]);
+    await wait(900);
+    const before = [];
+    for (let i = 0; i < 10; i += 1) { before.push(engine.getAudioFeatures().high); await wait(16); }
+    const baseline = before.reduce((a, b) => a + b, 0) / before.length;
+    const p0 = performance.now();
+    engine.feedMidi([0xb0, 1, 127]);
+    const series = [];
+    while (performance.now() - p0 < 700) {
+      series.push({ t: performance.now() - p0, v: engine.getAudioFeatures().high });
+      await wait(4);
+    }
+    const final = series.slice(-20).reduce((a, s) => a + s.v, 0) / 20;
+    const delta = final - baseline;
+    let responseMs = null;
+    if (Math.abs(delta) >= 0.03) {
+      for (const s of series) {
+        if (Math.abs(s.v - baseline) >= Math.abs(delta) * 0.2) { responseMs = s.t; break; }
+      }
+    }
+    results.push({ responseMs: responseMs === null ? null : +responseMs.toFixed(1), baseline: +baseline.toFixed(3), final: +final.toFixed(3) });
+  }
+  engine.noteOff(note);
+  engine.removeModulation(engine.getModulationRoutes().find((r) => r.source.id === 'wheel')?.id);
+  return results;
+}
+
+async function probeWheel(options = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies(options.species ?? 'seed');
+  await engine.start({ generative: false });
+  const results = await measureWheelResponse(engine, options);
+  engine.dispose();
+  return results;
+}
+
+window.bench = { run, probe, probeControl, abControls, probeModulation, measureWheelResponse, probeWheel };
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });
