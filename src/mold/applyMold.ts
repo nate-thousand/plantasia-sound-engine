@@ -3,6 +3,14 @@ import type { MoldEffectParams } from './types.js';
 import { resolveMoldParameters } from './moldMacro.js';
 import { setRampParam, type RampParam } from '../utils/ramp.js';
 
+/** Tone.js rejects LFO output when min === max (float leak ~1e-7). */
+const LFO_MIN_SPAN = 1e-6;
+
+function lfoBipolarSpan(depth: number): { min: number; max: number } {
+  const span = Math.max(Math.abs(depth), LFO_MIN_SPAN);
+  return { min: -span, max: span };
+}
+
 type MoldNodes = {
   tapeSaturation: Tone.Distortion;
   harmonicDistortion: Tone.Distortion;
@@ -35,9 +43,9 @@ export function createMoldNodes(): MoldNodes {
   const ringMod = new Tone.Vibrato({ frequency: 0.2, depth: 0, wet: 0 });
   const textureCrackle = new Tone.Noise({ type: 'brown', volume: -Infinity });
   const textureGain = new Tone.Gain(0);
-  const wowLfo = new Tone.LFO({ frequency: 0.08, min: 0, max: 0, type: 'sine' });
-  const flutterLfo = new Tone.LFO({ frequency: 4.2, min: 0, max: 0, type: 'sine' });
-  const filterQLfo = new Tone.LFO({ frequency: 0.35, min: 0, max: 0, type: 'triangle' });
+  const wowLfo = new Tone.LFO({ frequency: 0.08, min: -LFO_MIN_SPAN, max: LFO_MIN_SPAN, type: 'sine' });
+  const flutterLfo = new Tone.LFO({ frequency: 4.2, min: -LFO_MIN_SPAN, max: LFO_MIN_SPAN, type: 'sine' });
+  const filterQLfo = new Tone.LFO({ frequency: 0.35, min: -LFO_MIN_SPAN, max: LFO_MIN_SPAN, type: 'triangle' });
   const panLfo = new Tone.LFO({ frequency: 0.05, min: -0.35, max: 0.35, type: 'sine' });
   const stereoPanner = new Tone.Panner(0);
 
@@ -145,27 +153,31 @@ export function applyMoldParams(host: MoldHost, params: MoldEffectParams): void 
   );
   setRampParam(started, moldNodes.ringMod.wet as unknown as RampParam, params.ringMod * 0.25);
 
-  moldNodes.wowLfo.min = -params.wowDepth;
-  moldNodes.wowLfo.max = params.wowDepth;
+  const wow = lfoBipolarSpan(params.wowDepth);
+  moldNodes.wowLfo.min = wow.min;
+  moldNodes.wowLfo.max = wow.max;
   moldNodes.wowLfo.frequency.value = 0.05 + params.wowDepth * 5;
-  moldNodes.flutterLfo.min = -params.flutterDepth;
-  moldNodes.flutterLfo.max = params.flutterDepth;
+  const flutter = lfoBipolarSpan(params.flutterDepth);
+  moldNodes.flutterLfo.min = flutter.min;
+  moldNodes.flutterLfo.max = flutter.max;
   moldNodes.flutterLfo.frequency.value = 2.8 + params.flutterDepth * 120;
 
   const feedback = Math.min(0.9, 0.2 + params.delayFeedbackBoost + params.selfOscDelay * 0.35);
   setRampParam(started, delay.feedback as unknown as RampParam, feedback);
   setRampParam(started, delay.wet as unknown as RampParam, 0.12 + params.delayBloom * 0.35);
 
-  moldNodes.filterQLfo.min = -params.filterInstability * 0.04;
-  moldNodes.filterQLfo.max = params.filterInstability * 0.04;
+  const filterQ = lfoBipolarSpan(params.filterInstability * 0.04);
+  moldNodes.filterQLfo.min = filterQ.min;
+  moldNodes.filterQLfo.max = filterQ.max;
 
   setRampParam(started, lfo.frequency as unknown as RampParam, 0.04 + params.modulationDepth * 4.5);
   lfo.min = 400 - params.pitchDriftCents * 7;
   lfo.max = 2400 + params.pitchDriftCents * 11;
 
   moldNodes.panLfo.frequency.value = 0.04 + params.stereoInstability * 0.18;
-  moldNodes.panLfo.min = -params.stereoInstability * 0.55;
-  moldNodes.panLfo.max = params.stereoInstability * 0.55;
+  const pan = lfoBipolarSpan(params.stereoInstability * 0.55);
+  moldNodes.panLfo.min = pan.min;
+  moldNodes.panLfo.max = pan.max;
 
   const textureLevel = params.textureCrackle + params.textureAir + params.crackle * 0.5;
   setRampParam(started, moldNodes.textureGain.gain as unknown as RampParam, textureLevel * 0.045);

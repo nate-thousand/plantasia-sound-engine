@@ -1,0 +1,62 @@
+/** Unique identifier for a registered Sound World. Open string — plugins define their own IDs. */
+export type SpeciesId = string;
+
+export type EcologicalControl =
+  | 'growth'
+  | 'bloom'
+  | 'roots'
+  | 'mold'
+  | 'bacteria';
+
+/** Lifecycle status for registered species. */
+export const ECOLOGICAL_CONTROLS_LIST: readonly EcologicalControl[] = [
+  'growth',
+  'bloom',
+  'roots',
+  'mold',
+  'bacteria',
+] as const;
+
+export interface SoundWorldMetadata {
+  id: SpeciesId;
+  name: string;
+  concept: string;
+  description: string;
+  inspiration: string[];
+  character: string[];
+  /** Semantic version or milestone tag for the species plugin. */
+  version?: string;
+}
+
+/** Options for {@link SoundWorld.start}. */
+export interface SoundWorldStartOptions {
+  /**
+   * Start the species' generative system. Default true. Pass false for a
+   * played instrument: the audio graph runs and `noteOn` works, nothing
+   * plays on its own.
+   */
+  generative?: boolean;
+}
+
+export interface SoundWorld {
+  metadata: SoundWorldMetadata;
+
+  initialize(context: unknown): Promise<void> | void;
+  /** May be async while the audio graph unlocks and starts generative systems. */
+  start(options?: SoundWorldStartOptions): void | Promise<void>;
+  stop(): void;
+
+  noteOn(note: string, velocity?: number): void;
+  noteOff(note: string): void;
+  allNotesOff(): void;
+
+  setControl(control: EcologicalControl, value: number): void;
+
+  dispose(): void;
+}
+
+/** Well-known active species IDs shipped with the engine. */
+export const BUILTIN_ACTIVE_SPECIES = ['seed', 'flowers', 'mold', 'bacteria'] as const;
+
+export type BuiltinActiveSpeciesId = (typeof BUILTIN_ACTIVE_SPECIES)[number];
+

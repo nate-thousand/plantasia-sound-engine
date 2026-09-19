@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+site/
 src/presets/bundled/
 *.tsbuildinfo
 
@@ -20,3 +21,7 @@ npm-debug.log*
 
 # Test / coverage
 coverage/
+.vercel
+bench/results/
+test-results/
+playwright-report/

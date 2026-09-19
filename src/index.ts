@@ -1,5 +1,64 @@
-export { PlantasiaEngine } from './engine/plantasiaEngine.js';
+export { PlantasiaEngine, createPlantasiaEngine, type CreatePlantasiaEngineOptions } from './engine/plantasiaEngine.js';
+export {
+  resolvePresetToSpecies,
+  presetControlsToEcology,
+  PRESET_SPECIES_MAP,
+  type PresetSpeciesResolution,
+} from './engine/resolvePresetToSpecies.js';
 
+// --- v2 Sound World Engine ---
+export {
+  SpeciesManager,
+  DEFAULT_SPECIES_ID,
+  createSpeciesManager,
+  loadDefaultSpecies,
+  createSpeciesRegistry,
+  EcologyControls,
+  ECOLOGICAL_CONTROLS,
+  DEFAULT_ECOLOGY_STATE,
+  clampEcologyValue,
+  toSpeciesControlValue,
+  fromSpeciesControlValue,
+  SpeciesRegistry,
+  SpeciesLoader,
+  SpeciesValidationError,
+  SpeciesLoadError,
+  DuplicateSpeciesError,
+  EngineLifecycleError,
+  EcologyControlScaleError,
+  ReservedSpeciesIdError,
+  registerBuiltinSpecies,
+  Generator,
+  PerformanceEngine,
+  getMasterBus,
+  getMasterBusInput,
+  audioNow,
+  AudioAnalyser,
+  BAND_EDGES_HZ,
+} from './engine/index.js';
+
+export type {
+  SoundWorld,
+  SoundWorldMetadata,
+  SpeciesId,
+  EcologicalControl,
+  EcologyControlState,
+  ExpressionProfile,
+  PerformanceTargets,
+} from './engine/index.js';
+
+export {
+  seedSpecies,
+  flowersSpecies,
+  moldSpecies,
+  bacteriaSpecies,
+  createSeedSoundWorld,
+  createFlowersSoundWorld,
+  createMoldSoundWorld,
+  createBacteriaSoundWorld,
+} from './species/index.js';
+
+// --- v1 preset engine (unchanged) ---
 export {
   initAudio,
   playPreset,
@@ -120,3 +179,28 @@ export type {
   PlantasonicGraph,
   PlantasonicLiveVoice,
 } from './synths/plantasonicAudio.js';
+
+// Engine internals a host may reach for (root tier only)
+export {
+  EngineEventBus,
+  type EngineEventMap,
+  type EngineEventName,
+  type EngineEventHandler,
+  type EngineEventInput,
+  type EngineEventSink,
+  type NoteSource,
+  type TimedEvent,
+} from './engine/events/EngineEventBus.js';
+export {
+  createEngineScheduler,
+  EngineScheduler,
+  Transport,
+  type TransportState,
+} from './engine/scheduler/index.js';
+export {
+  createPlantasonicAdapter,
+  PlantasonicAdapter,
+  type PlantasonicLoadResult,
+} from './integration/plantasonicAdapter.js';
+export type { PlantasiaEngineApi, SoundWorldStartOptions } from './engine/index.js';
+export type { AudioFeatures, OnsetEvent } from './engine/analysis/AudioAnalyser.js';

@@ -20,13 +20,14 @@ export interface MpeConfig {
   memberChannels: number[];
 }
 
-/** Web MIDI facade scaffold — no functionality yet. */
+/** Web MIDI facade — use {@link createWebMidiManager} from `./WebMidiManager.js`. */
 export interface MidiManager {
   readonly devices: readonly MidiDeviceInfo[];
   readonly learnMappings: readonly MidiLearnMapping[];
   readonly mpe: MpeConfig;
 }
 
+/** @deprecated Use {@link createWebMidiManager} */
 export function createMidiManager(): MidiManager {
   return {
     devices: [],

@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMasterBusInput } from '../engine/masterBus.js';
 import type { JunoBotanicalConfig, JunoGrowthConfig } from '../utils/types/junoFlowers.js';
 import type { PlantasiaPreset, SynthSettings } from '../utils/types/presets.js';
 import { resolveMoldParameters } from '../mold/moldMacro.js';
@@ -692,7 +693,7 @@ export async function ensureJunoRuntime(): Promise<JunoBotanicalGraph> {
     // Juno graph is fully silent (voices reach windPan but never hit destination).
     junoGraph.windPan.connect(junoGraph.masterLimiter);
     junoGraph.masterLimiter.connect(junoMasterGain);
-    junoMasterGain.connect(audioCtx.destination);
+    junoMasterGain.connect(getMasterBusInput());
   }
   return junoGraph;
 }

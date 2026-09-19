@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plantasia v2 — MIDI Performance</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+      kbd { background: #eee; padding: 0.15rem 0.4rem; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <h1>MIDI / Keyboard Performance</h1>
+    <p>Computer keyboard → velocity-shaped notes via the Performance Engine. Keys <kbd>A</kbd>–<kbd>K</kbd> map to a pentatonic row.</p>
+    <button type="button" id="btn-start">Start Audio</button>
+    <p>Species:
+      <select id="species">
+        <option value="seed">Seed</option>
+        <option value="flowers">Flowers</option>
+        <option value="mold">Mold</option>
+        <option value="bacteria">Bacteria</option>
+      </select>
+    </p>
+    <p id="status">Ready</p>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

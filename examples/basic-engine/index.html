@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plantasia v2 — Basic Engine</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 2rem auto; padding: 0 1rem; }
+      button { margin: 0.25rem 0.25rem 0.25rem 0; }
+      #status { margin-top: 1rem; color: #333; }
+    </style>
+  </head>
+  <body>
+    <h1>v2 Basic Engine</h1>
+    <p>Load Seed via <code>createSpeciesManager()</code>, play notes, adjust ecology.</p>
+    <button type="button" id="btn-start">Start Audio</button>
+    <button type="button" id="btn-note">Play C4</button>
+    <button type="button" id="btn-stop">Stop All</button>
+    <div>
+      <label>Bloom <input type="range" id="bloom" min="0" max="100" value="48" /></label>
+    </div>
+    <p id="status">Ready</p>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

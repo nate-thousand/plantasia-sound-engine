@@ -1,237 +1,172 @@
-# API Reference
+# Public API
 
-Public exports from `plantasia-sound-engine`. All methods behave identically to v0.1.0 unless noted in CHANGELOG.
+The public tier of Plantasia Sound Engine: what a host builds on. One page, twenty four methods, the shipped presets, the events and features they produce.
 
----
-
-## Class: `PlantasiaEngine`
-
-Primary facade for the botanical synthesis engine.
-
-### Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `presets` | `PlantasiaPreset[]` | Built-in preset definitions |
-| `initialBotanicalControls` | `BotanicalControls` | Default botanical knob values |
-| `defaultNotePool` | `string[]` | Notes used by `triggerChord()` |
-
-### Methods
-
-#### `init(): Promise<void>`
-
-Start the Tone.js AudioContext. **Must be called from a user gesture** (click, keypress).
+Version `1.0.0`. Pin a tag, not `v2.0.0`.
 
 ```typescript
-const engine = new PlantasiaEngine();
-await engine.init();
+import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
 ```
 
-#### `playPreset(preset: PlantasiaPreset): void`
+The root export (`plantasia-sound-engine`) returns the same engine instance with the legacy v1 preset methods and engine internals on top. See [Root export](#root-export) and [API_V1.md](./API_V1.md). Species authors: [CREATING_A_SPECIES.md](./CREATING_A_SPECIES.md). Lifecycle detail: [LIFECYCLE.md](./LIFECYCLE.md).
 
-Apply preset synth settings and trigger audio (chord for standard presets; Juno path for botanical presets).
+## Quick start
 
 ```typescript
-engine.playPreset(engine.presets.find(p => p.id === 'bloom')!);
+import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
+
+const engine = createPlantasiaEngine();
+
+button.onclick = async () => {
+  await engine.init();                 // user gesture unlocks audio
+  await engine.loadDefaultSpecies();   // Seed
+  await engine.start();                // generative playback begins
+};
+
+engine.setControl('bloom', 0.7);       // ecology, 0..1
+engine.noteOn('E4', 0.8);              // play on top of the generator
+engine.on('notePlayed', ({ note, time }) => visuals.spark(note, time));
+
+function frame() {
+  const { bass, onset } = engine.getAudioFeatures();
+  visuals.pulse(bass, onset);
+  requestAnimationFrame(frame);
+}
 ```
 
-#### `stop(): void`
+A played instrument with no generator: `await engine.start({ generative: false })`, then `noteOn` and `noteOff` from your keyboard or `enableMidi()`.
 
-Release all active voices (including Juno Flowers live voices).
+## Methods
 
-```typescript
-engine.stop();
-```
+### Lifecycle
 
-#### `applyBotanicalControls(controls: BotanicalControls): void`
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `createPlantasiaEngine` | `(options?) => PlantasiaEngine` | One engine per page. Cheap; creates no audio nodes |
+| `init` | `() => Promise<void>` | Unlocks the audio context. Call from a user gesture |
+| `loadSpecies` | `(id: SpeciesId, context?) => Promise<void>` | State becomes `loaded`. Emits `speciesChanged` |
+| `loadDefaultSpecies` | `(context?) => Promise<void>` | Seed |
+| `loadPreset` | `(presetId: string, context?) => Promise<void>` | Resolves a preset to its species and ecology, loads both |
+| `start` | `(options?: { generative?: boolean }) => Promise<void>` | Resolves when the species graph is ready. State becomes `running`. `generative: false` runs the graph without the generator |
+| `stop` | `() => void` | Stops playback, releases every voice. State returns to `loaded`. Idempotent |
+| `dispose` | `() => void` | State becomes `disposed`. Create a new engine afterwards |
+| `getState` | `() => EngineState` | `idle`, `loaded`, `running` or `disposed` |
 
-Map live botanical knobs onto the synth graph.
+`noteOn` and `start` throw `EngineLifecycleError` (`code`: `NO_SPECIES_LOADED`, `ENGINE_NOT_STARTED`, `ENGINE_DISPOSED`) when called in the wrong state. `stop` and `allNotesOff` never throw.
 
-```typescript
-engine.applyBotanicalControls({
-  ...engine.initialBotanicalControls,
-  mold: 18,
-  space: 80,
-  texture: 70,
-});
-```
+### Notes
 
-#### `triggerChord(notes?: string[]): void`
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `noteOn` | `(note: string, velocity?: number) => void` | Scientific pitch, `'C4'`. Velocity 0..1, default 1. Requires `running` |
+| `noteOff` | `(note: string) => void` | |
+| `allNotesOff` | `() => void` | Releases every voice, playback continues |
 
-Play a short chord. Defaults to the first three notes in `defaultNotePool`. Requires `init()` first.
+noteOn to audible is measured at 12 ms in Chromium ([PERFORMANCE.md](./PERFORMANCE.md)).
 
-```typescript
-engine.triggerChord(['C3', 'E3', 'G3']);
-```
+### Ecology
 
-#### `setTempo(bpm: number): void`
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `setControl` | `(control: EcologicalControl, value: number) => void` | 0..1. Throws `EcologyControlScaleError` outside that range. Emits `controlChanged` |
+| `getControl` | `(control: EcologicalControl) => number` | |
+| `setTempo` | `(bpm: number) => void` | Generative playback and transport |
 
-Set Tone.js Transport tempo.
+The five controls, exported as `ECOLOGICAL_CONTROLS`:
 
-```typescript
-engine.setTempo(120);
-```
+| Control | Meaning |
+| --- | --- |
+| `growth` | activity and polyphony |
+| `bloom` | brightness, harmony, openness |
+| `roots` | low end, stability, drones |
+| `mold` | decay, degradation, tape wear |
+| `bacteria` | microscopic motion, particles |
 
-#### `getWaveform(): Float32Array`
+Each species interprets them in its own character. Controls ramp over about 200 ms.
 
-Read analyser waveform data for visualization.
+### Species
 
-#### `getLevel(): number`
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `getCurrentSpecies` | `() => SoundWorldMetadata \| null` | |
+| `getAvailableSpecies` | `() => SoundWorldMetadata[]` | `seed`, `flowers`, `mold`, `bacteria` plus anything registered |
+| `registerSpecies` | `(factory: () => SoundWorld) => void` | Ids must not collide with the built in set (`ReservedSpeciesIdError`). Contract in [CREATING_A_SPECIES.md](./CREATING_A_SPECIES.md) |
 
-Normalized output level (0–1).
+### Events and analysis
 
-#### `setMold(value: number): void`
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `on` | `(event, handler) => () => void` | Returns the unsubscribe function |
+| `off` | `(event, handler) => void` | |
+| `getAudioFeatures` | `() => AudioFeatures` | Per frame, from the master bus. Poll from your render loop |
+| `getWaveform` | `() => Float32Array` | 1024 samples, -1..1 |
+| `getLevel` | `() => number` | 0..1 from a -60 dB floor |
 
-Set the Mold macro (0–100). Drives the living degradation engine: tape wear, harmonic distortion, granular mutation, delay corruption, spectral decay, pitch instability, and subtle texture — scaled by the active Sound World's mold profile.
+### Input
 
-```typescript
-engine.setMold(24);
-```
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `enableMidi` | `() => Promise<boolean>` | Routes Web MIDI notes to the running species. Resolves false where Web MIDI is unavailable |
 
-#### `resolveMoldParameters(mold, profile?)`
+## Events
 
-Resolve Mold into all internal module targets. Optional `MoldProfile` override; defaults to the active preset profile.
+Every payload carries `time`, the AudioContext second it happened at.
 
-```typescript
-import { resolveMoldParameters, MOLD_PROFILES } from 'plantasia-sound-engine';
+| Event | Payload (plus `time`) | When |
+| --- | --- | --- |
+| `speciesChanged` | `speciesId`, `previousSpeciesId`, `presetId?` | `loadSpecies` or `loadPreset` completes |
+| `notePlayed` | `note`, `velocity`, `source`, `speciesId` | a voice starts. `source` is `host`, `generative` or `midi` |
+| `noteReleased` | `note`, `source`, `speciesId` | a voice is released |
+| `controlChanged` | `control`, `value`, `speciesId` | `setControl` |
+| `generatorEvent` | `kind`, `note?`, `velocity?`, `intensity?`, `speciesId` | the generator plans a `phrase`, `chord`, `drone`, `ornament`, `particle`, `glitch` or `silence` |
+| `densityChanged` | `density`, `speciesId` | the performance engine's density estimate moves |
+| `onset` | `strength` | a transient on the master bus, 0..1. While `running`, and on every `getAudioFeatures` read |
 
-const params = resolveMoldParameters(60, MOLD_PROFILES.plantasonic);
-```
+Types: `EngineEventMap`, `EngineEventName`, `EngineEventHandler`, `TimedEvent`, `NoteSource`.
 
-#### `resolveMoldProfile(preset)`
+## Audio features
 
-Get the mold personality for a preset.
+`getAudioFeatures()` returns, for the current frame:
 
-```typescript
-import { resolveMoldProfile, plantasonicPreset } from 'plantasia-sound-engine';
+| Field | Range | Meaning |
+| --- | --- | --- |
+| `time` | seconds | AudioContext time of the read |
+| `rms` | 0..1 | waveform RMS |
+| `peak` | 0..1 | level with hold, decays 2.5 per second |
+| `bass` | 0..1 | peak bin under 200 Hz, -80 dB floor |
+| `mid` | 0..1 | peak bin 200 Hz to 2 kHz |
+| `high` | 0..1 | peak bin above 2 kHz |
+| `centroid` | 0..1 | spectral centroid, log scale 20 Hz to Nyquist |
+| `onset` | 0..1 | onset strength this frame, 0 when none |
 
-const profile = resolveMoldProfile(plantasonicPreset);
-// { id: 'plantasonic', weights: { tapeWear: 1.35, ... } }
-```
+Raw per frame; the host owns smoothing. Reads within one frame return the same object. `BAND_EDGES_HZ` exports the two edges.
 
-#### `getMold(): number`
+## Presets
 
-Read the current Mold value (0–100).
+`presets` is the shipped list (`PlantasiaPreset[]`), `getPresetById(id)` looks one up, `resolvePresetId(alias)` maps older names. `loadPreset(id)` is how a host uses them; `preset.visual` is for the host's own visuals and the engine never reads it.
 
-#### `getParameterMetadata(): EngineParameterMeta[]`
+## Plantasonic adapter
 
-Exported parameter metadata for hosts, MIDI Learn, automation, and preset storage.
+`createPlantasonicAdapter(engine?)` wraps the engine for the Plantasonic platform: `loadPreset(id)` returning `{ preset, resolution }`, `startWithGesture()`, and `on()`. See [PLANTASONIC_INTEGRATION.md](./PLANTASONIC_INTEGRATION.md).
 
-```typescript
-const meta = engine.getParameterMetadata();
-// [{ id: 'mold', name: 'Mold', automatable: true, ... }]
-```
+## Errors
 
-#### `updateParameter(parameter, value): void`
-
-Update a single synth setting from the active preset.
-
-```typescript
-engine.updateParameter('filterHz', 2400);
-engine.updateParameter('reverb', 0.5);
-```
-
-Supported keys: `oscillator`, `filterHz`, `attack`, `release`, `delay`, `reverb`.
-
----
-
-## Functional exports
-
-Equivalent to calling methods on `PlantasiaEngine`:
-
-| Function | Description |
-|----------|-------------|
-| `initAudio()` | Start audio context |
-| `playPreset(preset)` | Play a preset |
-| `stopAudio()` | Stop all voices |
-| `applyBotanicalControls(controls)` | Apply botanical mapping (includes `mold`) |
-| `setMold(mold)` | Set Mold macro (0–100) |
-| `getMoldValue()` | Read current Mold value |
-| `getPresetMold(preset)` | Read preset default Mold |
-| `ENGINE_PARAMETER_METADATA` | Parameter metadata export |
-| `resolveMoldParameters(mold, profile?)` | Resolve macro → all module targets |
-| `resolveMoldProfile(preset)` | Get Sound World mold personality |
-| `MOLD_PROFILES` | Built-in mold profile registry |
-| `triggerChord(notes?)` | Trigger chord |
-| `setTempo(bpm)` | Set tempo |
-| `getWaveform()` | Waveform data |
-| `getLevel()` | Output level |
-| `updateParameter(key, value)` | Update parameter |
-| `defaultNotePool` | Default note array |
-| `presets` | Preset array |
-
-```typescript
-import { initAudio, playPreset, presets, stopAudio } from 'plantasia-sound-engine';
-
-await initAudio();
-playPreset(presets[0]);
-stopAudio();
-```
-
----
-
-## Preset exports
-
-| Export | Description |
-|--------|-------------|
-| `junoFlowersPreset` | Full Juno Flowers `PlantasiaPreset` |
-| `JUNO_FLOWERS_BOTANICAL` | Botanical routing blocks |
-| `JUNO_FLOWERS_GROWTH` | Growth-stage metadata |
-| `JUNO_FLOWERS_SCALE` | Scale frequencies (Hz) |
-
----
+| Error | Thrown by |
+| --- | --- |
+| `EngineLifecycleError` | `start`, `noteOn`, `noteOff` in the wrong state. `code` says which |
+| `EcologyControlScaleError` | `setControl` outside 0..1 |
+| `ReservedSpeciesIdError` | `registerSpecies` with a built in id |
 
 ## Types
 
-### `PlantasiaPreset`
+`PlantasiaEngine` (the interface, also exported as `PlantasiaEngineApi`), `CreatePlantasiaEngineOptions`, `SpeciesId`, `EcologicalControl`, `EcologyControlState`, `EngineState`, `EngineLifecycleErrorCode`, `SoundWorld`, `SoundWorldMetadata`, `SoundWorldStartOptions`, `AudioFeatures`, `OnsetEvent`, `PlantasiaPreset`, and the event types above.
 
-```typescript
-type PlantasiaPreset = {
-  id: string;
-  name: string;
-  species: SpeciesName;
-  description: string;
-  mood: string;
-  asciiState: OrganismState;
-  synth: SynthSettings;
-  scale?: number[];
-  botanical?: JunoBotanicalConfig;
-  growth?: JunoGrowthConfig;
-};
-```
+## Root export
 
-### `SynthSettings`
+`import { createPlantasiaEngine } from 'plantasia-sound-engine'` returns the same instance typed as the full class. On top of the public tier it carries:
 
-Oscillator, filter, envelope, and effects configuration. See `src/utils/types/presets.ts`.
+- Legacy v1 preset path, documented in [API_V1.md](./API_V1.md): `playPreset`, `triggerChord`, `updateParameter`, `applyBotanicalControls`, `setMold`, `getMold`, `getParameterMetadata`, `presets`, `initialBotanicalControls`, `defaultNotePool`.
+- Root only conveniences: `initialize` (alias of `init`), `stopSpecies`, `applyEcology`, `events`, `scheduler`, `transport`, `midi`.
+- Engine internals: `EngineEventBus`, `EngineScheduler`, `Transport`, `SpeciesManager`, `createSpeciesManager`, species factories, `resolvePresetToSpecies`, `getMasterBus`, `AudioAnalyser`, `configureContextLatency`, the generative and performance engines.
 
-### `BotanicalControls`
-
-Record of botanical knob values (0–100): `energy`, `growth`, `density`, `evolution`, `random`, `life`, `space`, `texture`, `harmony`, `resonance`.
-
-### `BotanicalControlKey`, `SpeciesName`, `OrganismState`
-
-String union types for preset metadata and controls.
-
-### `JunoBotanicalConfig`, `JunoGrowthConfig`
-
-Juno Flowers-specific routing and growth configuration.
-
----
-
-## Internal preset utilities (not in public barrel)
-
-Available under `src/presets/` for future subpath exports:
-
-- `serializePreset(preset)` — JSON string
-- `deserializePreset(json)` — parse preset
-- `getPresetById(id)` — lookup
-- `getPresetsByCategory(category)` — filter by manifest category
-
----
-
-## Error handling
-
-- `init()` rejects if Tone.js cannot start the AudioContext.
-- `playPreset()` before `init()` logs and returns without playing (preset staged).
-- `triggerChord()` before `init()` is a no-op.
-- `updateParameter()` without an active preset logs and returns.
+Nothing on the root is scheduled for removal. New hosts should not need it.
