@@ -47,8 +47,25 @@ test('engine performance bar', async ({ page, browserName }) => {
       `fps ${result.longRun.fps.toFixed(1)}, engine ${result.longRun.engineMsPerFrame.toFixed(3)} ms/frame (max ${result.longRun.engineMsMax.toFixed(2)})`,
   );
 
+  const wheelTimes = result.wheel.map((r) => r.responseMs).filter((v) => v !== null);
+  const wheelMedian = [...wheelTimes].sort((a, b) => a - b)[Math.floor(wheelTimes.length / 2)];
+  const stateTimes = result.wheel.map((r) => r.stateMs).filter((v) => v !== null);
+  const stateMedian = [...stateTimes].sort((a, b) => a - b)[Math.floor(stateTimes.length / 2)];
+  console.log(
+    `[${browserName}] wheel to modulation state median ${stateMedian?.toFixed(1)} ms; wheel to audible median ${wheelMedian?.toFixed(1)} ms ` +
+      `(runs ${result.wheel.map((r) => (r.responseMs === null ? 'none' : r.responseMs.toFixed(1))).join(', ')})`,
+  );
+  console.log(
+    `[${browserName}] long run, eight routes, ${result.longRunModulated.seconds.toFixed(0)}s: dropouts ${result.longRunModulated.dropouts}, ` +
+      `fps ${result.longRunModulated.fps.toFixed(1)}, engine ${result.longRunModulated.engineMsPerFrame.toFixed(3)} ms/frame (max ${result.longRunModulated.engineMsMax.toFixed(2)})`,
+  );
+  console.log(
+    `[${browserName}] modulation tick, eight routes: ${result.modulationCost.msPerTick.toFixed(3)} ms/tick (max ${result.modulationCost.msMax.toFixed(2)}), ${result.modulationCost.msPerSecond.toFixed(1)} ms/s over ${result.modulationCost.ticks} ticks`,
+  );
+
   expect(errors, 'no page errors').toEqual([]);
   expect(latencies.length, 'every latency run produced sound').toBe(result.latency.length);
   expect(median, 'noteOn to audible').toBeLessThanOrEqual(NOTE_ON_LATENCY_MS);
   expect(result.longRun.dropouts, 'dropouts over the long run').toBe(0);
+  expect(result.longRunModulated.dropouts, 'dropouts over the long run with eight routes').toBe(0);
 });

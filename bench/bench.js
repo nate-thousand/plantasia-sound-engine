@@ -152,7 +152,28 @@ async function measureControlSettle(engine, control, from, to, feature = 'centro
  * jumps above 0.5 while the window is audible. Also records engine main
  * thread cost per frame and achieved frame rate.
  */
-async function measureLongRun(engine, tap, { seconds = 60, burnMs = 8 } = {}) {
+/** Eight routes covering every source type and both destination kinds (decision 12 for 1.1.0). */
+const EIGHT_ROUTES = [
+  [{ id: 'lfo-a', type: 'lfo', hz: 0.2, shape: 'sine' }, 'bloom', 0.3],
+  [{ id: 'lfo-b', type: 'lfo', beats: 4, shape: 'triangle' }, 'target:filterCutoffMult', 0.5],
+  [{ id: 'lfo-c', type: 'lfo', hz: 0.07, shape: 'saw', unipolar: true }, 'roots', 0.2],
+  [{ id: 'sh-a', type: 'sample-hold', beats: 1, slew: 0.1 }, 'target:reverbWetAdd', 0.4],
+  [{ id: 'sh-b', type: 'sample-hold', hz: 0.5 }, 'mold', 0.15],
+  [{ id: 'env-a', type: 'follower', band: 'bass', attack: 0.05, release: 0.4 }, 'target:brightnessAdd', 0.5],
+  [{ id: 'wheel', type: 'midi-cc', cc: 1 }, 'growth', 0.3],
+  [{ id: 'press', type: 'midi-aftertouch' }, 'target:saturationAdd', 0.5],
+];
+
+async function measureLongRun(engine, tap, { seconds = 60, burnMs = 8, routes = 0 } = {}) {
+  const handles = [];
+  for (const [source, destination, depth] of EIGHT_ROUTES.slice(0, routes)) {
+    handles.push(engine.modulate(source, destination, depth));
+  }
+  if (routes > 0) {
+    // give the MIDI sources something to read
+    engine.feedMidi([0xb0, 1, 90]);
+    engine.feedMidi([0xd0, 40]);
+  }
   let dropouts = 0;
   let frames = 0;
   let engineMs = 0;
@@ -234,9 +255,13 @@ async function measureLongRun(engine, tap, { seconds = 60, burnMs = 8 } = {}) {
     await nextFrame();
   }
   const elapsed = (performance.now() - start) / 1000;
+  for (const h of handles) {
+    h.remove();
+  }
   return {
     seconds: elapsed,
     burnMs,
+    routes,
     frames,
     fps: frames / elapsed,
     dropouts,
@@ -244,6 +269,48 @@ async function measureLongRun(engine, tap, { seconds = 60, burnMs = 8 } = {}) {
     engineMsPerFrame: engineMs / frames,
     engineMsMax: maxEngineMs,
   };
+}
+
+/**
+ * Main thread cost of the modulation tick itself: time inside
+ * ModulationEngine.tick plus the species hook, sampled by wrapping the
+ * scheduler interval callback. Reported per tick and per second.
+ */
+async function measureModulationCost(engine, { seconds = 5, routes = 8 } = {}) {
+  const handles = [];
+  for (const [source, destination, depth] of EIGHT_ROUTES.slice(0, routes)) {
+    handles.push(engine.modulate(source, destination, depth));
+  }
+  engine.feedMidi([0xb0, 1, 90]);
+  engine.feedMidi([0xd0, 40]);
+  // Wrap the scheduler so the modulation interval callback is timed.
+  const scheduler = engine.scheduler;
+  const original = scheduler.setInterval.bind(scheduler);
+  let ticks = 0;
+  let totalMs = 0;
+  let maxMs = 0;
+  scheduler.setInterval = (callback, intervalMs, owner) => {
+    if (owner !== 'modulation') {
+      return original(callback, intervalMs, owner);
+    }
+    return original(() => {
+      const t0 = performance.now();
+      callback();
+      const spent = performance.now() - t0;
+      ticks += 1;
+      totalMs += spent;
+      maxMs = Math.max(maxMs, spent);
+    }, intervalMs, owner);
+  };
+  // restart the tick so the wrapper takes effect
+  engine.stopSpecies();
+  await engine.start({ generative: true });
+  await wait(seconds * 1000);
+  scheduler.setInterval = original;
+  for (const h of handles) {
+    h.remove();
+  }
+  return { routes, ticks, msPerTick: ticks ? totalMs / ticks : 0, msMax: maxMs, msPerSecond: totalMs / seconds };
 }
 
 async function run(options = {}) {
@@ -276,11 +343,22 @@ async function run(options = {}) {
   }
   log('control settle: ' + JSON.stringify(settle));
 
+  // Mod wheel to audible (decision 12 for 1.1.0), still in played mode.
+  const wheel = await measureWheelResponse(engine, { runs: 5 });
+  log('wheel response: ' + JSON.stringify(wheel));
+
   // Long run: generative Seed at default density.
   engine.stopSpecies();
   await engine.start();
   const longRun = await measureLongRun(engine, tap, { seconds: longRunSeconds, burnMs });
   log('long run: ' + JSON.stringify(longRun));
+
+  // Long run again with eight modulation routes (decision 12 for 1.1.0).
+  const longRunModulated = await measureLongRun(engine, tap, { seconds: longRunSeconds, burnMs, routes: 8 });
+  log('long run, eight routes: ' + JSON.stringify(longRunModulated));
+
+  const modulationCost = await measureModulationCost(engine, { seconds: 5, routes: 8 });
+  log('modulation cost: ' + JSON.stringify(modulationCost));
 
   engine.dispose();
   const result = {
@@ -291,7 +369,10 @@ async function run(options = {}) {
     lookAhead: Tone.getContext().lookAhead,
     latency,
     settle,
+    wheel,
     longRun,
+    longRunModulated,
+    modulationCost,
   };
   window.benchResult = result;
   return result;
@@ -458,19 +539,28 @@ async function measureWheelResponse(engine, { runs = 5, note = 'E3' } = {}) {
     const p0 = performance.now();
     engine.feedMidi([0xb0, 1, 127]);
     const series = [];
+    let stateMs = null;
     while (performance.now() - p0 < 700) {
-      series.push({ t: performance.now() - p0, v: engine.getAudioFeatures().high });
+      const t = performance.now() - p0;
+      if (stateMs === null && (engine.getModulationState().targets.filterCutoffMult ?? 0) < -0.4) {
+        stateMs = +t.toFixed(1);
+      }
+      series.push({ t, v: engine.getAudioFeatures().high });
       await wait(4);
     }
     const final = series.slice(-20).reduce((a, s) => a + s.v, 0) / 20;
     const delta = final - baseline;
+    // Response: two consecutive samples at least half way to the final value,
+    // so the band's own motion (about 0.03) cannot trigger it.
     let responseMs = null;
-    if (Math.abs(delta) >= 0.03) {
-      for (const s of series) {
-        if (Math.abs(s.v - baseline) >= Math.abs(delta) * 0.2) { responseMs = s.t; break; }
+    if (Math.abs(delta) >= 0.06) {
+      for (let i = 1; i < series.length; i += 1) {
+        const a = Math.abs(series[i - 1].v - baseline) >= Math.abs(delta) * 0.5;
+        const b = Math.abs(series[i].v - baseline) >= Math.abs(delta) * 0.5;
+        if (a && b) { responseMs = series[i - 1].t; break; }
       }
     }
-    results.push({ responseMs: responseMs === null ? null : +responseMs.toFixed(1), baseline: +baseline.toFixed(3), final: +final.toFixed(3) });
+    results.push({ stateMs, responseMs: responseMs === null ? null : +responseMs.toFixed(1), baseline: +baseline.toFixed(3), final: +final.toFixed(3) });
   }
   engine.noteOff(note);
   engine.removeModulation(engine.getModulationRoutes().find((r) => r.source.id === 'wheel')?.id);
@@ -487,7 +577,37 @@ async function probeWheel(options = {}) {
   return results;
 }
 
-window.bench = { run, probe, probeControl, abControls, probeModulation, measureWheelResponse, probeWheel };
+/** Where the wheel latency goes: MIDI store, modulation state, then audio. */
+async function probeWheelStages({ runs = 3, note = 'E3' } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies('seed');
+  await engine.start({ generative: false });
+  engine.modulate({ id: 'wheel', type: 'midi-cc', cc: 1 }, 'target:filterCutoffMult', -1);
+  engine.noteOn(note, 0.9);
+  const out = [];
+  for (let run = 0; run < runs; run += 1) {
+    engine.feedMidi([0xb0, 1, 0]);
+    await wait(900);
+    const baseHigh = engine.getAudioFeatures().high;
+    const p0 = performance.now();
+    engine.feedMidi([0xb0, 1, 127]);
+    let tStore = null, tState = null, tAudio = null;
+    while (performance.now() - p0 < 700) {
+      const t = performance.now() - p0;
+      if (tStore === null && engine.midi.read('cc', 1).value === 1) tStore = t;
+      if (tState === null && (engine.getModulationState().targets.filterCutoffMult ?? 0) < -0.4) tState = t;
+      if (tAudio === null && engine.getAudioFeatures().high < baseHigh - 0.07) tAudio = t;
+      if (tStore !== null && tState !== null && tAudio !== null) break;
+      await wait(2);
+    }
+    out.push({ tStore: +tStore?.toFixed(1), tState: +tState?.toFixed(1), tAudio: tAudio === null ? null : +tAudio.toFixed(1), baseHigh: +baseHigh.toFixed(3) });
+  }
+  engine.dispose();
+  return out;
+}
+
+window.bench = { run, probe, probeControl, abControls, probeModulation, measureWheelResponse, probeWheel, probeWheelStages };
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });
