@@ -297,7 +297,111 @@ async function run(options = {}) {
   return result;
 }
 
-window.bench = { run };
+/**
+ * Exploratory: hold a note, step one control, record every feature for
+ * `ms` milliseconds at 4 ms. Returns the series plus per feature before,
+ * final and response time (first sample 20 percent of the way to final).
+ */
+async function probeControl(engine, control, from, to, ms = 800, note = 'E3') {
+  engine.setControl(control, from);
+  engine.noteOn(note, 0.9);
+  await wait(1500);
+  const before = { ...engine.getAudioFeatures() };
+  const series = [];
+  const p0 = performance.now();
+  engine.setControl(control, to);
+  while (performance.now() - p0 < ms) {
+    series.push({ t: +(performance.now() - p0).toFixed(1), ...engine.getAudioFeatures() });
+    await wait(4);
+  }
+  engine.noteOff(note);
+  const tail = series.slice(-25);
+  const summary = {};
+  for (const key of ['rms', 'peak', 'bass', 'mid', 'high', 'centroid']) {
+    const final = tail.reduce((a, s) => a + s[key], 0) / tail.length;
+    const delta = final - before[key];
+    let responseMs = null;
+    if (Math.abs(delta) >= 0.01) {
+      for (const s of series) {
+        if (Math.abs(s[key] - before[key]) >= Math.abs(delta) * 0.2) {
+          responseMs = s.t;
+          break;
+        }
+      }
+    }
+    summary[key] = { before: +before[key].toFixed(3), final: +final.toFixed(3), delta: +delta.toFixed(3), responseMs };
+  }
+  return { control, from, to, summary, series };
+}
+
+async function probe(options = {}) {
+  const { species = 'seed', controls = ['growth', 'bloom', 'roots', 'mold', 'bacteria'], from = 0.1, to = 0.95, ms = 800 } = options;
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies(species);
+  await engine.start({ generative: false });
+  const results = [];
+  for (const control of controls) {
+    results.push(await probeControl(engine, control, from, to, ms));
+    engine.setControl(control, 0.5);
+    await wait(800);
+  }
+  engine.dispose();
+  window.probeResult = results;
+  return results.map((r) => ({ control: r.control, summary: r.summary }));
+}
+
+/**
+ * Steady state A/B: for each control, hold a note at `low` then at `high`,
+ * average features over `ms` after a settle wait, and report the difference
+ * against a same-value A/A run so the voice's own motion has a baseline.
+ */
+async function abControls(options = {}) {
+  const { species = 'seed', controls = ['growth', 'bloom', 'roots', 'mold', 'bacteria'], low = 0.1, high = 0.95, ms = 2000, settle = 1500, note = 'E3' } = options;
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies(species);
+  await engine.start({ generative: false });
+  const KEYS = ['rms', 'peak', 'bass', 'mid', 'high', 'centroid'];
+  const average = async () => {
+    const acc = Object.fromEntries(KEYS.map((k) => [k, 0]));
+    let n = 0;
+    const p0 = performance.now();
+    while (performance.now() - p0 < ms) {
+      const f = engine.getAudioFeatures();
+      for (const k of KEYS) acc[k] += f[k];
+      n += 1;
+      await wait(8);
+    }
+    return Object.fromEntries(KEYS.map((k) => [k, acc[k] / n]));
+  };
+  const hold = async (control, value) => {
+    for (const c of ['growth', 'bloom', 'roots', 'mold', 'bacteria']) engine.setControl(c, 0.5);
+    engine.setControl(control, value);
+    engine.allNotesOff();
+    await wait(600);
+    engine.noteOn(note, 0.9);
+    await wait(settle);
+    const avg = await average();
+    engine.noteOff(note);
+    return avg;
+  };
+  const out = [];
+  for (const control of controls) {
+    const a1 = await hold(control, low);
+    const a2 = await hold(control, low);
+    const b = await hold(control, high);
+    const row = { control };
+    for (const k of KEYS) {
+      row[k] = { aa: +(a2[k] - a1[k]).toFixed(3), ab: +(b[k] - a1[k]).toFixed(3) };
+    }
+    out.push(row);
+  }
+  engine.dispose();
+  return out;
+}
+
+window.bench = { run, probe, probeControl, abControls };
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });

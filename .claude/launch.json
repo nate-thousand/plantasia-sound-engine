@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "demo", "--", "--port", "5193", "--strictPort"],
+      "port": 5193
+    },
+    {
+      "name": "bench",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "bench"],
+      "port": 5194
+    }
+  ]
+}
