@@ -513,3 +513,20 @@ textarea {
   text-transform: uppercase;
   color: var(--accent, #4ade80);
 }
+
+.mod-builder { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.6rem; }
+.mod-builder .field input[type="text"], .mod-builder .field input[type="number"], .mod-builder .field select { width: 100%; }
+.mod-route { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.4rem 0.5rem; margin-bottom: 0.4rem; background: var(--surface); }
+.mod-route-title { font-size: 0.75rem; margin-bottom: 0.3rem; word-break: break-all; }
+.mod-route-controls { display: flex; align-items: center; gap: 0.5rem; }
+.mod-route-controls input[type="range"] { flex: 1; }
+.mod-depth-out { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.75rem; min-width: 2.6em; }
+.mod-live { margin-top: 0.6rem; display: grid; gap: 0.5rem; }
+.mod-live-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0.2rem 0; }
+.mod-bar { display: grid; grid-template-columns: 5.5em 1fr 6.5em; align-items: center; gap: 0.4rem; font-size: 0.72rem; margin-bottom: 0.2rem; }
+.mod-bar.inactive { opacity: 0.5; }
+.mod-bar-track { position: relative; height: 6px; background: #0006; border-radius: 3px; overflow: hidden; }
+.mod-bar-fill { position: absolute; top: 0; bottom: 0; background: var(--accent); }
+.mod-bar-base { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); }
+.mod-bar-val { font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.mod-targets { font-size: 0.72rem; color: var(--muted); word-break: break-word; }

@@ -92,7 +92,7 @@ See [docs/API.md](./docs/API.md) for the full contract.
 | **Ecology (v2)** | growth, bloom, roots, mold, bacteria (0–100 UI → 0–1 API) |
 | **Botanical (v1)** | All 11 botanical controls including mold |
 | **Audio** | Waveform canvas, RMS/peak/bass/mid/treble meters, chord trigger |
-| **Reactive** | Not wired — section shows hint only |
+| **Modulation** | Route builder for every source and destination, live state readout, three route preset (1.1) |
 | **MIDI** | Enable, device list, note monitor, panic |
 | **Keyboard** | A–K pentatonic layout, visual key feedback, octave/velocity options |
 | **Performance** | 12 macros with **species-specific routing** (Bloom, Mold, Air, Roots, …) |
@@ -108,7 +108,7 @@ See [docs/API.md](./docs/API.md) for the full contract.
 - **Keyboard:** Start Audio → keys A–K (auto-starts generative)
 - **Debugging:** Debug panel → Validate — see [DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md)
 
-Every active control is wired to a real engine API. Removed or labeled unavailable: audio reactive, mic, MIDI device select, per-layer mute/solo, and generative parameters with no engine facade. See audit doc for full inventory.
+Every active control is wired to a real engine API. Removed or labeled unavailable: mic, MIDI device select, per-layer mute/solo, and generative parameters with no engine facade. See audit doc for full inventory.
 
 ### Macro behavior
 

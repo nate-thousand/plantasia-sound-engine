@@ -84,6 +84,10 @@ Built-in IDs (`seed`, `flowers`, `mold`, `bacteria`) are reserved. Custom plugin
 
 Bootstrap uses `registerBuiltinSpecies()` with an internal `builtin: true` flag — do not re-register reserved IDs from host code.
 
+## Modulation and preferences (1.1)
+
+Routes may be created in any state, before a species is loaded or started. Sources run only while the engine is `running`; `stop()` holds their phase and value; `dispose()` clears every route. A species switch keeps routes. A route to a target the loaded species ignores does nothing until a species that uses it loads. Generative preference overrides set at any time apply to the loaded species and to every species loaded afterwards.
+
 ## Registry
 
 `createSpeciesManager()` registers the four built in species. Every registered species is playable; there is no placeholder status (ROADMAP decision 9).

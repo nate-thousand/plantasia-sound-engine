@@ -11,6 +11,7 @@ import {
   hint,
   groupHeading,
 } from './sections.js';
+import { buildModulationSection } from './modulationSection.js';
 import {
   LAYER_DEFS,
   PERFORMANCE_MACROS,
@@ -291,9 +292,9 @@ export function buildUI(bridge, callbacks) {
     ]));
   }));
 
-  // --- Reactive (not in engine) ---
-  root.appendChild(createSection('reactive', 'Audio Reactive Mapping', (body) => {
-    body.appendChild(hint('Not wired yet — engine has no bindSensor() or audio-reactive routing API.', 'warn'));
+  // --- Modulation (1.1) ---
+  root.appendChild(createSection('modulation', 'Modulation', (body) => {
+    buildModulationSection(body, bridge, callbacks);
   }));
 
   // --- MIDI ---

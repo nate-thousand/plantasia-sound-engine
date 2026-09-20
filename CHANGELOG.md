@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MIDI control input** (1.1 step 3): `WebMidiManager` decodes CC, channel pressure and pitch bend (0..1, 0..1, -1..1; channels 1..16), keeps the last value per control and channel (`read()`), and takes raw bytes through `feed()`. Facade emits `midiControl { kind, controller?, value, channel, time }` and offers root only `feedMidi(bytes)` for bridges and the harness. `midi-cc`, `midi-aftertouch` and `midi-bend` modulation sources are live after `enableMidi()` or `feedMidi()`
 - **Generative preferences** (1.1 step 4): `setGenerativePreferences(partial)` and `getGenerativePreferences()`. Host overrides merge over every species' defaults on load and follow the player across species. Tempo, density, probability bias and drone preference apply now; scale, alternate scale, voicings, phrase length, harmony and rhythm style land at the next phrase boundary (`Generator.setPreferences`). Optional `SoundWorld.setGenerativePreferences` / `getGenerativePreferences` hooks, implemented by all four species
 - Sixteenth and seventeenth gates `scripts/test-modulation.mjs`, `scripts/test-preferences.mjs`
+- Browser harness rows for modulation: eight route long run (blocks on dropouts), modulation tick cost, wheel to modulation state and to audible. Results in `docs/PERFORMANCE.md`
+- Demo **Modulation** section (decision 14): route builder for every source type and destination, live state readout, three route preset. Replaces the unwired Reactive section
+- `docs/API.md` covers modulation, preferences, `modulationChanged` and `midiControl`; `CREATING_A_SPECIES.md` documents the optional hooks; `LIFECYCLE.md` the route lifecycle
 
 ## [1.0.0] - 2026-09-18
 
