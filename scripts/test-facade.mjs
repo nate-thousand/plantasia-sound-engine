@@ -117,6 +117,21 @@ async function main() {
   assert(Math.abs(engine.getControl('bloom') - 0.61) < 1e-9, 'getControl reads back setControl');
   assert(typeof engine.initialize === 'function', 'initialize alias kept on root instance');
 
+  // v1 deprecation line (decision 15 after 1.1.0): one notice per session, on the first legacy call.
+  const infos = [];
+  const originalInfo = console.info;
+  console.info = (...args) => infos.push(args.join(' '));
+  try {
+    engine.getMold();
+    engine.getParameterMetadata();
+    engine.getMold();
+  } finally {
+    console.info = originalInfo;
+  }
+  const notices = infos.filter((line) => line.includes('removed at 2.0'));
+  assert(notices.length === 1, `one deprecation notice per session, got ${notices.length}`);
+  assert(notices[0].includes('getMold()'), 'notice names the first legacy method called');
+
   engine.dispose();
   console.log('[test-facade] OK — unified facade validated');
 }

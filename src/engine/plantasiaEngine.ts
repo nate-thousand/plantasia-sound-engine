@@ -73,6 +73,22 @@ export type CreatePlantasiaEngineOptions = CreateSpeciesManagerOptions;
  * types. Everything below the "root only" and "legacy" markers ships from the
  * root export for existing hosts and the demo.
  */
+/**
+ * The v1 preset path is deprecated and removed at 2.0 (ROADMAP decisions 6
+ * and 15 after 1.1.0). One notice per page session, on the first legacy call.
+ */
+let legacyNoticeShown = false;
+export function noteLegacyCall(method: string): void {
+  if (legacyNoticeShown) {
+    return;
+  }
+  legacyNoticeShown = true;
+  console.info(
+    `[plantasia-sound-engine] ${method}() is part of the v1 preset path, deprecated and removed at 2.0. ` +
+      'Build on plantasia-sound-engine/public (docs/API.md); migration in docs/MIGRATION_V1_TO_V2.md.',
+  );
+}
+
 export class PlantasiaEngine implements PlantasiaEngineApi {
   /** Preset definitions shipped with the engine (v1). */
   readonly presets = presets;
@@ -162,8 +178,9 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return initAudio();
   }
 
-  /** @deprecated Root only. Use {@link init}. */
+  /** @deprecated Root only, removed at 2.0. Use {@link init}. */
   async initialize(): Promise<void> {
+    noteLegacyCall('initialize');
     return this.init();
   }
 
@@ -209,8 +226,9 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     this.startModulation();
   }
 
-  /** Root only. Stop generative playback on the active Sound World. Idempotent. Public tier hosts use {@link stop}. */
+  /** @deprecated Root only, removed at 2.0. Stop generative playback on the active Sound World. Idempotent. Use {@link stop}. */
   stopSpecies(): void {
+    noteLegacyCall('stopSpecies');
     this.species.stop();
     this.stopAnalysis();
     this.stopModulation();
@@ -535,8 +553,9 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
 
   // --- v1 preset API (legacy, root export only, preserved) ---
 
-  /** Apply preset synth settings and trigger a chord (v1 path). */
+  /** @deprecated v1 path, removed at 2.0. Use {@link loadPreset} then {@link start} or {@link noteOn}. */
   playPreset(preset: PlantasiaPreset): void {
+    noteLegacyCall('playPreset');
     playPreset(preset);
   }
 
@@ -552,11 +571,15 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     stopAudio();
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use {@link setControl}. */
   applyBotanicalControls(controls: BotanicalControls): void {
+    noteLegacyCall('applyBotanicalControls');
     applyBotanicalControls(controls);
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use {@link noteOn}. */
   triggerChord(notes?: string[]): void {
+    noteLegacyCall('triggerChord');
     triggerChord(notes);
   }
 
@@ -573,23 +596,30 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return getLevel();
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use {@link setControl} and {@link modulate}. */
   updateParameter(
     parameter: keyof SynthSettings | string,
     value: string | number,
   ): void {
+    noteLegacyCall('updateParameter');
     updateParameter(parameter, value);
   }
 
-  /** Set Mold macro (0–100, v1). */
+  /** @deprecated v1 path, removed at 2.0. Use `setControl('mold', value)` on 0..1. */
   setMold(value: number): void {
+    noteLegacyCall('setMold');
     setMold(value);
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use `getControl('mold')`. */
   getMold(): number {
+    noteLegacyCall('getMold');
     return getMoldValue();
   }
 
+  /** @deprecated v1 path, removed at 2.0. The public tier has five typed controls; see `ECOLOGICAL_CONTROLS`. */
   getParameterMetadata(): EngineParameterMeta[] {
+    noteLegacyCall('getParameterMetadata');
     return ENGINE_PARAMETER_METADATA;
   }
 }

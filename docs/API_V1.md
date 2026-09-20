@@ -1,7 +1,8 @@
-# API Reference (v1 — current implementation)
+# API Reference (v1, deprecated)
 
-> **Note:** This documents the shipped v1 public API frozen at tag `v1-sound-engine-baseline`.  
-> For the v2 target contract, see [API.md](./API.md).
+> **Deprecated since 1.2.0, removed at 2.0.** Every method on this page is marked `@deprecated` on the root export and logs one notice per session on first use. The signature v1 sounds are ported into species before removal. New hosts build on [API.md](./API.md); existing ones follow [MIGRATION_V1_TO_V2.md](./MIGRATION_V1_TO_V2.md).
+>
+> This documents the shipped v1 public API frozen at tag `v1-sound-engine-baseline`.
 
 Public exports from `plantasia-sound-engine`. All methods behave identically to v0.1.0 unless noted in CHANGELOG.
 

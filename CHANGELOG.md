@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI browser job** (decisions 3 and 11): `.github/workflows/ci.yml` runs the Playwright harness in Chromium and WebKit on every push to `main` and pull request. Dropouts, page errors and control extremes block; noteOn latency is recorded and annotated above 25 ms; the 15 ms bar stays the local release check. Results uploaded as the `bench-results` artifact
 - **Size measurement** (decision 12): `npm run size` bundles `dist/public.js` and `dist/index.js` with esbuild (409 and 414 KB minified, 107 and 108 KB gzip, recorded) and builds the demo site (462 KB minified against a 500 KB budget, blocks). `esbuild` is a devDependency
 
+### Deprecated
+
+- The v1 preset path on the root export (decisions 6 and 15): `playPreset`, `applyBotanicalControls`, `triggerChord`, `updateParameter`, `setMold`, `getMold`, `getParameterMetadata`, `stopSpecies`, `initialize` carry `@deprecated` and log one `console.info` per session on the first call. `docs/API_V1.md` carries the banner; the demo's Legacy heading reads "removed at 2.0". Nothing changes in behaviour. Removal is 2.0, after the signature v1 sounds are ported into species
+
 ### Changed
 
 - Tone.js pinned to `~15.1.22` (decision 3): a minor bump is now a deliberate change
