@@ -1,5 +1,7 @@
 import type { EcologicalControl, SpeciesId, SoundWorld, SoundWorldMetadata, SoundWorldStartOptions } from './SoundWorld.js';
-import { EcologyControls, toSpeciesControlValue } from './EcologyControls.js';
+import { ECOLOGICAL_CONTROLS, EcologyControls, toSpeciesControlValue, type EcologyControlState } from './EcologyControls.js';
+import type { ModulationFrame } from './modulation/types.js';
+import type { GenerativePreferences } from './generative/types.js';
 import { assertNormalizedEcologyValue } from './EcologyControlScaleError.js';
 import {
   assertEngineRunning,
@@ -29,6 +31,8 @@ export class SpeciesManager {
   private readonly rootScheduler?: EngineScheduler;
   private speciesScheduler: EngineScheduler | null = null;
   private state: EngineState = 'idle';
+  /** Host generative preference overrides, merged over every species' defaults on load (decision 10 for 1.1.0). */
+  private generativePreferences: Partial<GenerativePreferences> = {};
 
   constructor(registry?: SpeciesRegistry, options: SpeciesManagerOptions = {}) {
     this.registry = registry ?? new SpeciesRegistry();
@@ -113,6 +117,9 @@ export class SpeciesManager {
     const active = this.loader.getCurrent();
     if (active) {
       this.ecologyControls.applyTo(active);
+      if (Object.keys(this.generativePreferences).length > 0) {
+        active.setGenerativePreferences?.(this.generativePreferences);
+      }
       this.state = 'loaded';
       this.events?.emit('speciesChanged', {
         speciesId: id,
@@ -167,6 +174,36 @@ export class SpeciesManager {
   /** Current normalized value (0..1) of an ecological control. */
   getControl(control: EcologicalControl): number {
     return this.ecologyControls.get(control);
+  }
+
+  /** Store host preference overrides and apply them to the loaded species. */
+  setGenerativePreferences(partial: Partial<GenerativePreferences>): void {
+    this.generativePreferences = { ...this.generativePreferences, ...partial };
+    this.loader.getCurrent()?.setGenerativePreferences?.(partial);
+  }
+
+  /** Effective preferences of the loaded species, or the overrides alone when none is loaded. */
+  getGenerativePreferences(): Partial<GenerativePreferences> {
+    const active = this.loader.getCurrent();
+    return active?.getGenerativePreferences?.() ?? { ...this.generativePreferences };
+  }
+
+  /** Snapshot of every control's base value. */
+  getControlState(): EcologyControlState {
+    return { ...this.ecologyControls.getState() };
+  }
+
+  /** Hand a modulation frame to the loaded species, converted to its 0..100 scale. */
+  applyModulation(frame: ModulationFrame, rampSec: number): void {
+    const active = this.loader.getCurrent();
+    if (!active?.applyModulation || this.state !== 'running') {
+      return;
+    }
+    const controls = {} as Record<EcologicalControl, number>;
+    for (const control of ECOLOGICAL_CONTROLS) {
+      controls[control] = toSpeciesControlValue(frame.controls[control]);
+    }
+    active.applyModulation({ controls, targets: frame.targets, rampSec, routes: frame.routes });
   }
 
   /**

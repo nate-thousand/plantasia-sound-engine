@@ -1,5 +1,6 @@
 import type { PerformanceTargets } from '../../engine/performance/types.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { ChangeGate } from '../../shared/modulationFrame.js';
 import {
   applyMoldEffectsLevels,
   type MoldEffectsLevels,
@@ -20,9 +21,11 @@ export function applyMoldPerformance(
   base: MoldPerformanceBase,
   targets: PerformanceTargets,
   audioStarted: boolean,
+  rampSec = 0.2,
+  gate?: ChangeGate,
 ): void {
-  const bandCenter = base.bandCenter * targets.filterCutoffMult;
-  setRampParam(audioStarted, synth.bandpass.frequency as unknown as RampParam, bandCenter);
+  const bandCenter = base.bandCenter * Math.max(0.05, targets.filterCutoffMult);
+  setRampParam(audioStarted, synth.bandpass.frequency as unknown as RampParam, bandCenter, rampSec);
 
   const filterDepth = base.filterDepth + targets.instabilityAdd * 0.18;
   synth.filterDriftLfo.min = bandCenter * (1 - filterDepth);
@@ -32,6 +35,7 @@ export function applyMoldPerformance(
     audioStarted,
     effects.preBandpass.frequency as unknown as RampParam,
     base.preBandCenter * targets.filterCutoffMult,
+    rampSec,
   );
 
   const instability = targets.instabilityAdd;
@@ -60,9 +64,12 @@ export function applyMoldPerformance(
       releaseScale: base.effectLevels.releaseScale * targets.releaseMult,
     },
     audioStarted,
+    rampSec,
+    gate,
   );
 
-  synth.dronePoly.set({
-    envelope: { attack: MOLD_DRONE_ATTACK * targets.attackMult },
-  });
+  const attack = MOLD_DRONE_ATTACK * Math.max(0.05, targets.attackMult);
+  if (!gate || gate.changed('attack', attack, 0.002)) {
+    synth.dronePoly.set({ envelope: { attack } });
+  }
 }

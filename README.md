@@ -2,11 +2,11 @@
 
 **Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), unified facade, semantic events, generative composition, and expressive performance routing.
 
-**Version:** `1.0.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
+**Version:** `1.1.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
 
 The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature graphs) remains available on the root export for legacy hosts.
 
-> Pin **`1.0.0`**. Do **not** use tag `v2.0.0` for integration.
+> Pin **`1.1.0`**. Do **not** use tag `v2.0.0` for integration.
 
 ## Quick start (v2 — recommended)
 
@@ -26,7 +26,7 @@ engine.on('onset', ({ strength }) => { /* transients */ });
 const { bass, mid, high } = engine.getAudioFeatures(); // per frame, from the master bus
 ```
 
-Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the twenty four method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
+Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
 
 ```bash
 npm install
@@ -92,7 +92,7 @@ See [docs/API.md](./docs/API.md) for the full contract.
 | **Ecology (v2)** | growth, bloom, roots, mold, bacteria (0–100 UI → 0–1 API) |
 | **Botanical (v1)** | All 11 botanical controls including mold |
 | **Audio** | Waveform canvas, RMS/peak/bass/mid/treble meters, chord trigger |
-| **Reactive** | Not wired — section shows hint only |
+| **Modulation** | Route builder for every source and destination, live state readout, three route preset (1.1) |
 | **MIDI** | Enable, device list, note monitor, panic |
 | **Keyboard** | A–K pentatonic layout, visual key feedback, octave/velocity options |
 | **Performance** | 12 macros with **species-specific routing** (Bloom, Mold, Air, Roots, …) |
@@ -108,7 +108,7 @@ See [docs/API.md](./docs/API.md) for the full contract.
 - **Keyboard:** Start Audio → keys A–K (auto-starts generative)
 - **Debugging:** Debug panel → Validate — see [DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md)
 
-Every active control is wired to a real engine API. Removed or labeled unavailable: audio reactive, mic, MIDI device select, per-layer mute/solo, and generative parameters with no engine facade. See audit doc for full inventory.
+Every active control is wired to a real engine API. Removed or labeled unavailable: mic, MIDI device select, per-layer mute/solo, and generative parameters with no engine facade. See audit doc for full inventory.
 
 ### Macro behavior
 
@@ -133,7 +133,7 @@ Performance macros route differently per active species (`seed`, `flowers`, `mol
 ```json
 {
   "dependencies": {
-    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.0.0"
+    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.1.0"
   }
 }
 ```

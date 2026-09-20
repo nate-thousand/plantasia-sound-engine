@@ -1,4 +1,5 @@
 import type { EcologicalControl, SoundWorld } from '../../engine/SoundWorld.js';
+import type { SpeciesModulationFrame } from '../../engine/modulation/types.js';
 import { syncGeneratorEcology } from '../../shared/syncGeneratorEcology.js';
 import { syncPerformanceEcology } from '../../shared/syncPerformanceEcology.js';
 import { PerformanceEngine } from '../../engine/performance/PerformanceEngine.js';
@@ -39,6 +40,7 @@ export class TemplateSoundWorld implements SoundWorld {
   private performance: PerformanceEngine | null = null;
   private performanceBase: TemplatePerformanceBase | null = null;
   private audioStarted = false;
+  private modulation: SpeciesModulationFrame | null = null;
 
   async initialize(_context?: unknown): Promise<void> {
     this.controls = { ...DEFAULT_CONTROLS };
@@ -81,6 +83,19 @@ export class TemplateSoundWorld implements SoundWorld {
       return;
     }
     this.controls[control] = clampControl(value);
+    this.applyEcologicalControls();
+  }
+
+  /**
+   * Optional (engine 1.1). Arrives at 30 Hz while modulation routes exist:
+   * `frame.controls` are the modulated values (0..100), `frame.targets` are
+   * offsets to add to the routed performance targets, `frame.rampSec` is one
+   * tick. `frame.routes === 0` is the clearing frame; drop the held frame.
+   * Read `this.modulation?.controls ?? this.controls` wherever ecology is
+   * applied, and pass `rampSec` to your ramps. See the built in species.
+   */
+  applyModulation(frame: SpeciesModulationFrame): void {
+    this.modulation = frame.routes > 0 ? frame : null;
     this.applyEcologicalControls();
   }
 
@@ -130,11 +145,12 @@ export class TemplateSoundWorld implements SoundWorld {
       return;
     }
 
-    const growth = this.controls.growth / 100;
-    const bloom = this.controls.bloom / 100;
-    const roots = this.controls.roots / 100;
-    const mold = this.controls.mold / 100;
-    const bacteria = this.controls.bacteria / 100;
+    const controls = this.modulation?.controls ?? this.controls;
+    const growth = controls.growth / 100;
+    const bloom = controls.bloom / 100;
+    const roots = controls.roots / 100;
+    const mold = controls.mold / 100;
+    const bacteria = controls.bacteria / 100;
 
     // TODO: map ecology → base DSP levels
     this.performanceBase = {

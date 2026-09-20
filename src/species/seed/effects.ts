@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { ChangeGate } from '../../shared/modulationFrame.js';
 
 /**
  * Seed effects chain (subtle Plantasonic-inspired color).
@@ -99,22 +100,26 @@ export function applySeedEffectsLevels(
   synthRelease: Tone.PolySynth,
   levels: SeedEffectsLevels,
   audioStarted: boolean,
+  rampSec = 0.2,
+  gate?: ChangeGate,
 ): void {
-  effects.tapeSaturation.distortion = levels.tapeDrive;
-  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet);
-  setRampParam(audioStarted, effects.chorus.wet as unknown as RampParam, levels.chorusWet);
-  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet);
-  setRampParam(audioStarted, effects.delay.wet as unknown as RampParam, levels.delayWet);
+  if (!gate || gate.changed('tapeDrive', levels.tapeDrive, 0.01)) {
+    effects.tapeSaturation.distortion = levels.tapeDrive;
+  }
+  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet, rampSec);
+  setRampParam(audioStarted, effects.chorus.wet as unknown as RampParam, levels.chorusWet, rampSec);
+  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet, rampSec);
+  setRampParam(audioStarted, effects.delay.wet as unknown as RampParam, levels.delayWet, rampSec);
   setRampParam(
     audioStarted,
     effects.delay.feedback as unknown as RampParam,
     levels.delayFeedback,
+    rampSec,
   );
 
   const baseRelease = 3.2;
-  synthRelease.set({
-    envelope: {
-      release: baseRelease * levels.releaseScale,
-    },
-  });
+  const release = baseRelease * levels.releaseScale;
+  if (!gate || gate.changed('release', release, 0.02)) {
+    synthRelease.set({ envelope: { release } });
+  }
 }

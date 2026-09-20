@@ -28,6 +28,9 @@ export interface SoundWorldMetadata {
   version?: string;
 }
 
+import type { SpeciesModulationFrame } from './modulation/types.js';
+import type { GenerativePreferences } from './generative/types.js';
+
 /** Options for {@link SoundWorld.start}. */
 export interface SoundWorldStartOptions {
   /**
@@ -51,6 +54,23 @@ export interface SoundWorld {
   allNotesOff(): void;
 
   setControl(control: EcologicalControl, value: number): void;
+
+  /**
+   * Optional (1.1). Called at 30 Hz while modulation routes exist with the
+   * modulated control values (0..100) and performance target offsets. A
+   * species applies them with the frame's ramp; one more frame with the
+   * unmodulated controls arrives when the last route is removed. Species
+   * without this method are unaffected by modulation.
+   */
+  applyModulation?(frame: SpeciesModulationFrame): void;
+
+  /**
+   * Optional (1.1). Merge host preferences over the species' own generative
+   * defaults. Species with a `Generator` forward to `Generator.setPreferences`.
+   */
+  setGenerativePreferences?(partial: Partial<GenerativePreferences>): void;
+  /** Optional (1.1). Effective generative preferences after host overrides. */
+  getGenerativePreferences?(): Readonly<GenerativePreferences>;
 
   dispose(): void;
 }

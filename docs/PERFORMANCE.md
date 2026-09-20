@@ -21,6 +21,15 @@ WebKit needs its browser once: `npx playwright install webkit`.
 | Control response and settle | Held note, `setControl` stepped 0.1 to 0.95, the matching feature from `getAudioFeatures()` sampled every 4 ms for 600 ms. Response is the first sample 20 percent of the way to the final value, settle the first after which every sample stays within 10 percent | recorded | no |
 | Engine main thread cost | Time inside `getAudioFeatures()` and `getWaveform()` per frame during the long run, plus achieved frame rate | recorded | no |
 
+## Modulation rows (1.1)
+
+| Measure | How | Bar | Blocks release |
+| --- | --- | --- | --- |
+| Dropouts with eight routes | The 60 s long run repeated with eight routes active: three LFOs (one beat synced), two sample and holds, an envelope follower on bass, a CC and an aftertouch source with values fed through `feedMidi`, across both control and target destinations | 0 | yes |
+| Modulation tick cost | The scheduler's 30 Hz modulation callback timed for 5 s with eight routes: `ModulationEngine.tick` plus the species hook | recorded | no |
+| Wheel to modulation state | `feedMidi` CC1 step 0 to 127 on a `midi-cc` route to `target:filterCutoffMult` at depth -1, held Seed note; time until `getModulationState()` shows the offset | recorded, one tick expected | no |
+| Wheel to audible | Same step; time until two consecutive frames show the high band half way to its final value | recorded, 50 ms expectation | no |
+
 ## Results
 
 ### 1.0.0 work, 2026-09-18
@@ -42,6 +51,15 @@ Control response as first measured (single feature per control, superseded by fi
 | mold | centroid | no measurable change |
 | bacteria | high | no measurable change |
 
+### 1.1.0 work, 2026-09-19
+
+Same machine, release/1.1.0 after the MIDI and preferences steps.
+
+| Browser | noteOn to audible (median, runs) | Dropouts, 60 s, no routes | Dropouts, 60 s, eight routes | fps | Modulation tick (mean, max) | Wheel to state (median) | Wheel to audible (median, runs) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Chromium 153 | 12.0 ms (12.1, 12.0, 11.3, 12.0, 11.8) | 0 | 0 | 60.0 | 0.21 ms, 0.40 ms (6.3 ms per second) | 15.6 ms | 30.7 ms (10.0, 41.0, 30.7, 41.3, 0.1) |
+| WebKit 26.6 | 14.2 ms (12.1, 15.1, 14.2, 14.2, 11.7) | 0 | 0 | 60.0 | 0.44 ms, 2.0 ms (12.2 ms per second) | 24.0 ms | 87.0 ms (40, 87, 96, none, 56) |
+
 ### Findings
 
 1. Before this pass, noteOn to audible was 102 ms in Chromium: Tone's default `lookAhead` of 0.1 s. The engine now sets 0.01 s on the shared context when the master bus is created. The 60 s dropout run at 60 fps with the mock visual load is the check that the shorter lookahead holds.
@@ -61,3 +79,7 @@ Control response as first measured (single feature per control, superseded by fi
    The code ramps live parameters on every `setControl` (Seed: filter cutoff, chorus, reverb and delay wet, tape drive, delay feedback, drift depth and rate, release scale, polyphony) over 200 ms, and the step probe sees those ramps start within 5 to 40 ms on some feature. But a single held Seed voice moves on its own (fat saw detune beating, drift LFO, chorus) by about as much as any one control moves it. Bloom and mold clear the noise floor; growth, roots and bacteria do not on one voice. Their audible effect is on the population: polyphony, generator density and phrase choice, release length, particle rate. That is the ecological design, not a fault, and it is what the 1.1 modulation work is for if a host needs a control to bite harder on one voice.
 
    Consequence for the bar: "control response" cannot be asserted from the output spectrum on a held note. It is recorded, not asserted, and the ramp itself is fixed by construction (`setRampParam`, 200 ms). Decision 7's "settle under 50 ms" should read as ramp start under 50 ms, which the step probe shows.
+
+5. **Eight routes cost nothing a player would notice.** The modulation tick runs 0.2 ms in Chromium and 0.4 ms in WebKit at 30 Hz, so under 13 ms of main thread per second, and the long run with eight routes shows zero dropouts in both browsers at 60 fps under the mock visual load. The `ChangeGate` around `PolySynth.set` is what keeps it there; without it every tick would touch every voice.
+6. **Wheel latency is one tick to the engine and the rest is the spectrum.** A CC step reaches `getModulationState()` in 16 ms (Chromium) and 24 ms (WebKit), which is the 33 ms tick interval sampled at random phase. The audible number is noisy (0 to 96 ms across runs, one WebKit run undetected) because it is read from the high band of a held Seed voice that moves on its own by about a third of the step's effect. The ramp itself is 33 ms by construction. Engine side latency is the number to hold to; the audible one stays recorded.
+7. **WebKit noteOn latency has drifted to the bar.** 12.1 ms in the 1.0 run, 14.2 ms median here with one run at 15.1 ms against a 15 ms bar. Nothing in 1.1 touches the note path, so this is run to run variance in headless WebKit. If it flakes, the options are a lookahead of 8 ms or a 20 ms bar for WebKit; neither is taken yet.

@@ -4,6 +4,7 @@ import { fromSpeciesControlValue } from '../../engine/EcologyControls.js';
 import {
   Generator,
   type GenerativeCallbacks,
+  type GenerativePreferences,
   type GenerativeEcology,
 } from '../../engine/generative/Generator.js';
 import { FLOWERS_GENERATIVE_PREFERENCES } from './metadata.js';
@@ -32,6 +33,14 @@ export class FlowersGenerator {
 
   setBacteria(value: number): void {
     this.engine.setEcology({ bacteria: fromSpeciesControlValue(value) });
+  }
+
+  setPreferences(partial: Partial<GenerativePreferences>): void {
+    this.engine.setPreferences(partial);
+  }
+
+  getPreferences(): Readonly<GenerativePreferences> {
+    return this.engine.getPreferences();
   }
 
   start(tempo = FLOWERS_GENERATIVE_PREFERENCES.preferredTempo): void {

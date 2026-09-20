@@ -28,12 +28,34 @@ A grill on "what is the next milestone" closed with these. They rank everything 
 | 14 | The portfolio case study is updated at 1.0 only. | beta.2 changes no counts |
 | 15 | Git: commit locally on the branch. Push, tag and deploy only after the user's ok. | |
 
+## Decisions for 1.1.0 (settled 2026-09-19)
+
+A grill on the modulation milestone closed with these. Branch `release/1.1.0` off `main`; commits local, tag on the user's ok.
+
+| # | Decision | Consequence |
+| --- | --- | --- |
+| 1 | Modulation is for host performance first: a player's mod wheel, aftertouch or pitch bend reaching a control or a target. Internal life (LFO, sample and hold) and visual coupling ship with it because they are the same source machinery. | Defaults and the harness bar follow the performed case |
+| 2 | Modulation lives in the engine, global, beside the species manager. Species see only resulting values. | One implementation; routes survive a species switch; a species with built in motion keeps its own LFOs in its graph |
+| 3 | Modulation adds to the host's base, clamped. `setControl` sets base, `getControl` returns base, the modulated value is in `getModulationState()`. Targets modulate around their neutral value. | The host's slider is never overwritten and never lies |
+| 4 | Sources are plain serializable descriptors with an `id`; the engine instantiates them. The same `id` used in two routes is one source. | A host can save routes in a preset and send them over a wire |
+| 5 | Source set for 1.1: `lfo` (sine, triangle, square, saw; bipolar by default, `unipolar: true` option), `sample-hold` (random, `slew` seconds), `follower` (own master bus, `band: rms \| bass \| mid \| high`, attack and release), `midi-cc` (`cc`, optional `channel`), `midi-aftertouch`, `midi-bend`. Rates as `{ hz }` free running or `{ beats }` synced to `Transport` BPM with phase reset on `play()`. | Random walk, step sources, sampling another source, and external audio input are later work |
+| 6 | Depth is -1..1. Unipolar sources read 0..1, bipolar -1..1. Control result `clamp01(base + depth × source)`. Target offset `depth × source × span` from `MODULATION_TARGET_SPANS`, one span per numeric target (`filterCutoffMult` ±0.5, `attackMult` and `releaseMult` ±0.75, `brightnessAdd` ±0.5, `chorusDepthMult` ±0.5, `reverbWetAdd` ±0.3, `saturationAdd` ±0.4, `oscBlendAdd` ±0.5, `stereoWidthMult` ±0.5, `instabilityAdd` ±0.5, `particleRateMult` ±0.75, `generativeDensityAdd` ±0.4, `noteVelocityScale` ±0.5). `legato` is not a destination. | Spans are exported, documented, and tuned by ear in the demo before 1.1.0 |
+| 7 | The modulation engine ticks on the scheduler at 30 Hz and calls a new optional `SoundWorld.applyModulation(frame)`: modulated control values on the species scale plus target offsets. Species ramp over one tick (33 ms). Species without the hook get nothing. | The four built in species implement it; the template documents it; 1.0 custom species keep working |
+| 8 | API: `modulate(source, destination, depth)` returns `{ id, set(partial), remove() }`; `removeModulation(id)`; `getModulationRoutes()`; `getModulationState()` returns `{ sources, controls: { base, modulated }, targets }` for per frame polling. Destinations are `'bloom'` style control names or `'target:filterCutoffMult'`. One event `modulationChanged { routes }` on add, set or remove. Modulation never emits `controlChanged` per tick. | Polling for values, events for structure, as features and notes already work |
+| 9 | MIDI: `WebMidiManager` decodes CC, channel pressure and pitch bend, normalised 0..1 and -1..1, all channels unless filtered, 7 bit only. One host event `midiControl { kind, controller?, value, channel, time }` so a host can build MIDI Learn. A MIDI source reads 0 and shows inactive until `enableMidi()`. | MIDI Learn stays host UI (decision 10 of 1.0); MPE stays deferred |
+| 10 | `setGenerativePreferences(partial)` and `getGenerativePreferences()`. The engine stores host overrides and merges them over every species' defaults on load. Fields: `preferredScale`, `chordVoicings`, `phraseLength`, `probabilityBias`, `dronePreference`, `harmonyStyle`, `rhythmStyle`, `preferredTempo`. Scale, voicings, harmony style and rhythm style land at the next phrase boundary; tempo, density, probability and drone preference land immediately. | A scale is a host decision that follows the player across species. `Generator` accepts runtime updates |
+| 11 | Route lifecycle: routes may be created in any state; sources run only while `running`; `stop` holds phase and value; `dispose` clears routes; a species switch keeps them; a route to a target the loaded species ignores is a silent no op, documented per target. | `route.set({ phase: 0 })` is the explicit reset |
+| 12 | Harness rows: zero dropouts over 60 s with eight active routes at 30 Hz under the 8 ms mock load (blocks); engine main thread cost per frame with eight routes (recorded); synthetic `midi-cc` step to `target:filterCutoffMult`, time to first spectral movement, 50 ms expectation (recorded). | `docs/PERFORMANCE.md` gains a 1.1 section |
+| 13 | Public tier grows to thirty methods: `modulate`, `removeModulation`, `getModulationRoutes`, `getModulationState`, `setGenerativePreferences`, `getGenerativePreferences`; events `modulationChanged` and `midiControl`. All additive. | `docs/API.md` stays one page |
+| 14 | Demo Modulation section: a route builder (source fields, destination select, depth), the live state readout, and a preset of three routes (LFO on bloom, follower bass to roots, CC1 to filter cutoff). No more. | The demo shows every source and destination once; hosts own the real UI |
+| 15 | One release. Order: modulation engine, species hook, LFO and sample and hold, spans; envelope follower; MIDI sources and event; generative preferences; harness rows; demo section and docs; tag 1.1.0. | The harness lands before the demo so the numbers exist when the surface is written up |
+
 ## Current status
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.0.0` |
-| **Honest integration target** | `1.0.0`, shipped; `1.1.0` is modulation (decision 12) |
+| **Package version (package.json)** | `1.1.0` |
+| **Honest integration target** | `1.1.0`, shipped: modulation, MIDI control, generative preferences |
 | **Production branch** | `main` (from 1.0.0; `v2-sound-world-engine` merges in at that tag) |
 | **Development branch until 1.0.0** | `v2-sound-world-engine` |
 | **v1 freeze tag** | `v1-sound-engine-baseline` |
@@ -59,9 +81,10 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `v2.0.0` | **Deprecated** — Sound World architecture landed; premature major tag |
 | `1.0.0-beta.1` | Honest Sound World integration beta (Phases 17 to 21) |
 | `1.0.0-beta.2` | Master bus analysis, Bacteria recursion fix, demo control surface |
-| `1.0.0` | **Current**: analysis API, event timing, performance harness, two tier facade, placeholder species removed |
+| `1.0.0` | Analysis API, event timing, performance harness, two tier facade, placeholder species removed |
+| `1.1.0` | **Current**: modulation engine, MIDI CC, aftertouch and bend, generative preferences, thirty method public tier |
 
-**Plantasonic should pin:** `1.0.0`, not `v2.0.0`.
+**Plantasonic should pin:** `1.1.0`, not `v2.0.0`.
 
 ---
 
@@ -264,9 +287,9 @@ Scaffold: `src/modulation/`
 - [x] ADSR envelope (PolySynth + per-voice WAAPI envelopes)
 - [x] Random drift (Juno / Plantasonic living voice ticks, preset `drift` param)
 - [x] Expression routing (partial — v2 `ExpressionRouter` maps velocity, density, and macros to synth targets; see Phase 14)
-- [ ] Modulation matrix with multiple sources/destinations *(1.1, decision 6)*
-- [ ] Sample & hold *(1.1)*
-- [ ] Envelope followers *(1.1)*
+- [x] Modulation matrix with multiple sources/destinations *(1.1.0)*
+- [x] Sample & hold *(1.1.0)*
+- [x] Envelope followers *(1.1.0, on the engine's own output)*
 
 ---
 
@@ -277,7 +300,7 @@ Shipped in Phase 20 (scaffold + note input). Remaining items are future mileston
 - [x] Web MIDI input — `engine.enableMidi()`, `engine.midi.devices` *(Phase 20)*
 - [ ] ~~MIDI Learn~~ host UI concern (decision 10)
 - [x] Velocity sensitivity — signature live voices + v2 `VelocityEngine`; Web MIDI note path via `enableMidi()`
-- [ ] Aftertouch / channel pressure as modulation sources *(1.1, decision 10)*
+- [x] Aftertouch / channel pressure as modulation sources *(1.1.0)*; pitch bend too
 - [ ] MPE deferred until a controller use case exists (decision 10)
 
 ---

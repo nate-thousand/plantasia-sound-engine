@@ -1,8 +1,8 @@
 # Public API
 
-The public tier of Plantasia Sound Engine: what a host builds on. One page, twenty four methods, the shipped presets, the events and features they produce.
+The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty methods, the shipped presets, the events and features they produce.
 
-Version `1.0.0`. Pin a tag, not `v2.0.0`.
+Version `1.1.0`. Pin a tag, not `v2.0.0`.
 
 ```typescript
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
@@ -102,11 +102,42 @@ Each species interprets them in its own character. Controls ramp over about 200 
 | `getWaveform` | `() => Float32Array` | 1024 samples, -1..1 |
 | `getLevel` | `() => number` | 0..1 from a -60 dB floor |
 
+### Modulation (1.1)
+
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `modulate` | `(source, destination, depth) => ModulationRoute` | Adds to the host's base value; `setControl` and `getControl` are untouched. Returns `{ id, set(partial), remove() }` |
+| `removeModulation` | `(id: string) => boolean` | False when there was no such route |
+| `getModulationRoutes` | `() => ModulationRouteConfig[]` | Serializable; a host can save routes in a preset |
+| `getModulationState` | `() => ModulationState` | `{ time, sources, controls: { base, modulated }, targets, routes }`. Poll per frame |
+
+Sources are plain descriptors. The same `id` used in two routes is one source.
+
+| Source | Fields | Output |
+| --- | --- | --- |
+| `lfo` | `shape: sine \| triangle \| square \| saw`, `hz` or `beats`, `unipolar?`, `phase?` | -1..1, or 0..1 with `unipolar` |
+| `sample-hold` | `hz` or `beats`, `slew?` seconds | -1..1, random each period |
+| `follower` | `band: rms \| bass \| mid \| high`, `attack?`, `release?` | 0..1, follows the engine's own output |
+| `midi-cc` | `cc`, `channel?` | 0..1 after `enableMidi()` or `feedMidi()`; inactive before |
+| `midi-aftertouch` | `channel?` | 0..1 |
+| `midi-bend` | `channel?` | -1..1 |
+
+`beats` rates sync to the transport BPM and reset phase on `transport.play()`; `hz` runs free. Destinations are a control name (`'bloom'`) or `target:<name>` for the thirteen numeric performance targets. Depth is -1..1: a control becomes `clamp01(base + depth × source)`; a target gets `depth × source × span` added, spans in `MODULATION_TARGET_SPANS` (`filterCutoffMult` 0.5 means ×0.5 to ×1.5 at full depth). `legato` is not a destination. Routes tick at 30 Hz while the engine is `running`, survive a species switch, and a route to a target the loaded species ignores is a silent no op. `ModulationRouteError` is thrown for unknown destinations or a source id reused with another type.
+
+### Generative preferences (1.1)
+
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `setGenerativePreferences` | `(partial: Partial<GenerativePreferences>) => void` | Host overrides merged over every species' defaults, now and on every later load |
+| `getGenerativePreferences` | `() => Partial<GenerativePreferences>` | Effective preferences of the loaded species, or the overrides alone |
+
+Fields: `preferredScale`, `alternateScale`, `chordVoicings`, `phraseLength`, `probabilityBias`, `dronePreference`, `harmonyStyle`, `rhythmStyle`, `preferredTempo`, `preferredDensity`. Tempo, density, probability bias and drone preference apply now; the rest land at the next phrase boundary so a phrase in flight is not broken.
+
 ### Input
 
 | Method | Signature | Notes |
 | --- | --- | --- |
-| `enableMidi` | `() => Promise<boolean>` | Routes Web MIDI notes to the running species. Resolves false where Web MIDI is unavailable |
+| `enableMidi` | `() => Promise<boolean>` | Routes Web MIDI notes to the running species and control messages to `midiControl`. Resolves false where Web MIDI is unavailable |
 
 ## Events
 
@@ -121,6 +152,8 @@ Every payload carries `time`, the AudioContext second it happened at.
 | `generatorEvent` | `kind`, `note?`, `velocity?`, `intensity?`, `speciesId` | the generator plans a `phrase`, `chord`, `drone`, `ornament`, `particle`, `glitch` or `silence` |
 | `densityChanged` | `density`, `speciesId` | the performance engine's density estimate moves |
 | `onset` | `strength` | a transient on the master bus, 0..1. While `running`, and on every `getAudioFeatures` read |
+| `modulationChanged` | `routes` | a route was added, changed or removed. Never per tick; modulated values are in `getModulationState()` |
+| `midiControl` | `kind`, `controller?`, `value`, `channel` | CC and aftertouch 0..1, pitch bend -1..1, channel 1..16. Build MIDI Learn on this |
 
 Types: `EngineEventMap`, `EngineEventName`, `EngineEventHandler`, `TimedEvent`, `NoteSource`.
 
@@ -159,14 +192,14 @@ Raw per frame; the host owns smoothing. Reads within one frame return the same o
 
 ## Types
 
-`PlantasiaEngine` (the interface, also exported as `PlantasiaEngineApi`), `CreatePlantasiaEngineOptions`, `SpeciesId`, `EcologicalControl`, `EcologyControlState`, `EngineState`, `EngineLifecycleErrorCode`, `SoundWorld`, `SoundWorldMetadata`, `SoundWorldStartOptions`, `AudioFeatures`, `OnsetEvent`, `PlantasiaPreset`, and the event types above.
+`PlantasiaEngine` (the interface, also exported as `PlantasiaEngineApi`), `CreatePlantasiaEngineOptions`, `SpeciesId`, `EcologicalControl`, `EcologyControlState`, `EngineState`, `EngineLifecycleErrorCode`, `SoundWorld`, `SoundWorldMetadata`, `SoundWorldStartOptions`, `SpeciesModulationFrame`, `AudioFeatures`, `OnsetEvent`, `PlantasiaPreset`, `ModulationSourceDescriptor`, `ModulationDestination`, `ModulationRoute`, `ModulationRouteConfig`, `ModulationState`, `ModulatableTarget`, `GenerativePreferences`, `MidiControlMessage`, and the event types above.
 
 ## Root export
 
 `import { createPlantasiaEngine } from 'plantasia-sound-engine'` returns the same instance typed as the full class. On top of the public tier it carries:
 
 - Legacy v1 preset path, documented in [API_V1.md](./API_V1.md): `playPreset`, `triggerChord`, `updateParameter`, `applyBotanicalControls`, `setMold`, `getMold`, `getParameterMetadata`, `presets`, `initialBotanicalControls`, `defaultNotePool`.
-- Root only conveniences: `initialize` (alias of `init`), `stopSpecies`, `applyEcology`, `events`, `scheduler`, `transport`, `midi`.
-- Engine internals: `EngineEventBus`, `EngineScheduler`, `Transport`, `SpeciesManager`, `createSpeciesManager`, species factories, `resolvePresetToSpecies`, `getMasterBus`, `AudioAnalyser`, `configureContextLatency`, the generative and performance engines.
+- Root only conveniences: `initialize` (alias of `init`), `stopSpecies`, `applyEcology`, `feedMidi` (raw MIDI bytes without hardware), `events`, `scheduler`, `transport`, `midi`.
+- Engine internals: `EngineEventBus`, `EngineScheduler`, `Transport`, `SpeciesManager`, `createSpeciesManager`, species factories, `resolvePresetToSpecies`, `getMasterBus`, `AudioAnalyser`, `ModulationEngine`, `configureContextLatency`, the generative and performance engines.
 
 Nothing on the root is scheduled for removal. New hosts should not need it.

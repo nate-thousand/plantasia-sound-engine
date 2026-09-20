@@ -8,6 +8,14 @@
  * should not need anything beyond this interface.
  */
 import type { AudioFeatures } from './analysis/AudioAnalyser.js';
+import type { GenerativePreferences } from './generative/types.js';
+import type {
+  ModulationDestination,
+  ModulationRoute,
+  ModulationRouteConfig,
+  ModulationSourceDescriptor,
+  ModulationState,
+} from './modulation/types.js';
 import type { EngineState } from './EngineLifecycle.js';
 import type { EngineEventHandler, EngineEventName } from './events/EngineEventBus.js';
 import type {
@@ -80,6 +88,28 @@ export interface PlantasiaEngineApi {
   getWaveform(): Float32Array;
   /** Master level 0..1 from a -60 dB floor. */
   getLevel(): number;
+
+  // --- generative preferences (1.1) ---
+
+  /** Merge host preferences (scale, voicings, phrase length, styles, tempo, density) over species defaults; they follow the player across species. */
+  setGenerativePreferences(partial: Partial<GenerativePreferences>): void;
+  /** Effective preferences of the loaded species, or the host overrides alone when none is loaded. */
+  getGenerativePreferences(): Partial<GenerativePreferences>;
+
+  // --- modulation (1.1) ---
+
+  /**
+   * Route a source (LFO, sample and hold, envelope follower, MIDI CC,
+   * aftertouch, pitch bend) to an ecology control or `target:<name>` with a
+   * depth of -1..1. Adds to the host's base value; never overwrites it.
+   */
+  modulate(source: ModulationSourceDescriptor, destination: ModulationDestination, depth: number): ModulationRoute;
+  /** Remove a route by id. Returns false when there was none. */
+  removeModulation(id: string): boolean;
+  /** Every route as serializable config. */
+  getModulationRoutes(): ModulationRouteConfig[];
+  /** Source values, base and modulated controls, target offsets. Poll per frame. */
+  getModulationState(): ModulationState;
 
   // --- input ---
 

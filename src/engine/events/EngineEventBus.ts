@@ -1,6 +1,7 @@
 import type { EcologicalControl, SpeciesId } from '../SoundWorld.js';
 import type { GenerativeEventKind } from '../generative/types.js';
 import { audioNow } from '../clock.js';
+import type { ModulationRouteConfig } from '../modulation/types.js';
 
 /** Every event carries the AudioContext time it happened at. */
 export type TimedEvent = {
@@ -47,6 +48,17 @@ export type EngineEventMap = {
   onset: TimedEvent & {
     /** 0..1, how far the spectral flux exceeded the adaptive threshold. */
     strength: number;
+  };
+  /** A modulation route was added, changed or removed. Never per tick. */
+  modulationChanged: TimedEvent & {
+    routes: ModulationRouteConfig[];
+  };
+  /** A MIDI control message: CC and aftertouch 0..1, pitch bend -1..1, channel 1..16. Hosts build MIDI Learn on this. */
+  midiControl: TimedEvent & {
+    kind: 'cc' | 'aftertouch' | 'bend';
+    controller?: number;
+    value: number;
+    channel: number;
   };
 };
 

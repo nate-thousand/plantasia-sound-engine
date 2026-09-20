@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-20
+
+Modulation. Six source types routed additively to the five ecology controls or the thirteen numeric performance targets, MIDI CC, aftertouch and pitch bend as events and sources, and host generative preferences that follow the player across species. Public tier grows from twenty four to thirty methods, all additive. Measured in Chromium and WebKit: zero dropouts over 60 s with eight routes under a mock visual load, 0.2 to 0.4 ms per modulation tick, a CC step reaching the engine in one tick ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).
+
+### Added
+
+- **Modulation engine** (1.1 step 1, ROADMAP decisions for 1.1.0): `engine.modulate(source, destination, depth)` with descriptor sources `lfo`, `sample-hold`, `follower` (MIDI sources typed, active after step 3), destinations the five controls or `target:<PerformanceTargets key>`, `MODULATION_TARGET_SPANS`, `removeModulation`, `getModulationRoutes`, `getModulationState`, `modulationChanged` event. Additive on the host's base; ticks at 30 Hz on the scheduler while running
+- `SoundWorld.applyModulation(frame)` optional hook, implemented by all four species with a one tick ramp and change gated `PolySynth.set` calls; documented in the species template
+- `Transport.getPlayCount()` for beat synced sources
+- **MIDI control input** (1.1 step 3): `WebMidiManager` decodes CC, channel pressure and pitch bend (0..1, 0..1, -1..1; channels 1..16), keeps the last value per control and channel (`read()`), and takes raw bytes through `feed()`. Facade emits `midiControl { kind, controller?, value, channel, time }` and offers root only `feedMidi(bytes)` for bridges and the harness. `midi-cc`, `midi-aftertouch` and `midi-bend` modulation sources are live after `enableMidi()` or `feedMidi()`
+- **Generative preferences** (1.1 step 4): `setGenerativePreferences(partial)` and `getGenerativePreferences()`. Host overrides merge over every species' defaults on load and follow the player across species. Tempo, density, probability bias and drone preference apply now; scale, alternate scale, voicings, phrase length, harmony and rhythm style land at the next phrase boundary (`Generator.setPreferences`). Optional `SoundWorld.setGenerativePreferences` / `getGenerativePreferences` hooks, implemented by all four species
+- Sixteenth and seventeenth gates `scripts/test-modulation.mjs`, `scripts/test-preferences.mjs`
+- Browser harness rows for modulation: eight route long run (blocks on dropouts), modulation tick cost, wheel to modulation state and to audible. Results in `docs/PERFORMANCE.md`
+- Demo **Modulation** section (decision 14): route builder for every source type and destination, live state readout, three route preset. Replaces the unwired Reactive section
+- `docs/API.md` covers modulation, preferences, `modulationChanged` and `midiControl`; `CREATING_A_SPECIES.md` documents the optional hooks; `LIFECYCLE.md` the route lifecycle
+
 ## [1.0.0] - 2026-09-18
 
 First stable release of the Sound World engine. The public tier (`plantasia-sound-engine/public`) is the frozen surface: twenty four methods, presets, events, audio features. Measured in Chromium and WebKit: noteOn to audible 12 ms, zero dropouts over 60 s under a mock visual load ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)). Branch `v2-sound-world-engine` merges into `main` at this tag.

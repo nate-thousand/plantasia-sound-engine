@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { getMasterBus } from '../../engine/masterBus.js';
 import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import type { ChangeGate } from '../../shared/modulationFrame.js';
 import { FLOWERS_RELEASE } from './synth.js';
 
 /**
@@ -139,17 +140,23 @@ export function applyFlowersEffectsLevels(
   pwmPoly: Tone.PolySynth,
   levels: FlowersEffectsLevels,
   audioStarted: boolean,
+  rampSec = 0.2,
+  gate?: ChangeGate,
 ): void {
-  effects.tapeSaturation.distortion = levels.tapeDrive;
-  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet);
-  setRampParam(audioStarted, effects.chorus.wet as unknown as RampParam, levels.chorusWet);
-  setRampParam(audioStarted, effects.chorus.depth as unknown as RampParam, levels.chorusDepth);
-  setRampParam(audioStarted, effects.ensembleChorus.wet as unknown as RampParam, levels.ensembleWet);
-  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet);
-  setRampParam(audioStarted, effects.delay.wet as unknown as RampParam, levels.delayWet);
-  setRampParam(audioStarted, effects.widener.width as unknown as RampParam, levels.widenerWidth);
+  if (!gate || gate.changed('tapeDrive', levels.tapeDrive, 0.01)) {
+    effects.tapeSaturation.distortion = levels.tapeDrive;
+  }
+  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet, rampSec);
+  setRampParam(audioStarted, effects.chorus.wet as unknown as RampParam, levels.chorusWet, rampSec);
+  setRampParam(audioStarted, effects.chorus.depth as unknown as RampParam, levels.chorusDepth, rampSec);
+  setRampParam(audioStarted, effects.ensembleChorus.wet as unknown as RampParam, levels.ensembleWet, rampSec);
+  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet, rampSec);
+  setRampParam(audioStarted, effects.delay.wet as unknown as RampParam, levels.delayWet, rampSec);
+  setRampParam(audioStarted, effects.widener.width as unknown as RampParam, levels.widenerWidth, rampSec);
 
   const release = FLOWERS_RELEASE * levels.releaseScale;
-  sawPoly.set({ envelope: { release } });
-  pwmPoly.set({ envelope: { release: release * 1.05 } });
+  if (!gate || gate.changed('release', release, 0.02)) {
+    sawPoly.set({ envelope: { release } });
+    pwmPoly.set({ envelope: { release: release * 1.05 } });
+  }
 }

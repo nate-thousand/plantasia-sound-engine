@@ -202,5 +202,7 @@ export {
   PlantasonicAdapter,
   type PlantasonicLoadResult,
 } from './integration/plantasonicAdapter.js';
-export type { PlantasiaEngineApi, SoundWorldStartOptions } from './engine/index.js';
+export type { PlantasiaEngineApi, SoundWorldStartOptions, SpeciesModulationFrame } from './engine/index.js';
+export * from './engine/modulation/index.js';
 export type { AudioFeatures, OnsetEvent } from './engine/analysis/AudioAnalyser.js';
+export { createWebMidiManager, WebMidiManager, type MidiControlKind, type MidiControlMessage, type MidiControlReading, type WebMidiHandlers } from './midi/WebMidiManager.js';

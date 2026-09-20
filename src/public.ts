@@ -36,6 +36,21 @@ export {
   type OnsetEvent,
 } from './engine/analysis/AudioAnalyser.js';
 
+// Modulation (1.1)
+export {
+  MODULATABLE_TARGETS,
+  MODULATION_TARGET_SPANS,
+  ModulationRouteError,
+  type ModulationSourceDescriptor,
+  type ModulationDestination,
+  type ModulationRoute,
+  type ModulationRouteConfig,
+  type ModulationState,
+  type ModulatableTarget,
+  type LfoShape,
+  type FollowerBand,
+} from './engine/modulation/index.js';
+
 // Lifecycle, errors, control ids
 export {
   DEFAULT_SPECIES_ID,
@@ -53,7 +68,14 @@ export type {
   SoundWorld,
   SoundWorldMetadata,
   SoundWorldStartOptions,
+  SpeciesModulationFrame,
+  GenerativePreferences,
+  HarmonyStyle,
+  RhythmStyle,
 } from './engine/index.js';
+
+// MIDI control messages (event payload shape)
+export type { MidiControlKind, MidiControlMessage } from './midi/WebMidiManager.js';
 
 // Presets
 export { presets, getPresetById } from './presets/loader.js';

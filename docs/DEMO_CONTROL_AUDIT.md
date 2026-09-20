@@ -3,7 +3,7 @@
 Validation pass for `demo/` — every visible control mapped to real engine behavior.
 
 **Audit date:** 2026-06-28  
-**Engine version:** `1.0.0`  
+**Engine version:** `1.1.0`  
 **Demo entry:** `npm run build && npm run demo`
 
 ---
@@ -23,7 +23,7 @@ Validation pass for `demo/` — every visible control mapped to real engine beha
 | Ecology (v2) | 5 sliders | — |
 | Botanical (v1) | 11 sliders | — (labeled v1 path) |
 | Audio | 1 button + stage meters | mic checkbox, fake transient text removed |
-| Reactive | hint only | 6 disabled selects removed |
+| Modulation (1.1) | `modulate()`, `removeModulation()`, `getModulationRoutes()`, `getModulationState()`, `modulationChanged` | Replaces the unwired Reactive section |
 | MIDI | 2 buttons + monitor | device select, refresh removed |
 | Keyboard | 1 checkbox + key display | layout/octave/velocity removed |
 | Performance | 12 macro sliders | — (ecology routes = v2 audible) |
@@ -210,8 +210,8 @@ These were removed from the active UI or replaced with hints:
 | Chorus, saturation, compressor, EQ | No host-facing effect API on species chains |
 | Generative memory/surprise/repetition/transition/mod evolution | No host generative parameter API |
 | Microphone, audio upload | Not implemented |
-| Audio reactive mapping | `bindSensor()` scaffold only |
-| MIDI device select, CC learn, aftertouch | WebMidiManager: note on/off only |
+| Audio reactive mapping | done in 1.1 as the `follower` modulation source on the engine's own output; external input still not implemented |
+| MIDI device select, CC learn | CC, aftertouch and bend decoded in 1.1 (`midiControl` event, modulation sources); learn is host UI; device select still not wired |
 | Keyboard layout, octave shift, velocity curve | Not implemented in demo wiring |
 | Tape, granular, glitch direct controls | Species-internal; no facade |
 
@@ -233,10 +233,10 @@ Distinct character: species-specific synth/generator graphs in `src/species/*` �
 ## Recommended engine tasks (from audit)
 
 1. ~~**v2 analyser getters**~~ — done: `src/engine/masterBus.ts` feeds every output path (v1 chain, Plantasonic, Juno, all species) into one analyser and meter
-2. **`bindSensor()`** — audio-reactive routing API
-3. **Generative host parameters** — expose memory, probability curves, phrase length on `Generator`
+2. ~~**`bindSensor()`**~~: done in 1.1 as the `follower` source
+3. ~~**Generative host parameters**~~: done in 1.1: `setGenerativePreferences()` (scale, voicings, phrase length, styles, tempo, density, probability, drone)
 4. **MIDI device selection** — pass `inputId` to `enableMidi()` from UI
-5. **MIDI CC → ecology** — mod wheel, expression, sustain
+5. ~~**MIDI CC → ecology**~~: done in 1.1: `midi-cc` / `midi-aftertouch` / `midi-bend` sources
 6. **Per-layer controls** — or document ecology as the only layer surface
 7. **Botanical → v2 bridge** — or document v1-only scope clearly (done in demo hints)
 8. **Keyboard host API** — octave shift, velocity curve, configurable maps
