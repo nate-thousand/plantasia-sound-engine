@@ -41,6 +41,7 @@
     "test:modulation": "node scripts/test-modulation.mjs",
     "test:preferences": "node scripts/test-preferences.mjs",
     "test:browser": "npm run build && playwright test",
+    "size": "node scripts/measure-size.mjs",
     "bench": "vite --config vite.bench.config.ts --port 5194 --strictPort",
     "lab": "vite --config vite.lab.config.ts --port 5195 --strictPort",
     "test:scheduler": "node scripts/test-scheduler.mjs",
@@ -81,10 +82,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "tone": "^15.0.4"
+    "tone": "~15.1.22"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "esbuild": "^0.25.12",
     "typescript": "^5.7.2",
     "vite": "^6.0.3"
   },

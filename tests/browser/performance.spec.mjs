@@ -7,8 +7,16 @@ import { join } from 'node:path';
  * Control settle and engine main thread cost are recorded, not asserted.
  */
 const NOTE_ON_LATENCY_MS = 15;
+const CI_LATENCY_WARN_MS = 25;
 const LONG_RUN_SECONDS = Number(process.env.BENCH_SECONDS ?? 60);
 const BURN_MS = 8;
+/**
+ * Decision 11 after 1.1.0: in CI, latency is recorded and warns above 25 ms
+ * (shared runners have no audio hardware and drift); the 15 ms bar is the
+ * local release check on the reference machine. Dropouts and page errors
+ * block everywhere.
+ */
+const IN_CI = Boolean(process.env.CI);
 
 test('engine performance bar', async ({ page, browserName }) => {
   const errors = [];
@@ -65,7 +73,13 @@ test('engine performance bar', async ({ page, browserName }) => {
 
   expect(errors, 'no page errors').toEqual([]);
   expect(latencies.length, 'every latency run produced sound').toBe(result.latency.length);
-  expect(median, 'noteOn to audible').toBeLessThanOrEqual(NOTE_ON_LATENCY_MS);
+  if (IN_CI) {
+    if (median > CI_LATENCY_WARN_MS) {
+      console.log(`::warning title=noteOn latency::[${browserName}] noteOn to audible ${median.toFixed(1)} ms is above ${CI_LATENCY_WARN_MS} ms on this runner`);
+    }
+  } else {
+    expect(median, 'noteOn to audible').toBeLessThanOrEqual(NOTE_ON_LATENCY_MS);
+  }
   expect(result.longRun.dropouts, 'dropouts over the long run').toBe(0);
   expect(result.longRunModulated.dropouts, 'dropouts over the long run with eight routes').toBe(0);
 });

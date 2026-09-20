@@ -12,6 +12,10 @@ Builds `dist/`, serves `bench/` with vite on port 5194, and runs `tests/browser/
 
 WebKit needs its browser once: `npx playwright install webkit`.
 
+### In CI
+
+The `browser` job in `.github/workflows/ci.yml` runs the same suite in Chromium and WebKit on every push to `main` and every pull request, then `npm run size`. Dropouts, page errors, the control extremes row and the demo size budget fail the job. noteOn latency is recorded and annotated as a warning above 25 ms, because a shared runner has no audio hardware and its numbers drift; the 15 ms bar stays the local release check on the reference machine (decision 11 after 1.1.0). Raw results are uploaded as the `bench-results` artifact.
+
 ## What is measured
 
 | Measure | How | Bar | Blocks release |
@@ -35,6 +39,18 @@ WebKit needs its browser once: `npx playwright install webkit`.
 | Measure | How | Bar | Blocks release |
 | --- | --- | --- | --- |
 | Control extremes | Every species at all controls 0, all controls 1, and each control alone at 0 and at 1 with the rest at 0.5: `loadSpecies`, `start({ generative: false })`, a held note, then every control flipped across its range on the live graph. 48 runs | no throw, no page error | yes |
+
+## Size
+
+`npm run size` (after `npm run build`) bundles `dist/public.js` and `dist/index.js` with esbuild (ESM, minified, tree shaken, Tone included) and builds the demo site with vite. Writes `bench/results/size.json`.
+
+| Measure | 2026-09-20 | Bar | Blocks release |
+| --- | --- | --- | --- |
+| `plantasia-sound-engine/public`, bundled | 409 KB minified, 107 KB gzip | recorded; budget set at 1.2.0 from this number | no |
+| root export, bundled | 414 KB minified, 108 KB gzip | recorded | no |
+| demo site, JS and CSS | 462 KB minified, 125 KB gzip | 500 KB minified | yes |
+
+Tone.js is 400 KB of the engine bundle. The engine's own code is under 20 KB minified on either entry. Tone is pinned to `~15.1.22` so a minor bump is a deliberate change with a size number beside it.
 
 ## Results
 

@@ -20,3 +20,26 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      # Blocks on dropouts, page errors and control extremes; records latency,
+      # warns above 25 ms (docs/PERFORMANCE.md, decision 11 after 1.1.0).
+      - run: npm run test:browser
+      # Records engine bundle size; blocks on the demo site above 500 KB.
+      - run: npm run size
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bench-results
+          path: bench/results/
+          if-no-files-found: ignore
