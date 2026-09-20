@@ -50,6 +50,34 @@ A grill on the modulation milestone closed with these. Branch `release/1.1.0` of
 | 14 | Demo Modulation section: a route builder (source fields, destination select, depth), the live state readout, and a preset of three routes (LFO on bloom, follower bass to roots, CC1 to filter cutoff). No more. | The demo shows every source and destination once; hosts own the real UI |
 | 15 | One release. Order: modulation engine, species hook, LFO and sample and hold, spans; envelope follower; MIDI sources and event; generative preferences; harness rows; demo section and docs; tag 1.1.0. | The harness lands before the demo so the numbers exist when the surface is written up |
 
+## Decisions after 1.1.0 (settled 2026-09-20)
+
+A grill on "what comes after 1.1" closed with these. They set the order of work from here to 2.0; where an older section disagrees, this table wins.
+
+| # | Decision | Consequence |
+| --- | --- | --- |
+| 1 | The first real instrument pulls engine work. Until it exists the engine posture is quality and hardening, not features. | Feature requests come from a player, not from the roadmap |
+| 2 | A listening pass on the sound itself is a milestone before new features. It needs the user's ears and cannot be automated. | The tool for it (decision 9) is built first so the pass can start when the user has time |
+| 3 | Hardening for 1.2: the Playwright harness runs in GitHub Actions, the demo bundle gets a 500 KB budget, Tone.js is pinned to a minor. | CI is the second gate after the seventeen Node postbuild checks |
+| 4 | `getSnapshot()` and `applySnapshot()` are the core of 1.2. | A host can save, restore and send a whole engine state as one JSON object |
+| 5 | Triage of the old roadmap: cut the effect rack, preset browser UI, keyboard API and procedural variation; defer voice stealing, MPE and external audio input; keep soon `enableMidi(inputId)` and a polyphony cap; offline render is a candidate only if the instrument asks. | The retired sections below are history, not plans |
+| 6 | The v1 path is deprecated now and removed at 2.0. The signature v1 sounds are ported into species before removal. | Nothing a player can hear today is lost at 2.0 |
+| 7 | Releases are milestone driven, not calendar driven. | A version ships when its table rows are done and measured |
+| 8 | The played instrument is a new repo from the `create-plantasonic-app` template, pinned to `#1.1.0`, built in a separate session. | This repo never contains instrument UI; engine requests come back as issues here |
+| 9 | A separate `lab/` page: species select, held note or chord, one control sweep with ramp on and off, species A/B, a span editor that emits JSON, analyser bands. Same pattern as `bench/` (`npm run lab`, own Vite config), not deployed. | The demo stays the control surface for showing; the lab is for tuning by ear |
+| 10 | The sound pass produces per species control depth constants, tuned spans, and `docs/SOUND.md`. Bar: for every control on every species the A/B spectral difference exceeds A/A noise on at least one feature. | PERFORMANCE.md finding 4 becomes a fixed number per control, not a caveat |
+| 11 | CI blocks on dropouts and page errors, records noteOn latency and warns above 25 ms. The 15 ms bar stays the local release check on the reference machine. | WebKit's 14.2 ms drift (finding 7) is watched, not blocking, in CI |
+| 12 | A size gate bundles `dist/public.js` with esbuild and records the number. Budgets for the engine are set next release from that number; the demo budget is 500 KB now. | First measurement before the first bar, as with latency |
+| 13 | Snapshot shape: `{ version: 1, speciesId, controls, tempo, routes, preferences, presetId? }`. `applySnapshot` is async, replaces all routes, and throws `SnapshotError` on an unknown species or version. | Routes and preferences are already serializable descriptors (1.1 decision 4); nothing new is invented |
+| 14 | Morph: `applySnapshot(target, { morphSec })` interpolates controls and tempo over `morphSec`; routes and preferences land at the start; a species switch happens at the start without crossfade. | A crossfade needs two live species graphs and is deferred until an instrument needs it |
+| 15 | v1 deprecation line: JSDoc `@deprecated` on every legacy method, one `console.info` on the first legacy call per session, a banner on `docs/API_V1.md`, demo Legacy heading reads "removed at 2.0". | No behaviour changes in 1.x |
+| 16 | 1.2 order: lab page; CI harness and size measurement; `enableMidi(inputId)` and polyphony cap; snapshot and morph; v1 deprecation line; then the sound pass with the user; signature port after. The instrument proceeds in parallel. | The lab page is first because the sound pass is the slowest item and depends on the user's time |
+| 17 | Public tier after 1.2: `getSnapshot`, `applySnapshot`, `setPolyphony`, `getPolyphony`, and an optional `inputId` on `enableMidi`. Thirty four methods, all additive, still one page. | A polyphony cap is a host's CPU knob on a phone; it belongs on the surface |
+| 18 | Harness rows for 1.2: a 5 s morph between two snapshots across a species switch with dropouts counted (blocks); `applySnapshot` with a species switch, time until the new species is audible (recorded); control audibility per decision 10 for every control on every species (recorded in 1.2, blocks once the sound pass has set the depths). | `docs/PERFORMANCE.md` gains a 1.2 section |
+| 19 | The lab page is not deployed to sound-engine.xyz. | It reads and writes span JSON pasted into the source; that is a local workflow |
+| 20 | `docs/INSTRUMENT_BRIEF.md` is written here: what the engine offers at 1.1.0, the thirty methods with the six an instrument starts from, the mod wheel and species switch stories, the pin, and the rule that engine requests come back as issues to this repo. | The one document that crosses the project boundary without either session touching the other's code |
+| 21 | Versions: 1.2.0 = hardening, MIDI input select, polyphony, snapshot and morph, lab page, v1 deprecation line. 1.3.0 = the sound pass, because it changes what a player hears. Then the signature sound port. 2.0 = v1 removal. | A sound change is never a patch |
+
 ## Current status
 
 | Item | Value |
@@ -389,8 +417,8 @@ None planned (decision 9). The eight `coming_soon` species and Aurora are cut; a
 - [x] Keyboard (A–K) + Web MIDI enable + v1 `playPreset` chord preserved
 - [x] Debug panel shows real engine state only (no guessed values)
 - [x] Validation pass — [docs/DEMO_CONTROL_AUDIT.md](./docs/DEMO_CONTROL_AUDIT.md)
-- [ ] Audio reactive mapping — awaits engine `bindSensor()` implementation
-- [ ] v2 public analyser getters — waveform meters currently v1-biased
+- [x] Audio reactive mapping: `follower` modulation source and `onset` event (1.1.0)
+- [x] v2 public analyser getters: `getAudioFeatures()` and `getWaveform()` off the master bus (1.0.0)
 
 ---
 
