@@ -33,6 +33,7 @@ export class SpeciesManager {
   private state: EngineState = 'idle';
   /** Host generative preference overrides, merged over every species' defaults on load (decision 10 for 1.1.0). */
   private generativePreferences: Partial<GenerativePreferences> = {};
+  private polyphonyCap: number | null = null;
 
   constructor(registry?: SpeciesRegistry, options: SpeciesManagerOptions = {}) {
     this.registry = registry ?? new SpeciesRegistry();
@@ -120,6 +121,9 @@ export class SpeciesManager {
       if (Object.keys(this.generativePreferences).length > 0) {
         active.setGenerativePreferences?.(this.generativePreferences);
       }
+      if (this.polyphonyCap !== null) {
+        active.setPolyphony?.(this.polyphonyCap);
+      }
       this.state = 'loaded';
       this.events?.emit('speciesChanged', {
         speciesId: id,
@@ -186,6 +190,19 @@ export class SpeciesManager {
   getGenerativePreferences(): Partial<GenerativePreferences> {
     const active = this.loader.getCurrent();
     return active?.getGenerativePreferences?.() ?? { ...this.generativePreferences };
+  }
+
+  /** Host voice cap, applied to the loaded species now and to every later load. */
+  setPolyphony(voices: number | null): void {
+    if (voices !== null && (!Number.isInteger(voices) || voices < 1 || voices > 64)) {
+      throw new RangeError(`setPolyphony expects an integer 1..64 or null, got ${voices}`);
+    }
+    this.polyphonyCap = voices;
+    this.loader.getCurrent()?.setPolyphony?.(voices);
+  }
+
+  getPolyphony(): number | null {
+    return this.polyphonyCap;
   }
 
   /** Snapshot of every control's base value. */

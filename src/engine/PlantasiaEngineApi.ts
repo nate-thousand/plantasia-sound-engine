@@ -89,6 +89,13 @@ export interface PlantasiaEngineApi {
   /** Master level 0..1 from a -60 dB floor. */
   getLevel(): number;
 
+  // --- voices (1.2) ---
+
+  /** Cap the voices a species may allocate (integer 1..64), or null for the species' own polyphony. Survives a species switch. */
+  setPolyphony(voices: number | null): void;
+  /** The host cap, or null. */
+  getPolyphony(): number | null;
+
   // --- generative preferences (1.1) ---
 
   /** Merge host preferences (scale, voicings, phrase length, styles, tempo, density) over species defaults; they follow the player across species. */
@@ -113,6 +120,11 @@ export interface PlantasiaEngineApi {
 
   // --- input ---
 
-  /** Route Web MIDI notes to the running species. Resolves false when unavailable. */
-  enableMidi(): Promise<boolean>;
+  /**
+   * Route Web MIDI notes to the running species and control messages to
+   * `midiControl`. `inputId` picks one input (ids from the root export's
+   * `midi.devices` after a first call); omitted, the first input is used.
+   * Resolves false when Web MIDI or the input is unavailable.
+   */
+  enableMidi(inputId?: string): Promise<boolean>;
 }

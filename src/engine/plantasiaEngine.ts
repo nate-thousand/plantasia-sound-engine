@@ -224,6 +224,22 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return this.species.getGenerativePreferences();
   }
 
+  // --- voices (1.2) ---
+
+  /**
+   * Cap the voices a species may allocate. Each species keeps its own
+   * polyphony curve (growth opens it) and clamps it to the cap. A host's CPU
+   * knob on a phone. `null` removes the cap. Survives a species switch.
+   */
+  setPolyphony(voices: number | null): void {
+    this.species.setPolyphony(voices);
+  }
+
+  /** The host cap, or null when the species run their own polyphony. */
+  getPolyphony(): number | null {
+    return this.species.getPolyphony();
+  }
+
   // --- modulation (1.1) ---
 
   /**
@@ -349,8 +365,8 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   }
 
   /** Connect Web MIDI note input to the active Sound World. */
-  async enableMidi(): Promise<boolean> {
-    const connected = await this.midi.connect(this.midiHandlers());
+  async enableMidi(inputId?: string): Promise<boolean> {
+    const connected = await this.midi.connect(this.midiHandlers(), inputId);
     this.midiBound = connected;
     return connected;
   }

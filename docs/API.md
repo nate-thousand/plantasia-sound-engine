@@ -1,6 +1,6 @@
 # Public API
 
-The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty methods, the shipped presets, the events and features they produce.
+The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty two methods, the shipped presets, the events and features they produce.
 
 Version `1.1.0`. Pin a tag, not `v2.0.0`.
 
@@ -133,11 +133,20 @@ Sources are plain descriptors. The same `id` used in two routes is one source.
 
 Fields: `preferredScale`, `alternateScale`, `chordVoicings`, `phraseLength`, `probabilityBias`, `dronePreference`, `harmonyStyle`, `rhythmStyle`, `preferredTempo`, `preferredDensity`. Tempo, density, probability bias and drone preference apply now; the rest land at the next phrase boundary so a phrase in flight is not broken.
 
+### Voices (1.2)
+
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `setPolyphony` | `(voices: number \| null) => void` | Caps the voices a species may allocate, integer 1..64. Each species keeps its own polyphony curve (growth opens it) and clamps to the cap. `null` removes it. Survives a species switch. Throws `RangeError` otherwise |
+| `getPolyphony` | `() => number \| null` | The cap, or null |
+
+A host's CPU knob on a phone. The species maxima are Seed 8, Flowers 10, Mold 6, Bacteria 16.
+
 ### Input
 
 | Method | Signature | Notes |
 | --- | --- | --- |
-| `enableMidi` | `() => Promise<boolean>` | Routes Web MIDI notes to the running species and control messages to `midiControl`. Resolves false where Web MIDI is unavailable |
+| `enableMidi` | `(inputId?: string) => Promise<boolean>` | Routes Web MIDI notes to the running species and control messages to `midiControl`. `inputId` picks one input; omitted, the first. Input ids and names are on the root export's `midi.devices` after a first call. Resolves false where Web MIDI or that input is unavailable |
 
 ## Events
 

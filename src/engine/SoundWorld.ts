@@ -77,6 +77,13 @@ export interface SoundWorld {
   /** Optional (1.1). Effective generative preferences after host overrides. */
   getGenerativePreferences?(): Readonly<GenerativePreferences>;
 
+  /**
+   * Optional (1.2). Host voice cap. The species keeps its own polyphony
+   * curve and clamps it to `voices`; `null` removes the cap. Applied on load
+   * and whenever the host changes it.
+   */
+  setPolyphony?(voices: number | null): void;
+
   dispose(): void;
 }
 

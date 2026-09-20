@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Root export only: `setControl(control, value, rampSec?)` takes an optional ramp time (`0` applies immediately); `setModulationTargetSpans(partial)` and `getModulationTargetSpans()` override spans at runtime. `SoundWorld.setControl` gains the same optional third argument; species without it are unaffected
 - Harness row `control extremes load every species` (blocks): every species at every control extreme loads, starts and takes a note without throwing, Chromium and WebKit
 - `docs/INSTRUMENT_BRIEF.md`, the hand off to the first played instrument (decision 20)
+- **Polyphony cap** (decision 17): `setPolyphony(voices | null)` and `getPolyphony()` on the public tier. Species keep their own growth driven polyphony curve and clamp it to the cap; optional `SoundWorld.setPolyphony` hook, implemented by all four species and the template; applied on every load
+- `enableMidi(inputId?)` picks one Web MIDI input; ids from the root export's `midi.devices`
 - **CI browser job** (decisions 3 and 11): `.github/workflows/ci.yml` runs the Playwright harness in Chromium and WebKit on every push to `main` and pull request. Dropouts, page errors and control extremes block; noteOn latency is recorded and annotated above 25 ms; the 15 ms bar stays the local release check. Results uploaded as the `bench-results` artifact
 - **Size measurement** (decision 12): `npm run size` bundles `dist/public.js` and `dist/index.js` with esbuild (409 and 414 KB minified, 107 and 108 KB gzip, recorded) and builds the demo site (462 KB minified against a 500 KB budget, blocks). `esbuild` is a devDependency
 

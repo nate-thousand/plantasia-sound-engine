@@ -26,7 +26,7 @@ engine.on('onset', ({ strength }) => { /* transients */ });
 const { bass, mid, high } = engine.getAudioFeatures(); // per frame, from the master bus
 ```
 
-Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
+Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty two method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
 
 ```bash
 npm install

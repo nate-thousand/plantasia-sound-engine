@@ -64,6 +64,7 @@ function clampControl(value: number): number {
 export class MoldSoundWorld implements SoundWorld {
   readonly metadata = MOLD_SOUND_WORLD_METADATA;
 
+  private polyphonyCap: number | null = null;
   private synth: MoldSynthNodes | null = null;
   private effects: MoldEffectsNodes | null = null;
   private generator: MoldGenerator | null = null;
@@ -143,6 +144,11 @@ export class MoldSoundWorld implements SoundWorld {
 
   getGenerativePreferences(): Readonly<GenerativePreferences> {
     return this.generator?.getPreferences() ?? { ...MOLD_GENERATIVE_PREFERENCES, ...this.preferenceOverrides };
+  }
+
+  setPolyphony(voices: number | null): void {
+    this.polyphonyCap = voices;
+    this.applyEcologicalControls();
   }
 
   applyModulation(frame: SpeciesModulationFrame): void {
@@ -262,7 +268,8 @@ export class MoldSoundWorld implements SoundWorld {
     const mold = controls.mold / 100;
     const bacteria = controls.bacteria / 100;
 
-    const polyphony = Math.round(2 + growth * (MOLD_MAX_POLYPHONY - 2));
+    const curve = Math.round(2 + growth * (MOLD_MAX_POLYPHONY - 2));
+    const polyphony = this.polyphonyCap === null ? curve : Math.max(1, Math.min(curve, this.polyphonyCap));
     if (this.gate.changed('polyphony', polyphony, 0.5)) {
       this.synth.dronePoly.maxPolyphony = polyphony;
       this.synth.fmPoly.maxPolyphony = polyphony;
