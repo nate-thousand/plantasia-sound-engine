@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-20
+
+Hardening, snapshots and the tools for the sound pass. `getSnapshot()` and `applySnapshot()` carry the whole host facing state as one JSON object with a timed morph between two; a polyphony cap and MIDI input select land on the public tier, now thirty four methods, all additive. The Playwright harness runs in CI in Chromium and WebKit, bundle size is measured with a demo budget, Tone is pinned to a minor, and the v1 preset path is deprecated for removal at 2.0. A local lab page for tuning by ear found and fixed a Flowers range error on its first A/B. Measured: zero dropouts through a 5 s morph across a species switch, a switch ready in 50 to 120 ms, 48 control extreme loads without a throw, and 9 to 10 of 20 controls audible on one held note, the input to the 1.3 sound pass ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).
+
 ### Added
 
 - **Lab page** (`npm run lab`, port 5195; ROADMAP decision 9 after 1.1.0): species select, held note or chord, one control sweep with the species ramp on or off, species A/B that re-holds the notes, a `MODULATION_TARGET_SPANS` editor applied live with Audition routes and JSON out, analyser bands, and a per control A/B over A/A measure (decision 10 bar). Local tool, never deployed

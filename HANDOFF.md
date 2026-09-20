@@ -26,17 +26,25 @@ See the decisions table at the top of ROADMAP.md (settled 2026-09-18). 1.0.0 nex
 
 Tag `1.0.0` on `main`, live at sound-engine.xyz. Portfolio case study updated on portfolio `main` and deployed.
 
-## 1.1.0 prepared 2026-09-20 (branch `release/1.1.0`, local commits only)
+## 1.1.0 shipped 2026-09-20
 
 Decisions table "Decisions for 1.1.0" in ROADMAP.md. All seven steps done: modulation engine and species hook, envelope follower, MIDI CC / aftertouch / bend as event and sources, generative preferences, harness rows (both browsers pass), demo Modulation section, docs. Version bumped to 1.1.0 with the CHANGELOG section. Seventeen gates.
 
 Not done: the spans table (decision 6) is verified to move the spectrum but not tuned by ear across all four species. WebKit noteOn latency sits at 14.2 ms median against the 15 ms bar (PERFORMANCE.md finding 7). No iPad pass.
 
+Merged to `main`, tagged, pushed, deployed to sound-engine.xyz; portfolio case study updated and deployed.
+
+## 1.2.0 prepared 2026-09-20 (branch `release/1.2.0`, local commits only)
+
+Decisions table "Decisions after 1.1.0" in ROADMAP.md (21 rows). Done, in decision 16's order: lab page (`npm run lab`, 5195, not deployed); CI browser job and `npm run size` with the demo budget, Tone pinned `~15.1.22`; `enableMidi(inputId)` and the polyphony cap; `getSnapshot` / `applySnapshot` with morph; v1 deprecation line; `docs/INSTRUMENT_BRIEF.md`. Public tier thirty four methods. Eighteen gates. Harness rows added: control extremes (blocks), snapshot morph (blocks), switch and control audibility (recorded). Both browsers pass. The lab's first A/B found Flowers throwing Tone's [0, 1] RangeError at high bloom; fixed by clamping every NormalRange write (`setRampNormal`).
+
+Not done, by design: the sound pass (1.3.0, needs the user's ears, PERFORMANCE.md finding 8 is its input: Mold and Bacteria controls are inaudible on one held note); the signature v1 sound port; the instrument (separate repo and session, starts from `docs/INSTRUMENT_BRIEF.md`). The demo shows no 1.2 feature beyond the Legacy heading; the lab is the 1.2 surface. No iPad pass.
+
 ## Suggested order
 
-1. On the user's ok: merge `release/1.1.0` into `main`, tag `1.1.0`, push, deploy; then the portfolio case study (cherry-pick to portfolio `main`, deploy from a clean worktree, as for 1.0.0).
-2. Tune `MODULATION_TARGET_SPANS` by ear in the demo's Modulation section.
-3. Grill the roadmap after 1.1.0; nothing beyond it is settled.
+1. On the user's ok: merge `release/1.2.0` into `main`, tag `1.2.0`, push. CI runs the browser job for the first time on that push; check it. Deploy follows automatically from `main`.
+2. Start the instrument session from `docs/INSTRUMENT_BRIEF.md`, pinned `#1.2.0`.
+3. The sound pass in the lab with the user: per species control depths, spans, `docs/SOUND.md`; then 1.3.0.
 
 ## Rules
 

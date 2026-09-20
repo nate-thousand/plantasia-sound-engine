@@ -82,8 +82,8 @@ A grill on "what comes after 1.1" closed with these. They set the order of work 
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.1.0` |
-| **Honest integration target** | `1.1.0`, shipped: modulation, MIDI control, generative preferences |
+| **Package version (package.json)** | `1.2.0` |
+| **Honest integration target** | `1.2.0`: snapshots and morph, polyphony cap, MIDI input select, CI harness, size gate, v1 deprecated |
 | **Production branch** | `main` (from 1.0.0; `v2-sound-world-engine` merges in at that tag) |
 | **Development branch until 1.0.0** | `v2-sound-world-engine` |
 | **v1 freeze tag** | `v1-sound-engine-baseline` |
@@ -92,7 +92,7 @@ A grill on "what comes after 1.1" closed with these. They set the order of work 
 | **Public API** | `plantasia-sound-engine/public`, [docs/API.md](./docs/API.md) (decision 5) |
 | **Architecture phases** | ✅ Phases 8–21 complete |
 | **Integration** | [PLANTASONIC_INTEGRATION.md](./docs/PLANTASONIC_INTEGRATION.md) |
-| **Performance** | [docs/PERFORMANCE.md](./docs/PERFORMANCE.md): 12 ms noteOn to audible, zero dropouts, Chromium and WebKit |
+| **Performance** | [docs/PERFORMANCE.md](./docs/PERFORMANCE.md): 12 ms noteOn to audible, zero dropouts including through a 5 s morph, Chromium and WebKit, in CI |
 | **Live demo** | https://sound-engine.xyz — demo control surface (validated) |
 
 ### What shipped in 1.0.0-beta.1
@@ -110,7 +110,8 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `1.0.0-beta.1` | Honest Sound World integration beta (Phases 17 to 21) |
 | `1.0.0-beta.2` | Master bus analysis, Bacteria recursion fix, demo control surface |
 | `1.0.0` | Analysis API, event timing, performance harness, two tier facade, placeholder species removed |
-| `1.1.0` | **Current**: modulation engine, MIDI CC, aftertouch and bend, generative preferences, thirty method public tier |
+| `1.1.0` | Modulation engine, MIDI CC, aftertouch and bend, generative preferences, thirty method public tier |
+| `1.2.0` | **Current**: snapshots and morph, polyphony cap, `enableMidi(inputId)`, CI harness, size gate, lab page, v1 deprecated, thirty four method public tier |
 
 **Plantasonic should pin:** `1.1.0`, not `v2.0.0`.
 

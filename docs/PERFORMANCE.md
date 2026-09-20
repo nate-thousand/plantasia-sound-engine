@@ -87,7 +87,7 @@ Same machine, release/1.1.0 after the MIDI and preferences steps.
 
 ### 1.2.0 work, 2026-09-20
 
-Same machine, release/1.2.0 after snapshot and morph.
+Same machine, release/1.2.0 after snapshot and morph. Full release check, 60 s long runs: Chromium noteOn to audible 12.0 ms median (12.1, 12.0, 12.0, 11.3, 11.8), WebKit 12.1 ms (15.0, 14.9, 12.1, 11.1, 10.8); zero dropouts with and without eight routes in both; engine 0.06 to 0.07 ms per frame.
 
 | Browser | Control extremes | Morph 5 s Seed to Flowers, dropouts | fps during morph | Switch ready (runs) | Switch to audible (runs) |
 | --- | --- | --- | --- | --- | --- |
