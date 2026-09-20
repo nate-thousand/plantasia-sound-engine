@@ -57,7 +57,7 @@ export function buildUI(bridge, callbacks) {
     }
   }
 
-  root.appendChild(groupHeading('Public tier (v2)', 'The twenty four method surface of plantasia-sound-engine/public: species, ecology, notes, events, analysis, MIDI.'));
+  root.appendChild(groupHeading('Public tier (v2)', 'The thirty method surface of plantasia-sound-engine/public: species, ecology, notes, events, analysis, modulation, preferences, MIDI.'));
 
   // --- Presets ---
   root.appendChild(createSection('presets', 'Presets', (body) => {

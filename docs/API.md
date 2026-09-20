@@ -2,7 +2,7 @@
 
 The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty methods, the shipped presets, the events and features they produce.
 
-Version `1.0.0`. Pin a tag, not `v2.0.0`.
+Version `1.1.0`. Pin a tag, not `v2.0.0`.
 
 ```typescript
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';

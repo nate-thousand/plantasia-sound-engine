@@ -54,8 +54,8 @@ A grill on the modulation milestone closed with these. Branch `release/1.1.0` of
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.0.0` |
-| **Honest integration target** | `1.0.0`, shipped; `1.1.0` is modulation (decision 12) |
+| **Package version (package.json)** | `1.1.0` |
+| **Honest integration target** | `1.1.0`, shipped: modulation, MIDI control, generative preferences |
 | **Production branch** | `main` (from 1.0.0; `v2-sound-world-engine` merges in at that tag) |
 | **Development branch until 1.0.0** | `v2-sound-world-engine` |
 | **v1 freeze tag** | `v1-sound-engine-baseline` |
@@ -81,9 +81,10 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `v2.0.0` | **Deprecated** — Sound World architecture landed; premature major tag |
 | `1.0.0-beta.1` | Honest Sound World integration beta (Phases 17 to 21) |
 | `1.0.0-beta.2` | Master bus analysis, Bacteria recursion fix, demo control surface |
-| `1.0.0` | **Current**: analysis API, event timing, performance harness, two tier facade, placeholder species removed |
+| `1.0.0` | Analysis API, event timing, performance harness, two tier facade, placeholder species removed |
+| `1.1.0` | **Current**: modulation engine, MIDI CC, aftertouch and bend, generative preferences, thirty method public tier |
 
-**Plantasonic should pin:** `1.0.0`, not `v2.0.0`.
+**Plantasonic should pin:** `1.1.0`, not `v2.0.0`.
 
 ---
 
@@ -286,9 +287,9 @@ Scaffold: `src/modulation/`
 - [x] ADSR envelope (PolySynth + per-voice WAAPI envelopes)
 - [x] Random drift (Juno / Plantasonic living voice ticks, preset `drift` param)
 - [x] Expression routing (partial — v2 `ExpressionRouter` maps velocity, density, and macros to synth targets; see Phase 14)
-- [ ] Modulation matrix with multiple sources/destinations *(1.1.0, decisions for 1.1.0 above)*
-- [ ] Sample & hold *(1.1.0)*
-- [ ] Envelope followers *(1.1.0)*
+- [x] Modulation matrix with multiple sources/destinations *(1.1.0)*
+- [x] Sample & hold *(1.1.0)*
+- [x] Envelope followers *(1.1.0, on the engine's own output)*
 
 ---
 
@@ -299,7 +300,7 @@ Shipped in Phase 20 (scaffold + note input). Remaining items are future mileston
 - [x] Web MIDI input — `engine.enableMidi()`, `engine.midi.devices` *(Phase 20)*
 - [ ] ~~MIDI Learn~~ host UI concern (decision 10)
 - [x] Velocity sensitivity — signature live voices + v2 `VelocityEngine`; Web MIDI note path via `enableMidi()`
-- [ ] Aftertouch / channel pressure as modulation sources *(1.1, decision 10)*
+- [x] Aftertouch / channel pressure as modulation sources *(1.1.0)*; pitch bend too
 - [ ] MPE deferred until a controller use case exists (decision 10)
 
 ---

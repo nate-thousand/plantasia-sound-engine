@@ -2,11 +2,11 @@
 
 **Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), unified facade, semantic events, generative composition, and expressive performance routing.
 
-**Version:** `1.0.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
+**Version:** `1.1.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
 
 The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature graphs) remains available on the root export for legacy hosts.
 
-> Pin **`1.0.0`**. Do **not** use tag `v2.0.0` for integration.
+> Pin **`1.1.0`**. Do **not** use tag `v2.0.0` for integration.
 
 ## Quick start (v2 — recommended)
 
@@ -26,7 +26,7 @@ engine.on('onset', ({ strength }) => { /* transients */ });
 const { bass, mid, high } = engine.getAudioFeatures(); // per frame, from the master bus
 ```
 
-Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the twenty four method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
+Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
 
 ```bash
 npm install
@@ -133,7 +133,7 @@ Performance macros route differently per active species (`seed`, `flowers`, `mol
 ```json
 {
   "dependencies": {
-    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.0.0"
+    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.1.0"
   }
 }
 ```

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-20
+
+Modulation. Six source types routed additively to the five ecology controls or the thirteen numeric performance targets, MIDI CC, aftertouch and pitch bend as events and sources, and host generative preferences that follow the player across species. Public tier grows from twenty four to thirty methods, all additive. Measured in Chromium and WebKit: zero dropouts over 60 s with eight routes under a mock visual load, 0.2 to 0.4 ms per modulation tick, a CC step reaching the engine in one tick ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).
+
 ### Added
 
 - **Modulation engine** (1.1 step 1, ROADMAP decisions for 1.1.0): `engine.modulate(source, destination, depth)` with descriptor sources `lfo`, `sample-hold`, `follower` (MIDI sources typed, active after step 3), destinations the five controls or `target:<PerformanceTargets key>`, `MODULATION_TARGET_SPANS`, `removeModulation`, `getModulationRoutes`, `getModulationState`, `modulationChanged` event. Additive on the host's base; ticks at 30 Hz on the scheduler while running
