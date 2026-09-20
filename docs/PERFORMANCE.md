@@ -30,6 +30,12 @@ WebKit needs its browser once: `npx playwright install webkit`.
 | Wheel to modulation state | `feedMidi` CC1 step 0 to 127 on a `midi-cc` route to `target:filterCutoffMult` at depth -1, held Seed note; time until `getModulationState()` shows the offset | recorded, one tick expected | no |
 | Wheel to audible | Same step; time until two consecutive frames show the high band half way to its final value | recorded, 50 ms expectation | no |
 
+## Hardening rows (1.2)
+
+| Measure | How | Bar | Blocks release |
+| --- | --- | --- | --- |
+| Control extremes | Every species at all controls 0, all controls 1, and each control alone at 0 and at 1 with the rest at 0.5: `loadSpecies`, `start({ generative: false })`, a held note, then every control flipped across its range on the live graph. 48 runs | no throw, no page error | yes |
+
 ## Results
 
 ### 1.0.0 work, 2026-09-18

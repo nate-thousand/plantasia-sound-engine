@@ -73,7 +73,7 @@ Your class must implement `SoundWorld`:
 | `noteOn(note, velocity?)` | Trigger voice; velocity 0–1 |
 | `noteOff(note)` | Release voice |
 | `allNotesOff()` | Release all |
-| `setControl(control, value)` | Accept 0–100 for all five ecological controls |
+| `setControl(control, value, rampSec?)` | Accept 0 to 100 for all five ecological controls. `rampSec` is optional: the species default when omitted, `0` means apply now. Only the lab and harness pass it |
 | `dispose()` | Release all Tone.js nodes |
 
 Optional, added in 1.1. Species without them keep working; hosts just get no modulation or preference control over them.

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Lab page** (`npm run lab`, port 5195; ROADMAP decision 9 after 1.1.0): species select, held note or chord, one control sweep with the species ramp on or off, species A/B that re-holds the notes, a `MODULATION_TARGET_SPANS` editor applied live with Audition routes and JSON out, analyser bands, and a per control A/B over A/A measure (decision 10 bar). Local tool, never deployed
+- Root export only: `setControl(control, value, rampSec?)` takes an optional ramp time (`0` applies immediately); `setModulationTargetSpans(partial)` and `getModulationTargetSpans()` override spans at runtime. `SoundWorld.setControl` gains the same optional third argument; species without it are unaffected
+- Harness row `control extremes load every species` (blocks): every species at every control extreme loads, starts and takes a note without throwing, Chromium and WebKit
+- `docs/INSTRUMENT_BRIEF.md`, the hand off to the first played instrument (decision 20)
+
+### Fixed
+
+- Flowers threw Tone's `RangeError: Value must be within [0, 1]` on load with bloom above about 0.9: chorus depth times the bloom macro passed 1. Every `NormalRange` effect write in all four species (wet, depth, width, resonance, feedback, room size) now goes through `setRampNormal`, which clamps at the one place values reach Tone. Found by the lab on its first A/B
+
 ## [1.1.0] - 2026-09-20
 
 Modulation. Six source types routed additively to the five ecology controls or the thirteen numeric performance targets, MIDI CC, aftertouch and pitch bend as events and sources, and host generative preferences that follow the player across species. Public tier grows from twenty four to thirty methods, all additive. Measured in Chromium and WebKit: zero dropouts over 60 s with eight routes under a mock visual load, 0.2 to 0.4 ms per modulation tick, a CC step reaching the engine in one tick ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plantasia Sound Engine lab</title>
+    <link rel="stylesheet" href="./lab.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Lab</h1>
+      <p>Tuning by ear. Not deployed. Species, a held note, one control at a time, an A/B, spans, bands.</p>
+      <div class="row">
+        <button id="unlock">Start audio</button>
+        <label>Species <select id="species"></select></label>
+        <label><input type="checkbox" id="generative" /> generative</label>
+        <button id="load">Load</button>
+        <span id="status" class="status">idle</span>
+      </div>
+    </header>
+
+    <main>
+      <section id="hold">
+        <h2>Hold</h2>
+        <div class="row">
+          <label>Note <select id="note"></select></label>
+          <label>Velocity <input type="range" id="velocity" min="0" max="1" step="0.05" value="0.9" /> <span id="velocityValue">0.90</span></label>
+        </div>
+        <div class="row">
+          <button id="holdNote">Hold note</button>
+          <button id="holdChord">Hold chord</button>
+          <button id="release">Release</button>
+          <span id="held" class="status">nothing held</span>
+        </div>
+      </section>
+
+      <section id="sweep">
+        <h2>Sweep</h2>
+        <div class="row">
+          <label>Control <select id="control"></select></label>
+          <label><input type="checkbox" id="ramp" checked /> ramp (0.2 s)</label>
+          <button id="resetControls">All to 0.5</button>
+        </div>
+        <div class="row">
+          <input type="range" id="controlValue" min="0" max="1" step="0.01" value="0.5" class="wide" />
+          <span id="controlReadout">0.50</span>
+        </div>
+        <div class="row">
+          <button id="jumpLow">Low 0.10</button>
+          <button id="jumpHigh">High 0.95</button>
+          <label>Auto <input type="number" id="sweepSec" min="1" max="30" step="1" value="6" /> s</label>
+          <button id="autoSweep">Low to high</button>
+          <button id="measure">Measure A/B over A/A</button>
+        </div>
+        <pre id="measureOut" class="out"></pre>
+      </section>
+
+      <section id="ab">
+        <h2>Species A/B</h2>
+        <div class="row">
+          <label>A <select id="speciesA"></select></label>
+          <label>B <select id="speciesB"></select></label>
+          <button id="playA">Play A</button>
+          <button id="playB">Play B</button>
+          <span class="hint">Loads the species and re-holds whatever is held. Controls and routes carry over.</span>
+        </div>
+      </section>
+
+      <section id="spans">
+        <h2>Target spans</h2>
+        <p class="hint">Each row is one <code>MODULATION_TARGET_SPANS</code> entry. Audition puts a 0.5 Hz sine LFO at depth 1 on that target. Edits apply live. Copy the JSON into <code>src/engine/modulation/types.ts</code>.</p>
+        <table id="spanTable"></table>
+        <div class="row">
+          <button id="spanDefaults">Reset to defaults</button>
+          <button id="spanCopy">Copy JSON</button>
+          <button id="spanApply">Apply JSON</button>
+        </div>
+        <textarea id="spanJson" rows="6" spellcheck="false"></textarea>
+      </section>
+
+      <section id="analyser">
+        <h2>Bands</h2>
+        <div id="bands"></div>
+        <canvas id="wave" width="600" height="80"></canvas>
+      </section>
+    </main>
+    <script type="module" src="./lab.js"></script>
+  </body>
+</html>

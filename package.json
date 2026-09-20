@@ -42,6 +42,7 @@
     "test:preferences": "node scripts/test-preferences.mjs",
     "test:browser": "npm run build && playwright test",
     "bench": "vite --config vite.bench.config.ts --port 5194 --strictPort",
+    "lab": "vite --config vite.lab.config.ts --port 5195 --strictPort",
     "test:scheduler": "node scripts/test-scheduler.mjs",
     "test:midi": "node scripts/test-midi.mjs",
     "test:audio": "node scripts/validate-species-audio.mjs",

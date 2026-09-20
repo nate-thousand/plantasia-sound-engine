@@ -53,7 +53,12 @@ export interface SoundWorld {
   noteOff(note: string): void;
   allNotesOff(): void;
 
-  setControl(control: EcologicalControl, value: number): void;
+  /**
+   * Set one ecology control on the species scale (0..100). `rampSec` is
+   * how long the species takes to reach the value; omitted means the species
+   * default (0.2 s). `0` applies immediately. Lab and harness use only.
+   */
+  setControl(control: EcologicalControl, value: number, rampSec?: number): void;
 
   /**
    * Optional (1.1). Called at 30 Hz while modulation routes exist with the

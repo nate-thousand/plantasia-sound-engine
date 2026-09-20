@@ -611,3 +611,50 @@ window.bench = { run, probe, probeControl, abControls, probeModulation, measureW
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });
+
+/**
+ * Every species at every control extreme (all 0, all 1, each control alone at
+ * 0 and at 1 with the rest at 0.5) loads, starts, and takes a note without
+ * throwing. Guards Tone's [0, 1] RangeError on effect params (found by the
+ * lab on Flowers at bloom 0.95).
+ */
+async function probeExtremes({ species, holdMs = 150 } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  const ids = species ?? engine.getAvailableSpecies().map((m) => m.id);
+  const CONTROLS = ['growth', 'bloom', 'roots', 'mold', 'bacteria'];
+  const cases = [
+    { name: 'all 0', values: Object.fromEntries(CONTROLS.map((c) => [c, 0])) },
+    { name: 'all 1', values: Object.fromEntries(CONTROLS.map((c) => [c, 1])) },
+  ];
+  for (const c of CONTROLS) {
+    for (const v of [0, 1]) {
+      const values = Object.fromEntries(CONTROLS.map((k) => [k, 0.5]));
+      values[c] = v;
+      cases.push({ name: `${c} ${v}`, values });
+    }
+  }
+  const failures = [];
+  let runs = 0;
+  for (const id of ids) {
+    for (const { name, values } of cases) {
+      runs += 1;
+      try {
+        for (const [c, v] of Object.entries(values)) engine.setControl(c, v);
+        await engine.loadSpecies(id);
+        await engine.start({ generative: false });
+        engine.noteOn('E3', 0.9);
+        await wait(holdMs);
+        // Move every control across its range on the live graph too.
+        for (const [c, v] of Object.entries(values)) engine.setControl(c, 1 - v);
+        await wait(holdMs);
+        engine.allNotesOff();
+      } catch (error) {
+        failures.push({ species: id, case: name, error: String(error?.message ?? error) });
+      }
+    }
+  }
+  engine.dispose();
+  return { runs, failures };
+}
+window.bench.probeExtremes = probeExtremes;

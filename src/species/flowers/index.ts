@@ -142,12 +142,12 @@ export class FlowersSoundWorld implements SoundWorld {
     this.applyEcologicalControls(frame.rampSec);
   }
 
-  setControl(control: EcologicalControl, value: number): void {
+  setControl(control: EcologicalControl, value: number, rampSec = 0.2): void {
     if (!FLOWERS_SUPPORTED_CONTROLS.includes(control)) {
       return;
     }
     this.controls[control] = clampControl(value);
-    this.applyEcologicalControls();
+    this.applyEcologicalControls(rampSec);
   }
 
   dispose(): void {

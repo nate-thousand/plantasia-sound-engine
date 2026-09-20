@@ -70,10 +70,25 @@ export class ModulationEngine {
   /** True once after the last route is removed, so the species gets one clearing frame. */
   private pendingClear = false;
 
+  private spans: Record<ModulatableTarget, number> = { ...MODULATION_TARGET_SPANS };
+
   constructor(
     private readonly env: ModulationEnvironment,
     private readonly getBase: () => EcologyControlState,
   ) {}
+
+  /** Replace spans for the given targets; others keep their current value. */
+  setTargetSpans(partial: Partial<Record<ModulatableTarget, number>>): void {
+    for (const [target, span] of Object.entries(partial)) {
+      if (TARGET_SET.has(target) && typeof span === 'number' && Number.isFinite(span)) {
+        this.spans[target as ModulatableTarget] = Math.max(0, span);
+      }
+    }
+  }
+
+  getTargetSpans(): Record<ModulatableTarget, number> {
+    return { ...this.spans };
+  }
 
   modulate(source: ModulationSourceDescriptor, destination: ModulationDestination, depth: number): ModulationRoute {
     const parsed = parseDestination(destination);
@@ -185,7 +200,7 @@ export class ModulationEngine {
       if (record.control) {
         controls[record.control] = clampEcologyValue(controls[record.control] + amount);
       } else if (record.target) {
-        targets[record.target] = (targets[record.target] ?? 0) + amount * MODULATION_TARGET_SPANS[record.target];
+        targets[record.target] = (targets[record.target] ?? 0) + amount * this.spans[record.target];
       }
     }
     const frame = { controls, targets, routes: this.routes.size };

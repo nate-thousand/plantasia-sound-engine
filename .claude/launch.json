@@ -4,14 +4,33 @@
     {
       "name": "demo",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "demo", "--", "--port", "5193", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "demo",
+        "--",
+        "--port",
+        "5193",
+        "--strictPort"
+      ],
       "port": 5193
     },
     {
       "name": "bench",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "bench"],
+      "runtimeArgs": [
+        "run",
+        "bench"
+      ],
       "port": 5194
+    },
+    {
+      "name": "lab",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "lab"
+      ],
+      "port": 5195
     }
   ]
 }

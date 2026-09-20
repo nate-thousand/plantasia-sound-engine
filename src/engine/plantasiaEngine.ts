@@ -53,6 +53,7 @@ import {
   type ModulationRouteConfig,
   type ModulationSourceDescriptor,
   type ModulationState,
+  type ModulatableTarget,
 } from './modulation/types.js';
 import type { PlantasiaEngineApi } from './PlantasiaEngineApi.js';
 
@@ -244,6 +245,20 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   }
 
   /** Current source values, base and modulated controls, target offsets. Poll per frame. */
+  /**
+   * Override target spans at runtime (root tier only; the lab page uses it to
+   * tune `MODULATION_TARGET_SPANS` by ear). Partial; unspecified targets keep
+   * their current span.
+   */
+  setModulationTargetSpans(partial: Partial<Record<ModulatableTarget, number>>): void {
+    this.modulation.setTargetSpans(partial);
+  }
+
+  /** Current target spans, defaults or overridden. */
+  getModulationTargetSpans(): Record<ModulatableTarget, number> {
+    return this.modulation.getTargetSpans();
+  }
+
   getModulationState(): ModulationState {
     return this.modulation.getState();
   }
@@ -319,8 +334,8 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   }
 
   /** Set an ecological control (0–1). */
-  setControl(control: EcologicalControl, value: number): void {
-    this.species.setControl(control, value);
+  setControl(control: EcologicalControl, value: number, rampSec?: number): void {
+    this.species.setControl(control, value, rampSec);
   }
 
   /** Current value of an ecological control (0..1). */

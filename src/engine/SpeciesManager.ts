@@ -211,12 +211,12 @@ export class SpeciesManager {
    * Stored centrally and routed to the active species when present.
    * @throws EcologyControlScaleError when value is outside 0–1
    */
-  setControl(control: EcologicalControl, value: number): void {
+  setControl(control: EcologicalControl, value: number, rampSec?: number): void {
     assertNormalizedEcologyValue(value, control);
     this.ecologyControls.set(control, value);
     const active = this.loader.getCurrent();
     if (active) {
-      active.setControl(control, toSpeciesControlValue(this.ecologyControls.get(control)));
+      active.setControl(control, toSpeciesControlValue(this.ecologyControls.get(control)), rampSec);
     }
     this.events?.emit('controlChanged', {
       control,

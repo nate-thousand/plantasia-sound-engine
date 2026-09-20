@@ -69,3 +69,16 @@ test('engine performance bar', async ({ page, browserName }) => {
   expect(result.longRun.dropouts, 'dropouts over the long run').toBe(0);
   expect(result.longRunModulated.dropouts, 'dropouts over the long run with eight routes').toBe(0);
 });
+
+/** Decision 3 after 1.1.0 (hardening): no species throws at a control extreme. Blocks. */
+test('control extremes load every species', async ({ page, browserName }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(String(err)));
+  await page.goto('/');
+  await page.click('#unlock', { trial: true });
+  const result = await page.evaluate(() => window.bench.probeExtremes());
+  console.log(`[${browserName}] control extremes: ${result.runs} runs, ${result.failures.length} failures`);
+  for (const f of result.failures) console.log(`[${browserName}]   ${f.species} at ${f.case}: ${f.error}`);
+  expect(errors, 'no page errors').toEqual([]);
+  expect(result.failures, 'no species throws at a control extreme').toEqual([]);
+});

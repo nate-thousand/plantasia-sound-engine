@@ -80,6 +80,8 @@ See [docs/API.md](./docs/API.md) for the full contract.
 
 `npm run build && npm run demo` opens the definitive Plantasia test bench at `demo/`. It exposes every **wired** engine capability and flags scaffold features in the Debug panel.
 
+`npm run lab` opens `lab/`, a local page for tuning by ear: one species, a held note or chord, one control swept with the species ramp on or off, a species A/B, the modulation target spans edited live and emitted as JSON, and the analyser bands. It is not deployed.
+
 | Section | Controls |
 |---------|----------|
 | **Presets** | Category filter, browser, prev/next/random, favorites, temp save, copy JSON |
@@ -160,6 +162,7 @@ npm run build
 npm run typecheck
 npm run test
 npm run test:browser # Playwright performance harness, see docs/PERFORMANCE.md
+npm run lab          # tuning page at localhost:5195, never deployed
 npm run build:site   # production bundle for Vercel
 ```
 
