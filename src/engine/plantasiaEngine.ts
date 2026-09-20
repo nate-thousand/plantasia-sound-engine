@@ -56,6 +56,9 @@ import {
   type ModulatableTarget,
 } from './modulation/types.js';
 import type { PlantasiaEngineApi } from './PlantasiaEngineApi.js';
+import { EngineLifecycleError } from './EngineLifecycle.js';
+import { ECOLOGICAL_CONTROLS } from './EcologyControls.js';
+import { ENGINE_SNAPSHOT_VERSION, validateSnapshot, type ApplySnapshotOptions, type EngineSnapshot } from './snapshot/types.js';
 
 /** How often the engine reads the master bus for onsets while running. */
 const ANALYSIS_TICK_MS = 16;
@@ -99,6 +102,9 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   private modulationTimer: number | null = null;
   private lastModulationTick = 0;
   private midiBound = false;
+  private lastPresetId: string | null = null;
+  private lastStartOptions: SoundWorldStartOptions | undefined;
+  private morph: { timer: number; resolve: () => void } | null = null;
 
   constructor(options: CreatePlantasiaEngineOptions = {}) {
     this.events = new EngineEventBus();
@@ -163,6 +169,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
 
   async loadSpecies(id: SpeciesId, context?: unknown): Promise<void> {
     await this.species.loadSpecies(id, context);
+    this.lastPresetId = null;
   }
 
   /** Load default Seed Sound World. */
@@ -177,6 +184,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   async loadPreset(presetId: string, context?: unknown): Promise<void> {
     const resolution = resolvePresetToSpecies(presetId);
     await this.species.loadSpecies(resolution.speciesId, context, { presetId: resolution.presetId });
+    this.lastPresetId = resolution.presetId;
     this.applyEcology(resolution.ecology);
   }
 
@@ -195,6 +203,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
    * {@link stopSpecies} then `start()` to switch generative playback on.
    */
   async start(options?: SoundWorldStartOptions): Promise<void> {
+    this.lastStartOptions = options;
     await this.species.start(options);
     this.startAnalysis();
     this.startModulation();
@@ -222,6 +231,110 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   /** Effective preferences of the loaded species, or the host overrides alone when none is loaded. */
   getGenerativePreferences(): Partial<GenerativePreferences> {
     return this.species.getGenerativePreferences();
+  }
+
+  // --- snapshots (1.2) ---
+
+  /**
+   * The whole host facing state as one JSON object: species, control base
+   * values, tempo, routes, preference overrides, polyphony cap, preset id.
+   * Throws `EngineLifecycleError` before a species is loaded.
+   */
+  getSnapshot(): EngineSnapshot {
+    const species = this.getCurrentSpecies();
+    if (!species) {
+      throw new EngineLifecycleError('NO_SPECIES_LOADED', this.getState(), 'getSnapshot() needs a loaded species');
+    }
+    const snapshot: EngineSnapshot = {
+      version: ENGINE_SNAPSHOT_VERSION,
+      speciesId: species.id,
+      controls: this.species.getControlState(),
+      tempo: this.transport.getBpm(),
+      routes: this.modulation.list(),
+      preferences: this.species.getPreferenceOverrides(),
+      polyphony: this.species.getPolyphony(),
+    };
+    if (this.lastPresetId) {
+      snapshot.presetId = this.lastPresetId;
+    }
+    return snapshot;
+  }
+
+  /**
+   * Restore a snapshot. Routes are replaced, preferences and the polyphony
+   * cap set, and the species switched (no crossfade; a running engine is
+   * started again with its last start options). Controls and tempo land now,
+   * or interpolate over `morphSec`. A second call cancels a morph in flight.
+   * Throws `SnapshotError` on an unsupported version, unknown species or
+   * malformed fields, before anything changes.
+   */
+  async applySnapshot(snapshot: EngineSnapshot, options: ApplySnapshotOptions = {}): Promise<void> {
+    const known = this.getAvailableSpecies().map((m) => m.id);
+    const target = validateSnapshot(snapshot, known);
+    this.cancelMorph();
+
+    for (const route of this.modulation.list()) {
+      this.modulation.remove(route.id);
+    }
+    for (const route of target.routes) {
+      this.modulation.modulate(route.source, route.destination, route.depth);
+    }
+    this.species.replaceGenerativePreferences(target.preferences ?? {});
+    this.species.setPolyphony(target.polyphony ?? null);
+
+    if (this.getCurrentSpecies()?.id !== target.speciesId) {
+      const wasRunning = this.getState() === 'running';
+      await this.species.loadSpecies(target.speciesId, undefined, target.presetId ? { presetId: target.presetId } : undefined);
+      if (wasRunning) {
+        await this.start(this.lastStartOptions);
+      }
+    }
+    this.lastPresetId = target.presetId ?? null;
+
+    const morphSec = options.morphSec ?? 0;
+    if (!(morphSec > 0)) {
+      for (const control of ECOLOGICAL_CONTROLS) {
+        this.species.setControl(control, target.controls[control]);
+      }
+      this.setTempo(target.tempo);
+      return;
+    }
+    await this.runMorph(target, morphSec);
+  }
+
+  private runMorph(target: EngineSnapshot, morphSec: number): Promise<void> {
+    const from = this.species.getControlState();
+    const fromTempo = this.transport.getBpm();
+    const startedAt = performance.now();
+    return new Promise<void>((resolve) => {
+      const timer = this.scheduler.setInterval(
+        () => {
+          const t = Math.min(1, (performance.now() - startedAt) / (morphSec * 1000));
+          for (const control of ECOLOGICAL_CONTROLS) {
+            const value = from[control] + (target.controls[control] - from[control]) * t;
+            this.species.setControl(control, Math.min(1, Math.max(0, value)), MODULATION_RAMP_SEC);
+          }
+          this.setTempo(fromTempo + (target.tempo - fromTempo) * t);
+          if (t >= 1) {
+            this.cancelMorph();
+          }
+        },
+        MODULATION_TICK_MS,
+        'morph',
+      );
+      this.morph = { timer, resolve };
+    });
+  }
+
+  /** Stop a morph in flight where it is; its promise resolves. */
+  private cancelMorph(): void {
+    if (!this.morph) {
+      return;
+    }
+    const { timer, resolve } = this.morph;
+    this.morph = null;
+    this.scheduler.clearInterval(timer);
+    resolve();
   }
 
   // --- voices (1.2) ---
@@ -409,6 +522,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
       this.midi.disconnect();
       this.midiBound = false;
     }
+    this.cancelMorph();
     this.stopAnalysis();
     this.analyser.dispose();
     this.stopModulation();

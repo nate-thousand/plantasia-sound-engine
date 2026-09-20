@@ -186,6 +186,20 @@ export class SpeciesManager {
     this.loader.getCurrent()?.setGenerativePreferences?.(partial);
   }
 
+  /** The host overrides alone, as stored; what a snapshot carries. */
+  getPreferenceOverrides(): Partial<GenerativePreferences> {
+    return { ...this.generativePreferences };
+  }
+
+  /** Replace the host overrides wholesale and apply them to the loaded species. */
+  replaceGenerativePreferences(preferences: Partial<GenerativePreferences>): void {
+    this.generativePreferences = { ...preferences };
+    const active = this.loader.getCurrent();
+    if (active && Object.keys(preferences).length > 0) {
+      active.setGenerativePreferences?.(preferences);
+    }
+  }
+
   /** Effective preferences of the loaded species, or the overrides alone when none is loaded. */
   getGenerativePreferences(): Partial<GenerativePreferences> {
     const active = this.loader.getCurrent();

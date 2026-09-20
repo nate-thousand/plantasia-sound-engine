@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Root export only: `setControl(control, value, rampSec?)` takes an optional ramp time (`0` applies immediately); `setModulationTargetSpans(partial)` and `getModulationTargetSpans()` override spans at runtime. `SoundWorld.setControl` gains the same optional third argument; species without it are unaffected
 - Harness row `control extremes load every species` (blocks): every species at every control extreme loads, starts and takes a note without throwing, Chromium and WebKit
 - `docs/INSTRUMENT_BRIEF.md`, the hand off to the first played instrument (decision 20)
+- **Snapshots** (decisions 13 and 14): `getSnapshot()` returns `{ version: 1, speciesId, controls, tempo, routes, preferences, polyphony?, presetId? }`; `applySnapshot(snapshot, { morphSec? })` validates (`SnapshotError`: `UNSUPPORTED_VERSION`, `UNKNOWN_SPECIES`, `INVALID`) before changing anything, replaces routes and preference overrides, sets the cap, switches species without crossfade (a running engine restarts with its last start options), then sets controls and tempo now or interpolates them at 30 Hz over `morphSec`. A second call cancels a morph in flight. Gate `scripts/test-snapshot.mjs` (eighteen postbuild gates)
+- Harness rows (decision 18): a 5 s morph across a species switch with dropouts counted (blocks); `applySnapshot` species switch, time until ready and until audible (recorded); control audibility, A/B over A/A for every control on every species (recorded until the sound pass)
 - **Polyphony cap** (decision 17): `setPolyphony(voices | null)` and `getPolyphony()` on the public tier. Species keep their own growth driven polyphony curve and clamp it to the cap; optional `SoundWorld.setPolyphony` hook, implemented by all four species and the template; applied on every load
 - `enableMidi(inputId?)` picks one Web MIDI input; ids from the root export's `midi.devices`
 - **CI browser job** (decisions 3 and 11): `.github/workflows/ci.yml` runs the Playwright harness in Chromium and WebKit on every push to `main` and pull request. Dropouts, page errors and control extremes block; noteOn latency is recorded and annotated above 25 ms; the 15 ms bar stays the local release check. Results uploaded as the `bench-results` artifact
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Tone.js pinned to `~15.1.22` (decision 3): a minor bump is now a deliberate change
+- The v1 `setTempo` no longer throws without a Web Audio context (Node gates); the engine transport still stores the BPM
 
 ### Fixed
 

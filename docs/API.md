@@ -1,6 +1,6 @@
 # Public API
 
-The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty two methods, the shipped presets, the events and features they produce.
+The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty four methods, the shipped presets, the events and features they produce.
 
 Version `1.1.0`. Pin a tag, not `v2.0.0`.
 
@@ -133,6 +133,30 @@ Sources are plain descriptors. The same `id` used in two routes is one source.
 
 Fields: `preferredScale`, `alternateScale`, `chordVoicings`, `phraseLength`, `probabilityBias`, `dronePreference`, `harmonyStyle`, `rhythmStyle`, `preferredTempo`, `preferredDensity`. Tempo, density, probability bias and drone preference apply now; the rest land at the next phrase boundary so a phrase in flight is not broken.
 
+### Snapshots (1.2)
+
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `getSnapshot` | `() => EngineSnapshot` | The whole host facing state as one JSON object. Throws `EngineLifecycleError` (`NO_SPECIES_LOADED`) before a species is loaded |
+| `applySnapshot` | `(snapshot: EngineSnapshot, options?: { morphSec?: number }) => Promise<void>` | Restores it. Validates first and throws `SnapshotError` before changing anything |
+
+```typescript
+type EngineSnapshot = {
+  version: 1;
+  speciesId: SpeciesId;
+  controls: EcologyControlState;           // host base values, 0..1
+  tempo: number;                           // BPM
+  routes: ModulationRouteConfig[];         // ids are informational
+  preferences: Partial<GenerativePreferences>; // host overrides only
+  polyphony?: number | null;
+  presetId?: string;                       // set when loaded through loadPreset
+};
+```
+
+What `applySnapshot` does, in order: replaces every route, replaces the preference overrides, sets the polyphony cap, switches species when the id differs (no crossfade; a running engine is started again with its last `start` options; `speciesChanged` is emitted), then sets controls and tempo. With `morphSec`, controls and tempo interpolate linearly from their current values over that many seconds at 30 Hz and the promise resolves when the morph ends; everything else lands at the start. A second call cancels a morph in flight where it is. Modulation is not baked into `controls`; routes carry it.
+
+`SnapshotError.code` is `UNSUPPORTED_VERSION`, `UNKNOWN_SPECIES` or `INVALID` (a control outside 0..1, a tempo at or below 0, a malformed route, a polyphony outside 1..64). A version 1 snapshot from 1.2.0 applies on every later 1.x.
+
 ### Voices (1.2)
 
 | Method | Signature | Notes |
@@ -198,10 +222,11 @@ Raw per frame; the host owns smoothing. Reads within one frame return the same o
 | `EngineLifecycleError` | `start`, `noteOn`, `noteOff` in the wrong state. `code` says which |
 | `EcologyControlScaleError` | `setControl` outside 0..1 |
 | `ReservedSpeciesIdError` | `registerSpecies` with a built in id |
+| `SnapshotError` | `applySnapshot` on an unsupported version, unknown species or malformed field. `code` says which |
 
 ## Types
 
-`PlantasiaEngine` (the interface, also exported as `PlantasiaEngineApi`), `CreatePlantasiaEngineOptions`, `SpeciesId`, `EcologicalControl`, `EcologyControlState`, `EngineState`, `EngineLifecycleErrorCode`, `SoundWorld`, `SoundWorldMetadata`, `SoundWorldStartOptions`, `SpeciesModulationFrame`, `AudioFeatures`, `OnsetEvent`, `PlantasiaPreset`, `ModulationSourceDescriptor`, `ModulationDestination`, `ModulationRoute`, `ModulationRouteConfig`, `ModulationState`, `ModulatableTarget`, `GenerativePreferences`, `MidiControlMessage`, and the event types above.
+`PlantasiaEngine` (the interface, also exported as `PlantasiaEngineApi`), `CreatePlantasiaEngineOptions`, `SpeciesId`, `EcologicalControl`, `EcologyControlState`, `EngineState`, `EngineLifecycleErrorCode`, `SoundWorld`, `SoundWorldMetadata`, `SoundWorldStartOptions`, `SpeciesModulationFrame`, `AudioFeatures`, `OnsetEvent`, `PlantasiaPreset`, `ModulationSourceDescriptor`, `ModulationDestination`, `ModulationRoute`, `ModulationRouteConfig`, `ModulationState`, `ModulatableTarget`, `GenerativePreferences`, `MidiControlMessage`, `EngineSnapshot`, `ApplySnapshotOptions`, `SnapshotErrorCode`, and the event types above.
 
 ## Root export
 

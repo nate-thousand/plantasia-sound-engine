@@ -9,6 +9,7 @@
  */
 import type { AudioFeatures } from './analysis/AudioAnalyser.js';
 import type { GenerativePreferences } from './generative/types.js';
+import type { ApplySnapshotOptions, EngineSnapshot } from './snapshot/types.js';
 import type {
   ModulationDestination,
   ModulationRoute,
@@ -88,6 +89,16 @@ export interface PlantasiaEngineApi {
   getWaveform(): Float32Array;
   /** Master level 0..1 from a -60 dB floor. */
   getLevel(): number;
+
+  // --- snapshots (1.2) ---
+
+  /** The whole host facing state as one JSON object. Throws `EngineLifecycleError` before a species is loaded. */
+  getSnapshot(): EngineSnapshot;
+  /**
+   * Restore a snapshot: routes replaced, preferences and polyphony set, species switched without crossfade,
+   * controls and tempo now or interpolated over `morphSec`. Throws `SnapshotError` before changing anything.
+   */
+  applySnapshot(snapshot: EngineSnapshot, options?: ApplySnapshotOptions): Promise<void>;
 
   // --- voices (1.2) ---
 

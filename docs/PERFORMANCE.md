@@ -39,6 +39,9 @@ The `browser` job in `.github/workflows/ci.yml` runs the same suite in Chromium 
 | Measure | How | Bar | Blocks release |
 | --- | --- | --- | --- |
 | Control extremes | Every species at all controls 0, all controls 1, and each control alone at 0 and at 1 with the rest at 0.5: `loadSpecies`, `start({ generative: false })`, a held note, then every control flipped across its range on the live graph. 48 runs | no throw, no page error | yes |
+| Snapshot morph | Seed generative at bloom 0.2, roots 0.8; `applySnapshot` to a Flowers snapshot at other controls and 96 BPM with `morphSec: 5`; the long run detector counts dropouts for the morph plus one second, under the 8 ms mock load | 0 dropouts, ends on the target species | yes |
+| Snapshot switch | From silence in played mode, `applySnapshot` to the other species, then `noteOn`; time until the promise resolves (ready) and until the first audible sample on the master bus. Three runs alternating Seed and Flowers | recorded | no |
+| Control audibility | `abControls` for every species: each control held at 0.1 twice (A/A) and at 0.95 (A/B) on a held `E3`, 1 s averages of six features after 0.8 s settle. A control clears when some feature's A/B difference is more than twice its A/A noise and above 0.005 | recorded until the sound pass sets the depths; then every control on every species clears on at least one feature | no |
 
 ## Size
 
@@ -82,6 +85,32 @@ Same machine, release/1.1.0 after the MIDI and preferences steps.
 | Chromium 153 | 12.0 ms (12.1, 12.0, 11.3, 12.0, 11.8) | 0 | 0 | 60.0 | 0.21 ms, 0.40 ms (6.3 ms per second) | 15.6 ms | 30.7 ms (10.0, 41.0, 30.7, 41.3, 0.1) |
 | WebKit 26.6 | 14.2 ms (12.1, 15.1, 14.2, 14.2, 11.7) | 0 | 0 | 60.0 | 0.44 ms, 2.0 ms (12.2 ms per second) | 24.0 ms | 87.0 ms (40, 87, 96, none, 56) |
 
+### 1.2.0 work, 2026-09-20
+
+Same machine, release/1.2.0 after snapshot and morph.
+
+| Browser | Control extremes | Morph 5 s Seed to Flowers, dropouts | fps during morph | Switch ready (runs) | Switch to audible (runs) |
+| --- | --- | --- | --- | --- | --- |
+| Chromium 153 | 48 runs, 0 failures | 0 | 59.5 | 88, 61, 119 ms | 116, 71, 145 ms |
+| WebKit 26.6 | 48 runs, 0 failures | 0 | 59.2 | 52, 58, 94 ms | 80, 68, 123 ms |
+
+Control audibility, A/B over A/A on a held `E3`, features that clear per control:
+
+| Species / control | Chromium | WebKit |
+| --- | --- | --- |
+| seed / growth | mid, high, centroid | centroid |
+| seed / bloom | rms, peak, bass, mid | rms, peak, bass, mid |
+| seed / roots | none | high |
+| seed / mold | rms, peak, bass | rms, peak, mid, high |
+| seed / bacteria | high, centroid | high, centroid |
+| flowers / growth | rms, peak, bass, mid, high | high |
+| flowers / bloom | mid, centroid | high, centroid |
+| flowers / roots | centroid | peak, bass, mid, centroid |
+| flowers / mold | rms, peak, bass, mid | rms, peak, mid, high |
+| flowers / bacteria | none | high |
+| mold / any | none | none |
+| bacteria / any | none | none |
+
 ### Findings
 
 1. Before this pass, noteOn to audible was 102 ms in Chromium: Tone's default `lookAhead` of 0.1 s. The engine now sets 0.01 s on the shared context when the master bus is created. The 60 s dropout run at 60 fps with the mock visual load is the check that the shorter lookahead holds.
@@ -105,3 +134,5 @@ Same machine, release/1.1.0 after the MIDI and preferences steps.
 5. **Eight routes cost nothing a player would notice.** The modulation tick runs 0.2 ms in Chromium and 0.4 ms in WebKit at 30 Hz, so under 13 ms of main thread per second, and the long run with eight routes shows zero dropouts in both browsers at 60 fps under the mock visual load. The `ChangeGate` around `PolySynth.set` is what keeps it there; without it every tick would touch every voice.
 6. **Wheel latency is one tick to the engine and the rest is the spectrum.** A CC step reaches `getModulationState()` in 16 ms (Chromium) and 24 ms (WebKit), which is the 33 ms tick interval sampled at random phase. The audible number is noisy (0 to 96 ms across runs, one WebKit run undetected) because it is read from the high band of a held Seed voice that moves on its own by about a third of the step's effect. The ramp itself is 33 ms by construction. Engine side latency is the number to hold to; the audible one stays recorded.
 7. **WebKit noteOn latency has drifted to the bar.** 12.1 ms in the 1.0 run, 14.2 ms median here with one run at 15.1 ms against a 15 ms bar. Nothing in 1.1 touches the note path, so this is run to run variance in headless WebKit. If it flakes, the options are a lookahead of 8 ms or a 20 ms bar for WebKit; neither is taken yet.
+8. **Half the controls are inaudible on one held note, and two species have none.** The 1.2 audibility row (decision 10 bar, recorded) finds 9 of 20 controls clearing the A/A noise in Chromium and 10 in WebKit. Seed and Flowers controls mostly clear, though which feature clears differs between browsers and between runs, so a held note is a noisy instrument for this. Mold and Bacteria clear on nothing: a Mold drone voice and a Bacteria FM voice are near static on their own and their controls act on the generator, the swarm and the particle rate, none of which a single `noteOn` exercises. This is the input to the 1.3 sound pass, and the reason its bar says "at least one feature" per control rather than a fixed feature: the pass has to decide, per species, what a control does to one voice, or measure the population instead.
+9. **A species switch through `applySnapshot` is ready in 50 to 120 ms and audible 20 to 30 ms after that.** The ready time is `loadSpecies` (graph build) plus `start`; the audible time on top is the ordinary noteOn latency. The 5 s morph across that switch ran with zero dropouts in both browsers at 60 fps under the mock load, so the switch and the 30 Hz control ramps do not disturb the audio thread.
