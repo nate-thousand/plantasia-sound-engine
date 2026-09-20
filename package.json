@@ -1,6 +1,6 @@
 {
   "name": "plantasia-sound-engine",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Modular Sound World engine for Plantasia — species plugins, generative composition, expressive performance",
   "type": "module",
   "sideEffects": false,
@@ -30,7 +30,7 @@
     "clean": "rm -rf dist",
     "sync-presets": "node scripts/sync-presets.mjs",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs && node scripts/validate-species-api.mjs && node scripts/test-ecology-controls.mjs && node scripts/test-generative-engine.mjs && node scripts/test-performance-engine.mjs && node scripts/test-species-registry.mjs && node scripts/test-lifecycle.mjs && node scripts/test-facade.mjs && node scripts/test-events.mjs && node scripts/test-analysis.mjs && node scripts/test-modulation.mjs && node scripts/test-preferences.mjs && node scripts/test-scheduler.mjs && node scripts/test-midi.mjs && node scripts/validate-species-audio.mjs && node scripts/test-performance-budget.mjs && node scripts/test-v2-engine.mjs",
+    "postbuild": "cp -r src/presets/bundled dist/presets/bundled && node scripts/validate-presets.mjs && node scripts/validate-species-api.mjs && node scripts/test-ecology-controls.mjs && node scripts/test-generative-engine.mjs && node scripts/test-performance-engine.mjs && node scripts/test-species-registry.mjs && node scripts/test-lifecycle.mjs && node scripts/test-facade.mjs && node scripts/test-events.mjs && node scripts/test-analysis.mjs && node scripts/test-modulation.mjs && node scripts/test-preferences.mjs && node scripts/test-snapshot.mjs && node scripts/test-scheduler.mjs && node scripts/test-midi.mjs && node scripts/validate-species-audio.mjs && node scripts/test-performance-budget.mjs && node scripts/test-v2-engine.mjs",
     "test": "npm run build && node scripts/test-v2-engine.mjs",
     "test:v2": "node scripts/test-v2-engine.mjs",
     "test:species": "node scripts/validate-species-api.mjs",
@@ -40,8 +40,11 @@
     "test:analysis": "node scripts/test-analysis.mjs",
     "test:modulation": "node scripts/test-modulation.mjs",
     "test:preferences": "node scripts/test-preferences.mjs",
+    "test:snapshot": "node scripts/test-snapshot.mjs",
     "test:browser": "npm run build && playwright test",
+    "size": "node scripts/measure-size.mjs",
     "bench": "vite --config vite.bench.config.ts --port 5194 --strictPort",
+    "lab": "vite --config vite.lab.config.ts --port 5195 --strictPort",
     "test:scheduler": "node scripts/test-scheduler.mjs",
     "test:midi": "node scripts/test-midi.mjs",
     "test:audio": "node scripts/validate-species-audio.mjs",
@@ -80,10 +83,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "tone": "^15.0.4"
+    "tone": "~15.1.22"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "esbuild": "^0.25.12",
     "typescript": "^5.7.2",
     "vite": "^6.0.3"
   },

@@ -53,8 +53,12 @@ import {
   type ModulationRouteConfig,
   type ModulationSourceDescriptor,
   type ModulationState,
+  type ModulatableTarget,
 } from './modulation/types.js';
 import type { PlantasiaEngineApi } from './PlantasiaEngineApi.js';
+import { EngineLifecycleError } from './EngineLifecycle.js';
+import { ECOLOGICAL_CONTROLS } from './EcologyControls.js';
+import { ENGINE_SNAPSHOT_VERSION, validateSnapshot, type ApplySnapshotOptions, type EngineSnapshot } from './snapshot/types.js';
 
 /** How often the engine reads the master bus for onsets while running. */
 const ANALYSIS_TICK_MS = 16;
@@ -69,6 +73,22 @@ export type CreatePlantasiaEngineOptions = CreateSpeciesManagerOptions;
  * types. Everything below the "root only" and "legacy" markers ships from the
  * root export for existing hosts and the demo.
  */
+/**
+ * The v1 preset path is deprecated and removed at 2.0 (ROADMAP decisions 6
+ * and 15 after 1.1.0). One notice per page session, on the first legacy call.
+ */
+let legacyNoticeShown = false;
+export function noteLegacyCall(method: string): void {
+  if (legacyNoticeShown) {
+    return;
+  }
+  legacyNoticeShown = true;
+  console.info(
+    `[plantasia-sound-engine] ${method}() is part of the v1 preset path, deprecated and removed at 2.0. ` +
+      'Build on plantasia-sound-engine/public (docs/API.md); migration in docs/MIGRATION_V1_TO_V2.md.',
+  );
+}
+
 export class PlantasiaEngine implements PlantasiaEngineApi {
   /** Preset definitions shipped with the engine (v1). */
   readonly presets = presets;
@@ -98,6 +118,9 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   private modulationTimer: number | null = null;
   private lastModulationTick = 0;
   private midiBound = false;
+  private lastPresetId: string | null = null;
+  private lastStartOptions: SoundWorldStartOptions | undefined;
+  private morph: { timer: number; resolve: () => void } | null = null;
 
   constructor(options: CreatePlantasiaEngineOptions = {}) {
     this.events = new EngineEventBus();
@@ -155,13 +178,15 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return initAudio();
   }
 
-  /** @deprecated Root only. Use {@link init}. */
+  /** @deprecated Root only, removed at 2.0. Use {@link init}. */
   async initialize(): Promise<void> {
+    noteLegacyCall('initialize');
     return this.init();
   }
 
   async loadSpecies(id: SpeciesId, context?: unknown): Promise<void> {
     await this.species.loadSpecies(id, context);
+    this.lastPresetId = null;
   }
 
   /** Load default Seed Sound World. */
@@ -176,6 +201,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   async loadPreset(presetId: string, context?: unknown): Promise<void> {
     const resolution = resolvePresetToSpecies(presetId);
     await this.species.loadSpecies(resolution.speciesId, context, { presetId: resolution.presetId });
+    this.lastPresetId = resolution.presetId;
     this.applyEcology(resolution.ecology);
   }
 
@@ -194,13 +220,15 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
    * {@link stopSpecies} then `start()` to switch generative playback on.
    */
   async start(options?: SoundWorldStartOptions): Promise<void> {
+    this.lastStartOptions = options;
     await this.species.start(options);
     this.startAnalysis();
     this.startModulation();
   }
 
-  /** Root only. Stop generative playback on the active Sound World. Idempotent. Public tier hosts use {@link stop}. */
+  /** @deprecated Root only, removed at 2.0. Stop generative playback on the active Sound World. Idempotent. Use {@link stop}. */
   stopSpecies(): void {
+    noteLegacyCall('stopSpecies');
     this.species.stop();
     this.stopAnalysis();
     this.stopModulation();
@@ -221,6 +249,126 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   /** Effective preferences of the loaded species, or the host overrides alone when none is loaded. */
   getGenerativePreferences(): Partial<GenerativePreferences> {
     return this.species.getGenerativePreferences();
+  }
+
+  // --- snapshots (1.2) ---
+
+  /**
+   * The whole host facing state as one JSON object: species, control base
+   * values, tempo, routes, preference overrides, polyphony cap, preset id.
+   * Throws `EngineLifecycleError` before a species is loaded.
+   */
+  getSnapshot(): EngineSnapshot {
+    const species = this.getCurrentSpecies();
+    if (!species) {
+      throw new EngineLifecycleError('NO_SPECIES_LOADED', this.getState(), 'getSnapshot() needs a loaded species');
+    }
+    const snapshot: EngineSnapshot = {
+      version: ENGINE_SNAPSHOT_VERSION,
+      speciesId: species.id,
+      controls: this.species.getControlState(),
+      tempo: this.transport.getBpm(),
+      routes: this.modulation.list(),
+      preferences: this.species.getPreferenceOverrides(),
+      polyphony: this.species.getPolyphony(),
+    };
+    if (this.lastPresetId) {
+      snapshot.presetId = this.lastPresetId;
+    }
+    return snapshot;
+  }
+
+  /**
+   * Restore a snapshot. Routes are replaced, preferences and the polyphony
+   * cap set, and the species switched (no crossfade; a running engine is
+   * started again with its last start options). Controls and tempo land now,
+   * or interpolate over `morphSec`. A second call cancels a morph in flight.
+   * Throws `SnapshotError` on an unsupported version, unknown species or
+   * malformed fields, before anything changes.
+   */
+  async applySnapshot(snapshot: EngineSnapshot, options: ApplySnapshotOptions = {}): Promise<void> {
+    const known = this.getAvailableSpecies().map((m) => m.id);
+    const target = validateSnapshot(snapshot, known);
+    this.cancelMorph();
+
+    for (const route of this.modulation.list()) {
+      this.modulation.remove(route.id);
+    }
+    for (const route of target.routes) {
+      this.modulation.modulate(route.source, route.destination, route.depth);
+    }
+    this.species.replaceGenerativePreferences(target.preferences ?? {});
+    this.species.setPolyphony(target.polyphony ?? null);
+
+    if (this.getCurrentSpecies()?.id !== target.speciesId) {
+      const wasRunning = this.getState() === 'running';
+      await this.species.loadSpecies(target.speciesId, undefined, target.presetId ? { presetId: target.presetId } : undefined);
+      if (wasRunning) {
+        await this.start(this.lastStartOptions);
+      }
+    }
+    this.lastPresetId = target.presetId ?? null;
+
+    const morphSec = options.morphSec ?? 0;
+    if (!(morphSec > 0)) {
+      for (const control of ECOLOGICAL_CONTROLS) {
+        this.species.setControl(control, target.controls[control]);
+      }
+      this.setTempo(target.tempo);
+      return;
+    }
+    await this.runMorph(target, morphSec);
+  }
+
+  private runMorph(target: EngineSnapshot, morphSec: number): Promise<void> {
+    const from = this.species.getControlState();
+    const fromTempo = this.transport.getBpm();
+    const startedAt = performance.now();
+    return new Promise<void>((resolve) => {
+      const timer = this.scheduler.setInterval(
+        () => {
+          const t = Math.min(1, (performance.now() - startedAt) / (morphSec * 1000));
+          for (const control of ECOLOGICAL_CONTROLS) {
+            const value = from[control] + (target.controls[control] - from[control]) * t;
+            this.species.setControl(control, Math.min(1, Math.max(0, value)), MODULATION_RAMP_SEC);
+          }
+          this.setTempo(fromTempo + (target.tempo - fromTempo) * t);
+          if (t >= 1) {
+            this.cancelMorph();
+          }
+        },
+        MODULATION_TICK_MS,
+        'morph',
+      );
+      this.morph = { timer, resolve };
+    });
+  }
+
+  /** Stop a morph in flight where it is; its promise resolves. */
+  private cancelMorph(): void {
+    if (!this.morph) {
+      return;
+    }
+    const { timer, resolve } = this.morph;
+    this.morph = null;
+    this.scheduler.clearInterval(timer);
+    resolve();
+  }
+
+  // --- voices (1.2) ---
+
+  /**
+   * Cap the voices a species may allocate. Each species keeps its own
+   * polyphony curve (growth opens it) and clamps it to the cap. A host's CPU
+   * knob on a phone. `null` removes the cap. Survives a species switch.
+   */
+  setPolyphony(voices: number | null): void {
+    this.species.setPolyphony(voices);
+  }
+
+  /** The host cap, or null when the species run their own polyphony. */
+  getPolyphony(): number | null {
+    return this.species.getPolyphony();
   }
 
   // --- modulation (1.1) ---
@@ -244,6 +392,20 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   }
 
   /** Current source values, base and modulated controls, target offsets. Poll per frame. */
+  /**
+   * Override target spans at runtime (root tier only; the lab page uses it to
+   * tune `MODULATION_TARGET_SPANS` by ear). Partial; unspecified targets keep
+   * their current span.
+   */
+  setModulationTargetSpans(partial: Partial<Record<ModulatableTarget, number>>): void {
+    this.modulation.setTargetSpans(partial);
+  }
+
+  /** Current target spans, defaults or overridden. */
+  getModulationTargetSpans(): Record<ModulatableTarget, number> {
+    return this.modulation.getTargetSpans();
+  }
+
   getModulationState(): ModulationState {
     return this.modulation.getState();
   }
@@ -319,8 +481,8 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   }
 
   /** Set an ecological control (0–1). */
-  setControl(control: EcologicalControl, value: number): void {
-    this.species.setControl(control, value);
+  setControl(control: EcologicalControl, value: number, rampSec?: number): void {
+    this.species.setControl(control, value, rampSec);
   }
 
   /** Current value of an ecological control (0..1). */
@@ -334,8 +496,8 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
   }
 
   /** Connect Web MIDI note input to the active Sound World. */
-  async enableMidi(): Promise<boolean> {
-    const connected = await this.midi.connect(this.midiHandlers());
+  async enableMidi(inputId?: string): Promise<boolean> {
+    const connected = await this.midi.connect(this.midiHandlers(), inputId);
     this.midiBound = connected;
     return connected;
   }
@@ -378,6 +540,7 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
       this.midi.disconnect();
       this.midiBound = false;
     }
+    this.cancelMorph();
     this.stopAnalysis();
     this.analyser.dispose();
     this.stopModulation();
@@ -390,8 +553,9 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
 
   // --- v1 preset API (legacy, root export only, preserved) ---
 
-  /** Apply preset synth settings and trigger a chord (v1 path). */
+  /** @deprecated v1 path, removed at 2.0. Use {@link loadPreset} then {@link start} or {@link noteOn}. */
   playPreset(preset: PlantasiaPreset): void {
+    noteLegacyCall('playPreset');
     playPreset(preset);
   }
 
@@ -407,11 +571,15 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     stopAudio();
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use {@link setControl}. */
   applyBotanicalControls(controls: BotanicalControls): void {
+    noteLegacyCall('applyBotanicalControls');
     applyBotanicalControls(controls);
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use {@link noteOn}. */
   triggerChord(notes?: string[]): void {
+    noteLegacyCall('triggerChord');
     triggerChord(notes);
   }
 
@@ -428,23 +596,30 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return getLevel();
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use {@link setControl} and {@link modulate}. */
   updateParameter(
     parameter: keyof SynthSettings | string,
     value: string | number,
   ): void {
+    noteLegacyCall('updateParameter');
     updateParameter(parameter, value);
   }
 
-  /** Set Mold macro (0–100, v1). */
+  /** @deprecated v1 path, removed at 2.0. Use `setControl('mold', value)` on 0..1. */
   setMold(value: number): void {
+    noteLegacyCall('setMold');
     setMold(value);
   }
 
+  /** @deprecated v1 path, removed at 2.0. Use `getControl('mold')`. */
   getMold(): number {
+    noteLegacyCall('getMold');
     return getMoldValue();
   }
 
+  /** @deprecated v1 path, removed at 2.0. The public tier has five typed controls; see `ECOLOGICAL_CONTROLS`. */
   getParameterMetadata(): EngineParameterMeta[] {
+    noteLegacyCall('getParameterMetadata');
     return ENGINE_PARAMETER_METADATA;
   }
 }

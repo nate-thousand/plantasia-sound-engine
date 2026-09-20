@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-20
+
+Hardening, snapshots and the tools for the sound pass. `getSnapshot()` and `applySnapshot()` carry the whole host facing state as one JSON object with a timed morph between two; a polyphony cap and MIDI input select land on the public tier, now thirty four methods, all additive. The Playwright harness runs in CI in Chromium and WebKit, bundle size is measured with a demo budget, Tone is pinned to a minor, and the v1 preset path is deprecated for removal at 2.0. A local lab page for tuning by ear found and fixed a Flowers range error on its first A/B. Measured: zero dropouts through a 5 s morph across a species switch, a switch ready in 50 to 120 ms, 48 control extreme loads without a throw, and 9 to 10 of 20 controls audible on one held note, the input to the 1.3 sound pass ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).
+
+### Added
+
+- **Lab page** (`npm run lab`, port 5195; ROADMAP decision 9 after 1.1.0): species select, held note or chord, one control sweep with the species ramp on or off, species A/B that re-holds the notes, a `MODULATION_TARGET_SPANS` editor applied live with Audition routes and JSON out, analyser bands, and a per control A/B over A/A measure (decision 10 bar). Local tool, never deployed
+- Root export only: `setControl(control, value, rampSec?)` takes an optional ramp time (`0` applies immediately); `setModulationTargetSpans(partial)` and `getModulationTargetSpans()` override spans at runtime. `SoundWorld.setControl` gains the same optional third argument; species without it are unaffected
+- Harness row `control extremes load every species` (blocks): every species at every control extreme loads, starts and takes a note without throwing, Chromium and WebKit
+- `docs/INSTRUMENT_BRIEF.md`, the hand off to the first played instrument (decision 20)
+- **Snapshots** (decisions 13 and 14): `getSnapshot()` returns `{ version: 1, speciesId, controls, tempo, routes, preferences, polyphony?, presetId? }`; `applySnapshot(snapshot, { morphSec? })` validates (`SnapshotError`: `UNSUPPORTED_VERSION`, `UNKNOWN_SPECIES`, `INVALID`) before changing anything, replaces routes and preference overrides, sets the cap, switches species without crossfade (a running engine restarts with its last start options), then sets controls and tempo now or interpolates them at 30 Hz over `morphSec`. A second call cancels a morph in flight. Gate `scripts/test-snapshot.mjs` (eighteen postbuild gates)
+- Harness rows (decision 18): a 5 s morph across a species switch with dropouts counted (blocks); `applySnapshot` species switch, time until ready and until audible (recorded); control audibility, A/B over A/A for every control on every species (recorded until the sound pass)
+- **Polyphony cap** (decision 17): `setPolyphony(voices | null)` and `getPolyphony()` on the public tier. Species keep their own growth driven polyphony curve and clamp it to the cap; optional `SoundWorld.setPolyphony` hook, implemented by all four species and the template; applied on every load
+- `enableMidi(inputId?)` picks one Web MIDI input; ids from the root export's `midi.devices`
+- **CI browser job** (decisions 3 and 11): `.github/workflows/ci.yml` runs the Playwright harness in Chromium and WebKit on every push to `main` and pull request. Dropouts, page errors and control extremes block; noteOn latency is recorded and annotated above 25 ms; the 15 ms bar stays the local release check. Results uploaded as the `bench-results` artifact
+- **Size measurement** (decision 12): `npm run size` bundles `dist/public.js` and `dist/index.js` with esbuild (409 and 414 KB minified, 107 and 108 KB gzip, recorded) and builds the demo site (462 KB minified against a 500 KB budget, blocks). `esbuild` is a devDependency
+
+### Deprecated
+
+- The v1 preset path on the root export (decisions 6 and 15): `playPreset`, `applyBotanicalControls`, `triggerChord`, `updateParameter`, `setMold`, `getMold`, `getParameterMetadata`, `stopSpecies`, `initialize` carry `@deprecated` and log one `console.info` per session on the first call. `docs/API_V1.md` carries the banner; the demo's Legacy heading reads "removed at 2.0". Nothing changes in behaviour. Removal is 2.0, after the signature v1 sounds are ported into species
+
+### Changed
+
+- Tone.js pinned to `~15.1.22` (decision 3): a minor bump is now a deliberate change
+- The v1 `setTempo` no longer throws without a Web Audio context (Node gates); the engine transport still stores the BPM
+
+### Fixed
+
+- Flowers threw Tone's `RangeError: Value must be within [0, 1]` on load with bloom above about 0.9: chorus depth times the bloom macro passed 1. Every `NormalRange` effect write in all four species (wet, depth, width, resonance, feedback, room size) now goes through `setRampNormal`, which clamps at the one place values reach Tone. Found by the lab on its first A/B
+
 ## [1.1.0] - 2026-09-20
 
 Modulation. Six source types routed additively to the five ecology controls or the thirteen numeric performance targets, MIDI CC, aftertouch and pitch bend as events and sources, and host generative preferences that follow the player across species. Public tier grows from twenty four to thirty methods, all additive. Measured in Chromium and WebKit: zero dropouts over 60 s with eight routes under a mock visual load, 0.2 to 0.4 ms per modulation tick, a CC step reaching the engine in one tick ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).

@@ -59,6 +59,15 @@ export {
   EcologyControlScaleError,
   ReservedSpeciesIdError,
 } from './engine/index.js';
+
+// Snapshots (1.2)
+export {
+  ENGINE_SNAPSHOT_VERSION,
+  SnapshotError,
+  type EngineSnapshot,
+  type ApplySnapshotOptions,
+  type SnapshotErrorCode,
+} from './engine/snapshot/index.js';
 export type {
   SpeciesId,
   EcologicalControl,

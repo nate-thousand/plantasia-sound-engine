@@ -73,15 +73,16 @@ Your class must implement `SoundWorld`:
 | `noteOn(note, velocity?)` | Trigger voice; velocity 0–1 |
 | `noteOff(note)` | Release voice |
 | `allNotesOff()` | Release all |
-| `setControl(control, value)` | Accept 0–100 for all five ecological controls |
+| `setControl(control, value, rampSec?)` | Accept 0 to 100 for all five ecological controls. `rampSec` is optional: the species default when omitted, `0` means apply now. Only the lab and harness pass it |
 | `dispose()` | Release all Tone.js nodes |
 
-Optional, added in 1.1. Species without them keep working; hosts just get no modulation or preference control over them.
+Optional, added in 1.1 and 1.2. Species without them keep working; hosts just get no modulation, preference or polyphony control over them.
 
 | Method | Contract |
 |--------|----------|
 | `applyModulation(frame)` | Arrives at 30 Hz while routes exist. `frame.controls` are the modulated values (0..100), `frame.targets` are offsets to add to your routed `PerformanceTargets`, `frame.rampSec` is one tick (33 ms). `frame.routes === 0` is the clearing frame: drop the held frame and return to the host controls. Read `this.modulation?.controls ?? this.controls` wherever you apply ecology; pass `rampSec` to your ramps; gate expensive setters (`PolySynth.set`) with `ChangeGate` from `src/shared/modulationFrame.ts` so a tick only touches what moved |
 | `setGenerativePreferences(partial)` / `getGenerativePreferences()` | Forward to `Generator.setPreferences` / `getPreferences`, and re-apply stored overrides when you rebuild your generator |
+| `setPolyphony(voices)` (1.2) | Host voice cap, or `null`. Keep your own polyphony curve (growth opens it) and clamp it to the cap wherever you set `maxPolyphony`. The engine calls it on load and on every change |
 
 ---
 

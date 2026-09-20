@@ -62,6 +62,7 @@ function clampControl(value: number): number {
 export class BacteriaSoundWorld implements SoundWorld {
   readonly metadata = BACTERIA_SOUND_WORLD_METADATA;
 
+  private polyphonyCap: number | null = null;
   private synth: BacteriaSynthNodes | null = null;
   private effects: BacteriaEffectsNodes | null = null;
   private generator: BacteriaGenerator | null = null;
@@ -153,17 +154,22 @@ export class BacteriaSoundWorld implements SoundWorld {
     return this.generator?.getPreferences() ?? { ...BACTERIA_GENERATIVE_PREFERENCES, ...this.preferenceOverrides };
   }
 
+  setPolyphony(voices: number | null): void {
+    this.polyphonyCap = voices;
+    this.applyEcologicalControls();
+  }
+
   applyModulation(frame: SpeciesModulationFrame): void {
     this.modulation = frame.routes > 0 ? frame : null;
     this.applyEcologicalControls(frame.rampSec);
   }
 
-  setControl(control: EcologicalControl, value: number): void {
+  setControl(control: EcologicalControl, value: number, rampSec = 0.2): void {
     if (!BACTERIA_SUPPORTED_CONTROLS.includes(control)) {
       return;
     }
     this.controls[control] = clampControl(value);
-    this.applyEcologicalControls();
+    this.applyEcologicalControls(rampSec);
     syncGeneratorEcology(this.generator, this.controls);
   }
 
@@ -259,7 +265,8 @@ export class BacteriaSoundWorld implements SoundWorld {
     const mold = controls.mold / 100;
     const bacteria = controls.bacteria / 100;
 
-    const polyphony = Math.round(4 + growth * (BACTERIA_MAX_POLYPHONY - 4));
+    const curve = Math.round(4 + growth * (BACTERIA_MAX_POLYPHONY - 4));
+    const polyphony = this.polyphonyCap === null ? curve : Math.max(1, Math.min(curve, this.polyphonyCap));
     if (this.gate.changed('polyphony', polyphony, 0.5)) {
       this.synth.fmPoly.maxPolyphony = polyphony;
       this.synth.sinePoly.maxPolyphony = polyphony;

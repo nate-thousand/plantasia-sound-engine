@@ -35,6 +35,7 @@ function clampControl(value: number): number {
 export class TemplateSoundWorld implements SoundWorld {
   readonly metadata = TEMPLATE_SOUND_WORLD_METADATA;
 
+  private polyphonyCap: number | null = null;
   private controls: TemplateControlState = { ...DEFAULT_CONTROLS };
   private generator: TemplateGenerator | null = null;
   private performance: PerformanceEngine | null = null;
@@ -99,6 +100,15 @@ export class TemplateSoundWorld implements SoundWorld {
     this.applyEcologicalControls();
   }
 
+  /**
+   * Optional (engine 1.2). Host voice cap; `null` removes it. Keep your own
+   * polyphony curve and clamp it to the cap wherever you set `maxPolyphony`.
+   */
+  setPolyphony(voices: number | null): void {
+    this.polyphonyCap = voices;
+    this.applyEcologicalControls();
+  }
+
   dispose(): void {
     this.stop();
     this.teardownGraph();
@@ -151,6 +161,11 @@ export class TemplateSoundWorld implements SoundWorld {
     const roots = controls.roots / 100;
     const mold = controls.mold / 100;
     const bacteria = controls.bacteria / 100;
+
+    // Polyphony: your own curve, clamped to the host cap (engine 1.2).
+    const curve = Math.round(3 + growth * 5);
+    const polyphony = this.polyphonyCap === null ? curve : Math.max(1, Math.min(curve, this.polyphonyCap));
+    void polyphony; // TODO: this.synth.poly.maxPolyphony = polyphony
 
     // TODO: map ecology → base DSP levels
     this.performanceBase = {

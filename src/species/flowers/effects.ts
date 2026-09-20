@@ -1,6 +1,6 @@
 import * as Tone from 'tone';
 import { getMasterBus } from '../../engine/masterBus.js';
-import { setRampParam, type RampParam } from '../../utils/ramp.js';
+import { setRampNormal, type RampParam } from '../../utils/ramp.js';
 import type { ChangeGate } from '../../shared/modulationFrame.js';
 import { FLOWERS_RELEASE } from './synth.js';
 
@@ -146,13 +146,13 @@ export function applyFlowersEffectsLevels(
   if (!gate || gate.changed('tapeDrive', levels.tapeDrive, 0.01)) {
     effects.tapeSaturation.distortion = levels.tapeDrive;
   }
-  setRampParam(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet, rampSec);
-  setRampParam(audioStarted, effects.chorus.wet as unknown as RampParam, levels.chorusWet, rampSec);
-  setRampParam(audioStarted, effects.chorus.depth as unknown as RampParam, levels.chorusDepth, rampSec);
-  setRampParam(audioStarted, effects.ensembleChorus.wet as unknown as RampParam, levels.ensembleWet, rampSec);
-  setRampParam(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet, rampSec);
-  setRampParam(audioStarted, effects.delay.wet as unknown as RampParam, levels.delayWet, rampSec);
-  setRampParam(audioStarted, effects.widener.width as unknown as RampParam, levels.widenerWidth, rampSec);
+  setRampNormal(audioStarted, effects.tapeSaturation.wet as unknown as RampParam, levels.tapeWet, rampSec);
+  setRampNormal(audioStarted, effects.chorus.wet as unknown as RampParam, levels.chorusWet, rampSec);
+  setRampNormal(audioStarted, effects.chorus.depth as unknown as RampParam, levels.chorusDepth, rampSec);
+  setRampNormal(audioStarted, effects.ensembleChorus.wet as unknown as RampParam, levels.ensembleWet, rampSec);
+  setRampNormal(audioStarted, effects.reverb.wet as unknown as RampParam, levels.reverbWet, rampSec);
+  setRampNormal(audioStarted, effects.delay.wet as unknown as RampParam, levels.delayWet, rampSec);
+  setRampNormal(audioStarted, effects.widener.width as unknown as RampParam, levels.widenerWidth, rampSec);
 
   const release = FLOWERS_RELEASE * levels.releaseScale;
   if (!gate || gate.changed('release', release, 0.02)) {

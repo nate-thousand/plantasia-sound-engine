@@ -258,6 +258,10 @@ export function triggerChord(notes: string[] = NOTE_POOL.slice(0, 3)): void {
 
 export function setTempo(bpm: number): void {
   const transport = Tone.getTransport();
+  // Without a Web Audio context (Node gates) Tone's transport has no bpm param.
+  if (!transport?.bpm) {
+    return;
+  }
   if (started) {
     transport.bpm.rampTo(bpm, 0.3);
   } else {

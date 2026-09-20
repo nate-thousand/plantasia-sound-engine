@@ -53,7 +53,12 @@ export interface SoundWorld {
   noteOff(note: string): void;
   allNotesOff(): void;
 
-  setControl(control: EcologicalControl, value: number): void;
+  /**
+   * Set one ecology control on the species scale (0..100). `rampSec` is
+   * how long the species takes to reach the value; omitted means the species
+   * default (0.2 s). `0` applies immediately. Lab and harness use only.
+   */
+  setControl(control: EcologicalControl, value: number, rampSec?: number): void;
 
   /**
    * Optional (1.1). Called at 30 Hz while modulation routes exist with the
@@ -71,6 +76,13 @@ export interface SoundWorld {
   setGenerativePreferences?(partial: Partial<GenerativePreferences>): void;
   /** Optional (1.1). Effective generative preferences after host overrides. */
   getGenerativePreferences?(): Readonly<GenerativePreferences>;
+
+  /**
+   * Optional (1.2). Host voice cap. The species keeps its own polyphony
+   * curve and clamps it to `voices`; `null` removes the cap. Applied on load
+   * and whenever the host changes it.
+   */
+  setPolyphony?(voices: number | null): void;
 
   dispose(): void;
 }

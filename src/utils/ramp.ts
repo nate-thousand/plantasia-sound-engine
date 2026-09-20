@@ -27,3 +27,19 @@ export function setRampParam(
     (param as { value: number }).value = value;
   }
 }
+
+/**
+ * Same as {@link setRampParam} for a Tone `NormalRange` param (wet, depth,
+ * width, resonance, feedback, room size). Tone throws a RangeError on any
+ * write outside [0, 1]; species effect math can land just past 1 at control
+ * extremes, so the value is clamped here, at the one place it reaches Tone.
+ */
+export function setRampNormal(
+  started: boolean,
+  param: RampParam,
+  value: number,
+  time = 0.2,
+): void {
+  const clamped = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
+  setRampParam(started, param, clamped, time);
+}

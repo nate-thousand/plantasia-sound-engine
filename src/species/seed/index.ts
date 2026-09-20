@@ -58,6 +58,7 @@ function clampControl(value: number): number {
 export class SeedSoundWorld implements SoundWorld {
   readonly metadata = SEED_SOUND_WORLD_METADATA;
 
+  private polyphonyCap: number | null = null;
   private synth: SeedSynthNodes | null = null;
   private effects: SeedEffectsNodes | null = null;
   private generator: SeedGenerator | null = null;
@@ -128,17 +129,22 @@ export class SeedSoundWorld implements SoundWorld {
     return this.generator?.getPreferences() ?? { ...SEED_GENERATIVE_PREFERENCES, ...this.preferenceOverrides };
   }
 
+  setPolyphony(voices: number | null): void {
+    this.polyphonyCap = voices;
+    this.applyEcologicalControls();
+  }
+
   applyModulation(frame: SpeciesModulationFrame): void {
     this.modulation = frame.routes > 0 ? frame : null;
     this.applyEcologicalControls(frame.rampSec);
   }
 
-  setControl(control: EcologicalControl, value: number): void {
+  setControl(control: EcologicalControl, value: number, rampSec = 0.2): void {
     if (!SEED_SUPPORTED_CONTROLS.includes(control)) {
       return;
     }
     this.controls[control] = clampControl(value);
-    this.applyEcologicalControls();
+    this.applyEcologicalControls(rampSec);
   }
 
   dispose(): void {
@@ -230,7 +236,8 @@ export class SeedSoundWorld implements SoundWorld {
     const mold = controls.mold / 100;
     const bacteria = controls.bacteria / 100;
 
-    const polyphony = Math.round(3 + growth * (SEED_MAX_POLYPHONY - 3));
+    const curve = Math.round(3 + growth * (SEED_MAX_POLYPHONY - 3));
+    const polyphony = this.polyphonyCap === null ? curve : Math.max(1, Math.min(curve, this.polyphonyCap));
     if (this.gate.changed('polyphony', polyphony, 0.5)) {
       this.synth.poly.maxPolyphony = polyphony;
     }

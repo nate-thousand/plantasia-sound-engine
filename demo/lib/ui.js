@@ -397,7 +397,7 @@ export function buildUI(bridge, callbacks) {
   // --- Legacy (v1) ---
   // ROADMAP decision 13: the v1 preset graph stays wired in the demo, grouped
   // here so a visitor can see which half of the engine to build on.
-  root.appendChild(groupHeading('Legacy (v1)', 'Root export only: playPreset(), updateParameter(), applyBotanicalControls(), setMold(). Audible through Play Preset Chord. New hosts build on the sections above (plantasia-sound-engine/public).'));
+  root.appendChild(groupHeading('Legacy (v1), removed at 2.0', 'Root export only, deprecated: playPreset(), updateParameter(), applyBotanicalControls(), setMold(). Audible through Play Preset Chord. New hosts build on the sections above (plantasia-sound-engine/public).'));
 
   root.appendChild(createSection('timbre', 'Timbre', (body) => {
     refs.sliders = refs.sliders ?? {};

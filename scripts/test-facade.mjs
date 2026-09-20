@@ -95,9 +95,42 @@ async function main() {
     assert(typeof engine[name] === 'function', `public method missing: ${name}`);
   }
   assert(PUBLIC_METHODS.length === 23, 'twenty three methods plus createPlantasiaEngine');
+
+  // 1.2 additions (decision 17 after 1.1.0): polyphony cap and enableMidi(inputId).
+  for (const name of ['setPolyphony', 'getPolyphony']) {
+    assert(typeof engine[name] === 'function', `public method missing: ${name}`);
+  }
+  assert(engine.getPolyphony() === null, 'no polyphony cap by default');
+  engine.setPolyphony(4);
+  assert(engine.getPolyphony() === 4, 'polyphony cap stored');
+  let badPolyphony = false;
+  try { engine.setPolyphony(0); } catch (err) { badPolyphony = err instanceof RangeError; }
+  assert(badPolyphony, 'setPolyphony(0) throws RangeError');
+  try { engine.setPolyphony(2.5); badPolyphony = false; } catch { badPolyphony = true; }
+  assert(badPolyphony, 'setPolyphony(2.5) throws RangeError');
+  await engine.loadSpecies('flowers');
+  assert(engine.getPolyphony() === 4, 'polyphony cap survives a species switch');
+  engine.setPolyphony(null);
+  assert(engine.getPolyphony() === null, 'setPolyphony(null) removes the cap');
+  assert(engine.enableMidi.length === 1, 'enableMidi takes an inputId');
   engine.setControl('bloom', 0.61);
   assert(Math.abs(engine.getControl('bloom') - 0.61) < 1e-9, 'getControl reads back setControl');
   assert(typeof engine.initialize === 'function', 'initialize alias kept on root instance');
+
+  // v1 deprecation line (decision 15 after 1.1.0): one notice per session, on the first legacy call.
+  const infos = [];
+  const originalInfo = console.info;
+  console.info = (...args) => infos.push(args.join(' '));
+  try {
+    engine.getMold();
+    engine.getParameterMetadata();
+    engine.getMold();
+  } finally {
+    console.info = originalInfo;
+  }
+  const notices = infos.filter((line) => line.includes('removed at 2.0'));
+  assert(notices.length === 1, `one deprecation notice per session, got ${notices.length}`);
+  assert(notices[0].includes('getMold()'), 'notice names the first legacy method called');
 
   engine.dispose();
   console.log('[test-facade] OK — unified facade validated');

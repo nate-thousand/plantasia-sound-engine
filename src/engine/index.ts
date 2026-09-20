@@ -77,3 +77,4 @@ export { AudioAnalyser, BAND_EDGES_HZ, type AudioFeatures, type OnsetEvent } fro
 export { audioNow, configureContextLatency, ENGINE_LOOK_AHEAD_SEC } from './clock.js';
 export type { PlantasiaEngineApi } from './PlantasiaEngineApi.js';
 export * from './modulation/index.js';
+export * from './snapshot/index.js';

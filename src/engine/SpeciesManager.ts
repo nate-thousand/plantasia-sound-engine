@@ -33,6 +33,7 @@ export class SpeciesManager {
   private state: EngineState = 'idle';
   /** Host generative preference overrides, merged over every species' defaults on load (decision 10 for 1.1.0). */
   private generativePreferences: Partial<GenerativePreferences> = {};
+  private polyphonyCap: number | null = null;
 
   constructor(registry?: SpeciesRegistry, options: SpeciesManagerOptions = {}) {
     this.registry = registry ?? new SpeciesRegistry();
@@ -120,6 +121,9 @@ export class SpeciesManager {
       if (Object.keys(this.generativePreferences).length > 0) {
         active.setGenerativePreferences?.(this.generativePreferences);
       }
+      if (this.polyphonyCap !== null) {
+        active.setPolyphony?.(this.polyphonyCap);
+      }
       this.state = 'loaded';
       this.events?.emit('speciesChanged', {
         speciesId: id,
@@ -182,10 +186,37 @@ export class SpeciesManager {
     this.loader.getCurrent()?.setGenerativePreferences?.(partial);
   }
 
+  /** The host overrides alone, as stored; what a snapshot carries. */
+  getPreferenceOverrides(): Partial<GenerativePreferences> {
+    return { ...this.generativePreferences };
+  }
+
+  /** Replace the host overrides wholesale and apply them to the loaded species. */
+  replaceGenerativePreferences(preferences: Partial<GenerativePreferences>): void {
+    this.generativePreferences = { ...preferences };
+    const active = this.loader.getCurrent();
+    if (active && Object.keys(preferences).length > 0) {
+      active.setGenerativePreferences?.(preferences);
+    }
+  }
+
   /** Effective preferences of the loaded species, or the overrides alone when none is loaded. */
   getGenerativePreferences(): Partial<GenerativePreferences> {
     const active = this.loader.getCurrent();
     return active?.getGenerativePreferences?.() ?? { ...this.generativePreferences };
+  }
+
+  /** Host voice cap, applied to the loaded species now and to every later load. */
+  setPolyphony(voices: number | null): void {
+    if (voices !== null && (!Number.isInteger(voices) || voices < 1 || voices > 64)) {
+      throw new RangeError(`setPolyphony expects an integer 1..64 or null, got ${voices}`);
+    }
+    this.polyphonyCap = voices;
+    this.loader.getCurrent()?.setPolyphony?.(voices);
+  }
+
+  getPolyphony(): number | null {
+    return this.polyphonyCap;
   }
 
   /** Snapshot of every control's base value. */
@@ -211,12 +242,12 @@ export class SpeciesManager {
    * Stored centrally and routed to the active species when present.
    * @throws EcologyControlScaleError when value is outside 0–1
    */
-  setControl(control: EcologicalControl, value: number): void {
+  setControl(control: EcologicalControl, value: number, rampSec?: number): void {
     assertNormalizedEcologyValue(value, control);
     this.ecologyControls.set(control, value);
     const active = this.loader.getCurrent();
     if (active) {
-      active.setControl(control, toSpeciesControlValue(this.ecologyControls.get(control)));
+      active.setControl(control, toSpeciesControlValue(this.ecologyControls.get(control)), rampSec);
     }
     this.events?.emit('controlChanged', {
       control,

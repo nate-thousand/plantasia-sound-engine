@@ -611,3 +611,147 @@ window.bench = { run, probe, probeControl, abControls, probeModulation, measureW
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });
+
+/**
+ * Every species at every control extreme (all 0, all 1, each control alone at
+ * 0 and at 1 with the rest at 0.5) loads, starts, and takes a note without
+ * throwing. Guards Tone's [0, 1] RangeError on effect params (found by the
+ * lab on Flowers at bloom 0.95).
+ */
+async function probeExtremes({ species, holdMs = 150 } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  const ids = species ?? engine.getAvailableSpecies().map((m) => m.id);
+  const CONTROLS = ['growth', 'bloom', 'roots', 'mold', 'bacteria'];
+  const cases = [
+    { name: 'all 0', values: Object.fromEntries(CONTROLS.map((c) => [c, 0])) },
+    { name: 'all 1', values: Object.fromEntries(CONTROLS.map((c) => [c, 1])) },
+  ];
+  for (const c of CONTROLS) {
+    for (const v of [0, 1]) {
+      const values = Object.fromEntries(CONTROLS.map((k) => [k, 0.5]));
+      values[c] = v;
+      cases.push({ name: `${c} ${v}`, values });
+    }
+  }
+  const failures = [];
+  let runs = 0;
+  for (const id of ids) {
+    for (const { name, values } of cases) {
+      runs += 1;
+      try {
+        for (const [c, v] of Object.entries(values)) engine.setControl(c, v);
+        await engine.loadSpecies(id);
+        await engine.start({ generative: false });
+        engine.noteOn('E3', 0.9);
+        await wait(holdMs);
+        // Move every control across its range on the live graph too.
+        for (const [c, v] of Object.entries(values)) engine.setControl(c, 1 - v);
+        await wait(holdMs);
+        engine.allNotesOff();
+      } catch (error) {
+        failures.push({ species: id, case: name, error: String(error?.message ?? error) });
+      }
+    }
+  }
+  engine.dispose();
+  return { runs, failures };
+}
+window.bench.probeExtremes = probeExtremes;
+
+/**
+ * Snapshot rows (decision 18 after 1.1.0).
+ *
+ *   morph        a 5 s morph between two snapshots across a species switch,
+ *                generative playback on, dropouts counted with the long run
+ *                detector (blocks)
+ *   switch       applySnapshot with a species switch while a note is held in
+ *                played mode: time from the call until the new species is
+ *                audible (recorded)
+ */
+async function measureSnapshotMorph({ seconds = 5, burnMs = 8 } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies('seed');
+  await engine.start();
+  const tap = createTap();
+  engine.setControl('bloom', 0.2);
+  engine.setControl('roots', 0.8);
+  const a = engine.getSnapshot();
+  const b = { ...a, speciesId: 'flowers', controls: { growth: 0.7, bloom: 0.9, roots: 0.2, mold: 0.4, bacteria: 0.3 }, tempo: 96 };
+  await wait(1500);
+  const t0 = performance.now();
+  const morph = engine.applySnapshot(b, { morphSec: seconds });
+  // Count dropouts for the morph plus a second of settling after it.
+  const run = await measureLongRun(engine, tap, { seconds: seconds + 1, burnMs });
+  await morph;
+  const result = {
+    morphSec: seconds,
+    elapsedMs: +(performance.now() - t0).toFixed(0),
+    species: engine.getCurrentSpecies()?.id,
+    bloom: +engine.getControl('bloom').toFixed(3),
+    tempo: +engine.getSnapshot().tempo.toFixed(1),
+    dropouts: run.dropouts,
+    glitches: run.glitches,
+    fps: +run.fps.toFixed(1),
+  };
+  engine.dispose();
+  return result;
+}
+
+async function measureSnapshotSwitch({ runs = 3, note = 'E3' } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  await engine.loadSpecies('seed');
+  await engine.start({ generative: false });
+  const tap = createTap();
+  const seed = engine.getSnapshot();
+  const flowers = { ...seed, speciesId: 'flowers' };
+  const results = [];
+  let target = flowers;
+  for (let i = 0; i < runs; i += 1) {
+    // From silence: the switch, then the first note on the new species, so
+    // the old species' release tail cannot be mistaken for the new one.
+    await wait(800);
+    const t0 = performance.now();
+    await engine.applySnapshot(target);
+    const readyMs = performance.now() - t0;
+    engine.noteOn(note, 0.9);
+    let audibleMs = null;
+    const deadline = performance.now() + 1500;
+    while (performance.now() < deadline) {
+      const buffer = tap.read();
+      const idx = firstAudibleIndex(buffer);
+      if (idx !== -1) {
+        // Sample position inside the window says how long ago the sound started.
+        audibleMs = Math.max(0, performance.now() - t0 - ((buffer.length - idx) / tap.ctx.sampleRate) * 1000);
+        break;
+      }
+      await wait(1);
+    }
+    results.push({ to: target.speciesId, readyMs: +readyMs.toFixed(1), audibleMs: audibleMs === null ? null : +audibleMs.toFixed(1) });
+    engine.allNotesOff();
+    await wait(600);
+    target = target === flowers ? seed : flowers;
+  }
+  engine.dispose();
+  return results;
+}
+
+/**
+ * Control audibility (decision 10 after 1.1.0): for every control on every
+ * species, the A/B spectral difference against the A/A noise. Recorded in
+ * 1.2; blocks once the sound pass has set the depths.
+ */
+async function measureControlAudibility({ species, ms = 1000, settle = 800 } = {}) {
+  const ids = species ?? ['seed', 'flowers', 'mold', 'bacteria'];
+  const out = {};
+  for (const id of ids) {
+    out[id] = await abControls({ species: id, ms, settle });
+  }
+  return out;
+}
+
+window.bench.measureSnapshotMorph = measureSnapshotMorph;
+window.bench.measureSnapshotSwitch = measureSnapshotSwitch;
+window.bench.measureControlAudibility = measureControlAudibility;

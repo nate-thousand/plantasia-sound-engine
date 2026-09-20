@@ -31,6 +31,7 @@ async function main() {
   assert(typeof engine.enableMidi === 'function', 'facade exposes enableMidi');
   const enabled = await engine.enableMidi();
   assert(enabled === false, 'enableMidi no-ops in Node');
+  assert((await engine.enableMidi('input-1')) === false, 'enableMidi(inputId) no-ops in Node');
   assert(typeof engine.midi === 'object', 'facade exposes midi manager');
 
   // 1.1: control decoding, midiControl event, live MIDI sources through feedMidi.

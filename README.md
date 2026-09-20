@@ -2,11 +2,11 @@
 
 **Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), unified facade, semantic events, generative composition, and expressive performance routing.
 
-**Version:** `1.1.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
+**Version:** `1.2.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
 
 The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature graphs) remains available on the root export for legacy hosts.
 
-> Pin **`1.1.0`**. Do **not** use tag `v2.0.0` for integration.
+> Pin **`1.2.0`**. Do **not** use tag `v2.0.0` for integration.
 
 ## Quick start (v2 — recommended)
 
@@ -26,7 +26,7 @@ engine.on('onset', ({ strength }) => { /* transients */ });
 const { bass, mid, high } = engine.getAudioFeatures(); // per frame, from the master bus
 ```
 
-Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
+Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty four method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
 
 ```bash
 npm install
@@ -79,6 +79,8 @@ See [docs/API.md](./docs/API.md) for the full contract.
 ## Demo control surface
 
 `npm run build && npm run demo` opens the definitive Plantasia test bench at `demo/`. It exposes every **wired** engine capability and flags scaffold features in the Debug panel.
+
+`npm run lab` opens `lab/`, a local page for tuning by ear: one species, a held note or chord, one control swept with the species ramp on or off, a species A/B, the modulation target spans edited live and emitted as JSON, and the analyser bands. It is not deployed.
 
 | Section | Controls |
 |---------|----------|
@@ -133,7 +135,7 @@ Performance macros route differently per active species (`seed`, `flowers`, `mol
 ```json
 {
   "dependencies": {
-    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.1.0"
+    "plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.2.0"
   }
 }
 ```
@@ -160,6 +162,7 @@ npm run build
 npm run typecheck
 npm run test
 npm run test:browser # Playwright performance harness, see docs/PERFORMANCE.md
+npm run lab          # tuning page at localhost:5195, never deployed
 npm run build:site   # production bundle for Vercel
 ```
 
