@@ -852,3 +852,48 @@ async function probeParticleBurst({ rounds = 5 } = {}) {
   return { rounds, failures };
 }
 window.bench.probeParticleBurst = probeParticleBurst;
+
+/**
+ * A held voice stays bounded (found in the 1.3 lab: Mold's comb and feedback
+ * LFOs summed onto their params took the loop gain past 1 and the output grew
+ * without bound within three seconds). Every species, E3 held for `seconds`,
+ * default controls, one control moved half way through: peak per second on
+ * the master bus tap must be finite, under `ceiling`, and not growing.
+ */
+async function probeSustain({ species, seconds = 6, ceiling = 1.5 } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  const tap = createTap();
+  const ids = species ?? engine.getAvailableSpecies().map((m) => m.id);
+  const results = [];
+  for (const id of ids) {
+    await engine.loadSpecies(id);
+    await engine.start({ generative: false });
+    engine.noteOn('E3', 0.9);
+    const peaks = [];
+    let nan = 0;
+    for (let s = 0; s < seconds; s += 1) {
+      let peak = 0;
+      const until = performance.now() + 1000;
+      while (performance.now() < until) {
+        const buffer = tap.read();
+        for (let i = 0; i < buffer.length; i += 1) {
+          const v = buffer[i];
+          if (Number.isNaN(v)) nan += 1;
+          else if (Math.abs(v) > peak) peak = Math.abs(v);
+        }
+        await wait(20);
+      }
+      peaks.push(+peak.toFixed(4));
+      if (s === Math.floor(seconds / 2)) engine.setControl('mold', 0.7);
+    }
+    engine.allNotesOff();
+    await wait(400);
+    const first = Math.max(peaks[0], 1e-4);
+    const last = peaks[peaks.length - 1];
+    results.push({ species: id, peaks, nan, bounded: nan === 0 && Math.max(...peaks) < ceiling && last < first * 4 + 0.05 });
+  }
+  engine.dispose();
+  return results;
+}
+window.bench.probeSustain = probeSustain;
