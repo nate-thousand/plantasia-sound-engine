@@ -78,6 +78,40 @@ A grill on "what comes after 1.1" closed with these. They set the order of work 
 | 20 | `docs/INSTRUMENT_BRIEF.md` is written here: what the engine offers at 1.1.0, the thirty methods with the six an instrument starts from, the mod wheel and species switch stories, the pin, and the rule that engine requests come back as issues to this repo. | The one document that crosses the project boundary without either session touching the other's code |
 | 21 | Versions: 1.2.0 = hardening, MIDI input select, polyphony, snapshot and morph, lab page, v1 deprecation line. 1.3.0 = the sound pass, because it changes what a player hears. Then the signature sound port. 2.0 = v1 removal. | A sound change is never a patch |
 
+## Decisions on simplicity (settled 2026-09-25)
+
+A grill on "what this is and how to make it simpler and better" closed with these. They set 1.2.1, 1.3.0 and 2.0; where an older section disagrees, this table wins.
+
+| # | Decision | Consequence |
+| --- | --- | --- |
+| 1 | The thing being simplified is the engine library. The demo is its mirror: when the engine gets simpler the demo shrinks. The case study follows what ships. | No separate demo or docs redesign |
+| 2 | Simple is judged for the player, through the developer. Every concept the developer must expose becomes a control the player must understand. | The developer path is optimised for what a player can feel: notes, five sliders, one wheel, a species switch, save and recall. Everything else is depth |
+| 3 | The one sentence: an instrument that plays itself and answers you. The nouns (four species, five controls, hosts own the UI) come second. | README, API.md and the case study lead with it; every feature is tested against it |
+| 4 | Thirty four methods stay until 2.0; the additive promise from 1.0 holds. The docs lead with a playing set and fold the rest. | Simpler is what is read first, not what exists |
+| 5 | Removing the v1 audio path is the largest simplification available and it waits for the signature port, because it changes what a player hears. | Port in 1.3 as part of the sound pass; remove at 2.0 right after. Never remove before the port |
+| 6 | Whether Mold and Bacteria earn their place is decided by ear before the sound pass, not assumed. Until then the docs and demo lead with Seed and Flowers. | Decision 12 is the test |
+| 7 | Better is defined by the first stranger who plays it. Bars: every control audible on every species, and a real phone. Doc check: lines to first sound. | Decisions 13, 14, 15 |
+| 8 | The playing set is seven: `init`, `loadSpecies`, `start`, `noteOn` with `noteOff`, `setControl`, `modulate`, `applySnapshot`. | `modulate` stays because a wheel to a filter is the one thing `setControl` cannot do |
+| 9 | API.md stays one page with two headings: Playing (the seven and a runnable snippet) and Everything else (the same tables as now). The README leads with the sentence and the snippet, nothing else. | The fold is a heading, not a file |
+| 10 | The demo opens on the playing set: species, five sliders, keys, one wheel route, save and recall. Everything else collapses under a Depth heading. Nothing is removed until 2.0. | Snapshots get their first demo presence |
+| 11 | At 2.0: `loadDefaultSpecies` folds into `loadSpecies()` with no argument; `getWaveform` and `getLevel` fold into `getAudioFeatures`; `off` goes (`on` returns unsubscribe); `stopSpecies` and `initialize` go with v1; `loadPreset` becomes `applySnapshot(preset)` and the presets ship as snapshots. About twenty seven methods. | Presets and snapshots become one concept; the preset id adapter goes with them |
+| 12 | The species verdict: in the lab, one held note and one generative minute per species, eyes closed. A species stays when it is distinguishable from the other three and every control does something you can name. This is the first hour of the sound pass, before any tuning. | A species you cannot name blind is not a species yet |
+| 13 | The player test: the first person who is not the author, on the instrument's first build, five minutes with nothing explained, then three questions: what did the sliders do, which sound was which, would you keep going. Two passes, sliders unlabelled then labelled. Written into the instrument brief as the instrument's acceptance; answers come back as engine issues. | What they cannot work out unprompted is the engine's next simplification |
+| 14 | Phone bar: the bench page run on a phone over the LAN, latency and dropouts recorded by hand beside the WebKit column, once per release from 1.3. The instrument on the phone as well once it exists. No emulation. | Recorded, not blocking, until an instrument exists |
+| 15 | Lines to first sound is a bar: six today (import, create, `init`, `loadSpecies`, `start`, `noteOn`). The README's first code block is that snippet, a gate runs it against the built dist, and 2.0 may not raise the count. | `loadSpecies()` with no argument makes the Seed case five at 2.0 |
+| 16 | Sequence: 1.2.1 = docs fold, demo reorder with save and recall, the six line gate, the lab's v1 versus species A/B, the brief update. 1.3.0 = species verdict, sound pass, signature port, phone pass. 2.0 = v1 removal, the method fold, presets as snapshots, entry points, any renames. | 1.3 is the sound release and nothing else |
+| 17 | A preset at 2.0 is a snapshot with an optional `meta` block (`name`, `visual`) that the engine validates and carries but never applies. The visual contract lives there. | Hosts read `meta`; the engine renders nothing, as before |
+| 18 | The signature port: one snapshot per v1 preset that, on its species, passes the author's ear A/B against the v1 chain in the lab. A preset that cannot pass gets a species change in the sound pass, or is dropped with the user's ok. Nothing is removed until all eleven have a verdict, recorded in `docs/SOUND.md`. | The v1 chain stays in the lab as the reference until 2.0 ships |
+| 19 | Save and recall in the demo: Save (named, local storage and JSON), a Recall list, a morph seconds field, and Copy JSON. Nothing leaves the browser. | The player's save and the developer's take away in one bar |
+| 20 | Entry points at 2.0: the package root is the public tier; `plantasia-sound-engine/internals` carries the master bus, scheduler, species factories, `feedMidi` and the lab overrides; `/public` stays one release as an alias. | A host imports the package name and gets nothing it should not see |
+| 21 | The player test hides the control names on the first pass. If a stranger names a slider better than growth, bloom, roots, mold or bacteria, that is the name. | The five names have never been tested on anyone |
+| 22 | The instrument brief is updated in 1.2.1: pin `1.2.0`, the playing set of seven, the player test with both passes as the instrument's acceptance, "coming" reduced to the sound pass and 2.0. | The other session starts from the tag that exists |
+| 23 | 1.3 ships only when all four species pass decision 12. No status field, no removal from the registry. | A registered species is playable, still |
+| 24 | 1.3 does not wait for the player test. The sound pass is judged by the author's ears; the stranger's answers feed the release after. | The sound release is not held to another project's calendar |
+| 25 | The lab's v1 versus species A/B is built in 1.2.1, before the work it measures. | A Play v1 button beside the species A/B, on the lab's root access |
+| 26 | Control renames land at 2.0 only, with the old name kept as an alias for one release. Until then the instrument labels its sliders as the test says. | A control name is on the public tier; a rename is breaking |
+| 27 | Presets at 2.0 ship as a map by id: `applySnapshot(presets.bloom)`. The JSON is the same object for anyone who wants a file. | A preset browser needs a map; the sentence reads as it is |
+
 ## Current status
 
 | Item | Value |
