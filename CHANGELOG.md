@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-09-25
+
+A patch for the second bug the instrument found: Mold on a held key. Ported from the 1.3 branch. No API change.
+
+### Fixed
+
+- **Mold's output grew without bound on any sustained voice**, within about three seconds, until the graph went NaN and fell silent; heard as noise and feedback on every held key. Its comb resonance and feedback delay LFOs were connected on top of the ramped levels, and a connected LFO adds to a param, so the loop gain passed 1 (comb up to 1.4, feedback up to 1.45 at ordinary controls). Both LFOs now run bipolar around the level and the level is capped so level plus depth stays under `MOLD_FEEDBACK_CEILING` (0.95). Generative Mold hid it because its notes are short; the instrument holds keys. Bacteria's room size LFO had the same wiring (room size up to 1.2) and gets the same fix
+- Not settled here: once stable, Mold's held voice peaks about twenty five times lower than Seed's at default controls. A level and register decision for the 1.3.0 sound pass, with the instrument's bar that every species is ambient by nature
+
+### Added
+
+- Harness row `held voice stays bounded` (blocks): every species holds `E3` for six seconds with one control moved half way; peak per second on the master bus must be finite, under 1.5 and not growing. Mold fails it on 1.2.2 and passes on 1.2.3, Chromium and WebKit. `window.bench.probeSustain` on the bench page
+
 ## [1.2.2] - 2026-09-25
 
 A patch for the first bug the instrument found (issue #1). No API change.

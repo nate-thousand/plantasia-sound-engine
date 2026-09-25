@@ -183,3 +183,17 @@ test('a burst of bacteria particles in one tick throws nothing', async ({ page, 
   expect(errors, 'no page errors').toEqual([]);
   expect(result.failures, 'no particle start throws').toEqual([]);
 });
+
+/** 1.3 hardening: a held voice on every species stays bounded (no NaN, no growth). Blocks. */
+test('held voice stays bounded', async ({ page, browserName }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(String(err)));
+  await page.goto('/');
+  await page.click('#unlock', { trial: true });
+  const result = await page.evaluate(() => window.bench.probeSustain({ seconds: 6 }));
+  for (const r of result) {
+    console.log(`[${browserName}] held E3 on ${r.species}: peaks per second ${r.peaks.join(', ')}${r.nan ? `, ${r.nan} NaN samples` : ''} ${r.bounded ? 'bounded' : 'UNBOUNDED'}`);
+  }
+  expect(errors, 'no page errors').toEqual([]);
+  expect(result.filter((r) => !r.bounded).map((r) => r.species), 'species whose held voice grows or goes NaN').toEqual([]);
+});

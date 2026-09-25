@@ -2,7 +2,7 @@
 
 An instrument that plays itself and answers you. This page is the public tier of Plantasia Sound Engine, what a host builds on: seven methods for playing, twenty seven more for depth, the shipped presets, the events and features they produce. One page.
 
-Version `1.2.2`. Pin a tag, not `v2.0.0`.
+Version `1.2.3`. Pin a tag, not `v2.0.0`.
 
 ```typescript
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';

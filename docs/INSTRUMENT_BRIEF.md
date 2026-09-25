@@ -8,10 +8,10 @@ A played instrument: a keyboard or pad surface, a mod wheel, a species switch, o
 
 ## Where the engine is
 
-Version `1.2.2`, tag `1.2.2` on `github.com/nate-thousand/plantasia-sound-engine`. Pin that tag:
+Version `1.2.3`, tag `1.2.3` on `github.com/nate-thousand/plantasia-sound-engine`. Pin that tag:
 
 ```json
-"plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.2.2"
+"plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.2.3"
 ```
 
 Installing from git runs the engine's `prepare` build, so TypeScript is installed alongside. Never pin `v2.0.0`; it is a retired architecture tag.
