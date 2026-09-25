@@ -25,6 +25,8 @@ A patch for the second bug the instrument found: Mold on a held key. Ported from
 
 ### Added
 
+- **Demo info button**: an About dialog in the header (what it is, what it does, what it is for, how it is made) with links to the source and the case study
+- Lab: the blind verdict order and guesses persist across a page reload in the tab
 - Harness row `held voice stays bounded` (blocks): every species holds `E3` for six seconds with one control moved half way; peak per second on the master bus must be finite, under 1.5 and not growing. Mold fails it on 1.2.2 and passes on 1.2.3, Chromium and WebKit. `window.bench.probeSustain` on the bench page
 
 ## [1.2.2] - 2026-09-25

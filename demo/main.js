@@ -12,6 +12,9 @@ const btnPlayPreset = document.getElementById('btn-play-preset');
 const btnStop = document.getElementById('btn-stop');
 const btnPanelClose = document.getElementById('btn-panel-close');
 const btnPanelToggle = document.getElementById('panel-toggle');
+const btnInfo = document.getElementById('btn-info');
+const infoDialog = document.getElementById('info-dialog');
+const btnInfoClose = document.getElementById('btn-info-close');
 const app = document.getElementById('app');
 
 const bridge = new EngineBridge();
@@ -139,6 +142,12 @@ btnStop.addEventListener('click', () => {
   btnGenerative.textContent = 'Start Generative';
   setStatus('Stopped');
   ui?.updateDebug();
+});
+
+btnInfo.addEventListener('click', () => infoDialog.showModal());
+btnInfoClose.addEventListener('click', () => infoDialog.close());
+infoDialog.addEventListener('click', (event) => {
+  if (event.target === infoDialog) infoDialog.close();
 });
 
 btnPanelClose.addEventListener('click', () => {

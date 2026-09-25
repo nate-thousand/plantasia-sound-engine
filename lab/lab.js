@@ -270,7 +270,23 @@ function depthJson() {
 // ---------------------------------------------------------------------------
 // Blind verdict (decision 12) and blind controls (decision 13 rehearsal)
 
+const BLIND_KEY = 'plantasia-lab-blind';
 const blind = { order: [], index: -1, guesses: [], running: false, controls: [], ctlGuesses: [] };
+/** The verdict survives a page reload: order, index and guesses persist in this tab. */
+function saveBlind() {
+  try { sessionStorage.setItem(BLIND_KEY, JSON.stringify({ order: blind.order, index: blind.index, guesses: blind.guesses, running: blind.running })); } catch {}
+}
+function restoreBlind() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(BLIND_KEY) ?? 'null');
+    if (saved?.running && saved.order?.length) {
+      Object.assign(blind, saved);
+      $('blindStatus').textContent = `resumed: species ${blind.index + 1} of ${blind.order.length}; Start audio, then Held note`;
+      return true;
+    }
+  } catch {}
+  return false;
+}
 const shuffle = (list) => { const a = list.slice(); for (let i = a.length - 1; i > 0; i -= 1) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const speciesIds = () => engine.getAvailableSpecies().map((m) => m.id);
 
@@ -296,6 +312,7 @@ async function blindStart() {
   blind.index = 0;
   blind.running = true;
   $('verdictOut').textContent = '';
+  saveBlind();
   await blindLoad(0);
 }
 
@@ -317,11 +334,13 @@ async function blindMinute() {
 async function blindNext() {
   if (!blind.running) return;
   blind.guesses[blind.index] = $('blindGuess').value;
+  saveBlind();
   if (blind.index + 1 >= blind.order.length) {
     $('blindStatus').textContent = 'all heard; reveal';
     return;
   }
   blind.index += 1;
+  saveBlind();
   await blindLoad(blind.index);
 }
 
@@ -329,6 +348,7 @@ function blindReveal() {
   if (!blind.order.length) return;
   blind.guesses[blind.index] = blind.guesses[blind.index] ?? $('blindGuess').value;
   blind.running = false;
+  saveBlind();
   const lines = ['blind verdict', 'heard      guessed    ok'];
   let ok = 0;
   blind.order.forEach((id, i) => {
@@ -546,7 +566,12 @@ function init() {
   $('stopV1').addEventListener('click', stopV1);
   fillSelect($('blindGuess'), species, species[0]?.value);
   $('blindStart').addEventListener('click', () => blindStart().catch((e) => setStatus(String(e))));
-  $('blindNote').addEventListener('click', () => { if (blind.running) hold([$('note').value]); });
+  $('blindNote').addEventListener('click', async () => {
+    if (!blind.running) return;
+    if (!state.species || engine.getCurrentSpecies()?.id !== blind.order[blind.index]) await blindLoad(blind.index);
+    hold([$('note').value]);
+  });
+  restoreBlind();
   $('blindMinute').addEventListener('click', () => blindMinute().catch((e) => setStatus(String(e))));
   $('blindNext').addEventListener('click', () => blindNext().catch((e) => setStatus(String(e))));
   $('blindReveal').addEventListener('click', blindReveal);

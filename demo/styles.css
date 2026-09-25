@@ -260,6 +260,73 @@ button.danger {
   color: var(--error);
 }
 
+button.icon {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+#info-dialog {
+  width: min(640px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+#info-dialog::backdrop {
+  background: #000a;
+  backdrop-filter: blur(4px);
+}
+
+.info-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.info-body {
+  padding: 0.25rem 1rem 1rem;
+  overflow: auto;
+  max-height: calc(100vh - 6rem);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.info-body h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.info-body p {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+
+.info-links a {
+  color: var(--accent);
+}
+
 button.small {
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
