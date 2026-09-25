@@ -25,6 +25,8 @@ export const BACTERIA_ROOM_DAMP = 3200;
 export const BACTERIA_ROOM_WET = 0.22;
 
 export const BACTERIA_MASTER_GAIN = 0.8;
+export const BACTERIA_ROOM_LFO_DEPTH = 0.1;
+export const BACTERIA_ROOM_CEILING = 0.9;
 
 export type BacteriaEffectsNodes = {
   saturation: Tone.Distortion;
@@ -75,10 +77,12 @@ export function createBacteriaEffects(): BacteriaEffectsNodes {
     type: 'triangle',
   });
 
+  // Bipolar around the ramped room size: a connected LFO adds to the param, and
+  // Freeverb's room size is a comb feedback that must stay under 1 (see Mold).
   const roomLfo = new Tone.LFO({
     frequency: 0.04,
-    min: 0.28,
-    max: 0.55,
+    min: -BACTERIA_ROOM_LFO_DEPTH,
+    max: BACTERIA_ROOM_LFO_DEPTH,
     type: 'sine',
   });
 
@@ -170,7 +174,12 @@ export function applyBacteriaEffectsLevels(
     rampSec,
   );
   setRampNormal(audioStarted, effects.roomVerb.wet as unknown as RampParam, levels.roomWet, rampSec);
-  setRampNormal(audioStarted, effects.roomVerb.roomSize as unknown as RampParam, levels.roomSize, rampSec);
+  setRampNormal(
+    audioStarted,
+    effects.roomVerb.roomSize as unknown as RampParam,
+    Math.min(levels.roomSize, BACTERIA_ROOM_CEILING - BACTERIA_ROOM_LFO_DEPTH),
+    rampSec,
+  );
   // Freeverb rebuilds its comb filters on every dampening write, so skip unchanged values.
   if (Math.abs(Number(effects.roomVerb.dampening) - levels.roomDampening) > 1) {
     effects.roomVerb.dampening = levels.roomDampening;

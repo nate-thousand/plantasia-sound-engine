@@ -53,6 +53,17 @@ export const MOLD_REVERB_WET = 0.52;
 
 export const MOLD_MASTER_GAIN = 0.72;
 
+/**
+ * A connected LFO adds to a param's own value. The comb and feedback delay
+ * LFOs therefore run bipolar around the ramped level, and the level is held
+ * so that level plus depth stays under MOLD_FEEDBACK_CEILING. Before 1.3 they
+ * ran 0.2..0.55 and 0.25..0.65 on top of the level, which took the loop gain
+ * past 1 on any sustained voice and the output grew without bound.
+ */
+export const MOLD_COMB_LFO_DEPTH = 0.12;
+export const MOLD_FEEDBACK_LFO_DEPTH = 0.1;
+export const MOLD_FEEDBACK_CEILING = 0.95;
+
 export type MoldEffectsNodes = {
   preBandpass: Tone.Filter;
   tapeSaturation: Tone.Distortion;
@@ -126,8 +137,8 @@ export function createMoldEffects(): MoldEffectsNodes {
 
   const wowLfo = new Tone.LFO({ frequency: 0.07, ...lfoSpan(0.002), type: 'sine' });
   const flutterLfo = new Tone.LFO({ frequency: 3.8, ...lfoSpan(0.0008), type: 'sine' });
-  const combLfo = new Tone.LFO({ frequency: 0.11, min: 0.2, max: 0.55, type: 'triangle' });
-  const feedbackLfo = new Tone.LFO({ frequency: 0.05, min: 0.25, max: 0.65, type: 'sine' });
+  const combLfo = new Tone.LFO({ frequency: 0.11, ...lfoSpan(MOLD_COMB_LFO_DEPTH), type: 'triangle' });
+  const feedbackLfo = new Tone.LFO({ frequency: 0.05, ...lfoSpan(MOLD_FEEDBACK_LFO_DEPTH), type: 'sine' });
   const filterDriftLfo = new Tone.LFO({
     frequency: 0.03,
     min: MOLD_PRE_BANDPASS_HZ * 0.65,
@@ -258,7 +269,12 @@ export function applyMoldEffectsLevels(
   setRampNormal(audioStarted, effects.bitCrusher.wet as unknown as RampParam, levels.bitCrushWet, rampSec);
   effects.bitCrusher.bits.value = levels.bitCrushBits;
 
-  setRampNormal(audioStarted, effects.comb.resonance as unknown as RampParam, levels.combResonance, rampSec);
+  setRampNormal(
+    audioStarted,
+    effects.comb.resonance as unknown as RampParam,
+    Math.min(levels.combResonance, MOLD_FEEDBACK_CEILING - MOLD_COMB_LFO_DEPTH),
+    rampSec,
+  );
   setRampNormal(audioStarted, effects.microDelay.wet as unknown as RampParam, levels.microDelayWet, rampSec);
   setRampNormal(
     audioStarted,
@@ -275,7 +291,7 @@ export function applyMoldEffectsLevels(
   setRampNormal(
     audioStarted,
     effects.feedbackDelay.feedback as unknown as RampParam,
-    levels.feedbackDelayFeedback,
+    Math.min(levels.feedbackDelayFeedback, MOLD_FEEDBACK_CEILING - MOLD_FEEDBACK_LFO_DEPTH),
     rampSec,
   );
   setRampNormal(audioStarted, effects.vibrato.wet as unknown as RampParam, levels.vibratoWet, rampSec);

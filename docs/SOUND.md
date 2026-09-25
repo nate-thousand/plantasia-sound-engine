@@ -41,6 +41,15 @@ From the harness audibility row at 1.2.0 (held `E3`, A/B over A/A, Chromium and 
 
 Mold and Bacteria controls act on the generator, the swarm and the particle rate, none of which a single `noteOn` exercises. The pass has to decide, per species, what each control does to one voice, or accept that a species is population only and say so.
 
+## Findings before the verdict
+
+Found by the lab on 2026-09-25, before any listening:
+
+1. **Mold was unstable on a held note** and has been since 1.0: its comb and feedback LFOs summed onto their params took the loop gain past 1 and the output grew to NaN within three seconds. Fixed in 1.3 (bipolar LFOs around a capped level). The 1.2 audibility "none" for Mold measured the blown up graph, so the table above is void for Mold; the verdict starts from the fixed species.
+2. **Mold's held voice is about twenty five times quieter than Seed's** (peak 0.014 against 0.34 on the same `E3` at default controls). A level and register decision for the pass.
+3. **A held note on Bacteria is one 16 ms particle, then silence.** `noteOn` fires a particle and, when the generator runs, spawns a swarm; nothing sustains. Either Bacteria gets a sustained voice for held keys or it is declared a population only species and the instrument is told so. This is the first question of its verdict.
+4. **Mold's pre filter centre is the sum of its ramped value and its drift LFO**, about twice the written centre. Not a fault, but the constant in `depths.ts` does not mean what it says until the LFO runs around the value. To settle in the pass.
+
 ## Control depths
 
 Every constant in each species' ecology mapping lives in `src/species/<id>/depths.ts`, named `<what>_<control>` with `<what>_base` as the value at every control 0. The lab's Control depths section edits them live through `engine.setControlDepths()` (root tier) and emits JSON; paste it back into the file. A tuned table replaces the defaults at 1.3.0.

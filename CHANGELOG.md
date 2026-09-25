@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lab**: Blind verdict (shuffled species, held note, generative minute, guess, reveal) and Blind controls (five sweeps A to E, say what each did, reveal) for decision 12; a Control depths editor with defaults, filter, Copy and Apply JSON, changed keys marked
 - `docs/SOUND.md`: the sound pass record: the bar, blind verdict tables, where 1.2 left the controls, depths and spans tables, the signature port table for the eleven presets, the phone pass table
 - `docs/PERFORMANCE.md` gains "On a phone": the bench served on the LAN for the phone pass by hand (decision 14)
+- Harness row `held voice stays bounded` (blocks): every species holds `E3` for six seconds with one control moved half way; peak per second on the master bus must be finite, under 1.5 and not growing
+
+### Fixed
+
+- **Mold's output grew without bound on any sustained voice**, within about three seconds, until the graph went NaN and fell silent. Its comb resonance and feedback delay LFOs were connected on top of the ramped levels, and a connected LFO adds to a param, so the loop gain passed 1 (comb up to 1.4, feedback up to 1.45 at ordinary controls). Both LFOs now run bipolar around the level and the level is capped so level plus depth stays under 0.95. Generative Mold hid it because its notes are short; the lab's blind verdict found it on the first held note. Bacteria's room size LFO had the same wiring (room size up to 1.2) and gets the same fix
 
 ## [1.2.1] - 2026-09-25
 
