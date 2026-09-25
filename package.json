@@ -1,6 +1,6 @@
 {
   "name": "plantasia-sound-engine",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Modular Sound World engine for Plantasia — species plugins, generative composition, expressive performance",
   "type": "module",
   "sideEffects": false,

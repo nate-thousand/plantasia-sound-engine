@@ -50,9 +50,13 @@ Decisions table "Decisions on simplicity" in ROADMAP.md (27 rows). All five 1.2.
 
 The instrument's player test found issue #1 on its first generative run: Bacteria's noise particle tripped Tone's "start time must be strictly greater" assertion when a swarm burst handed two particles to one tick, and the error escaped the scheduler tick as an uncaught error in the host. Fixed in `src/species/bacteria/synth.ts` (the noise synth and the pluck remember their last start and space a collision by 1 ms) and `src/engine/generative/Generator.ts` (species callbacks run through a guard that logs and carries on). New blocking harness row `generative mode runs clean on every species`. `release/1.3.0` carries the fix by merging `main`.
 
+## 1.2.3 cut 2026-09-25 (branch `release/1.2.3`, merged to `main`, tag `1.2.3`)
+
+The instrument's second finding: Mold on a held key is noise and feedback. That is the runaway comb and feedback loop fixed on `release/1.3.0` in `src/species/mold/effects.ts` and `src/species/bacteria/effects.ts`, ported here with the blocking harness row `held voice stays bounded`. The user's bar for the instrument is that every species is ambient by nature; Mold's level once stable (about twenty five times under Seed) and that bar are for the 1.3.0 sound pass. `release/1.3.0` carries the patch by merging `main`.
+
 ## Suggested order
 
-1. Start the instrument session from `docs/INSTRUMENT_BRIEF.md`, pinned `#1.2.2`.
+1. Start the instrument session from `docs/INSTRUMENT_BRIEF.md`, pinned `#1.2.3`.
 3. 1.3.0: the blind species verdict in the lab (decision 12), then the sound pass with the user, the signature port through the lab's v1 A/B, `docs/SOUND.md`, a phone pass by hand.
 4. 2.0 after the port: v1 removal, the method fold, presets as snapshots, entry points (decisions 11, 17, 20, 27).
 

@@ -116,7 +116,7 @@ A grill on "what this is and how to make it simpler and better" closed with thes
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.2.2` |
+| **Package version (package.json)** | `1.2.3` |
 | **Honest integration target** | `1.2.0`: snapshots and morph, polyphony cap, MIDI input select, CI harness, size gate, v1 deprecated |
 | **Production branch** | `main` (from 1.0.0; `v2-sound-world-engine` merges in at that tag) |
 | **Development branch until 1.0.0** | `v2-sound-world-engine` |
@@ -147,7 +147,8 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `1.1.0` | Modulation engine, MIDI CC, aftertouch and bend, generative preferences, thirty method public tier |
 | `1.2.0` | Snapshots and morph, polyphony cap, `enableMidi(inputId)`, CI harness, size gate, lab page, v1 deprecated, thirty four method public tier |
 | `1.2.1` | The simplicity release: playing set of seven, docs fold, demo Playing group with save and recall, lab v1 versus species A/B, six line first sound gate, instrument brief for the tag |
-| `1.2.2` | **Current**: patch for issue #1, the first bug the instrument found: Bacteria's noise and pluck particles space colliding starts, the generator guards species callbacks, harness row for generative mode on every species |
+| `1.2.2` | Patch for issue #1, the first bug the instrument found: Bacteria's noise and pluck particles space colliding starts, the generator guards species callbacks, harness row for generative mode on every species |
+| `1.2.3` | **Current**: patch for the second bug the instrument found: Mold's runaway comb and feedback loops on a held voice (and Bacteria's room size LFO), ported from 1.3 with the held voice harness row. The level and the ambient bar go to the 1.3.0 sound pass |
 
 **Plantasonic should pin:** `1.1.0`, not `v2.0.0`.
 

@@ -14,7 +14,7 @@ engine.noteOn('C4', 0.8);
 
 Six lines to the first sound, measured on every build. Then the rest of the playing set: `noteOff`, `setControl('bloom', 0.65)` on 0..1, `modulate` for a wheel, `applySnapshot` for save and recall. Everything else, thirty four methods in all, is on one page: [docs/API.md](./docs/API.md).
 
-**Version:** `1.2.2`. Pin the tag (`github:nate-thousand/plantasia-sound-engine#1.2.2`), never `v2.0.0`.
+**Version:** `1.2.3`. Pin the tag (`github:nate-thousand/plantasia-sound-engine#1.2.3`), never `v2.0.0`.
 
 Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the public surface; the root export adds the deprecated v1 preset path (removed at 2.0) and engine internals for the lab, the harness and species authors.
 
