@@ -16,6 +16,16 @@ WebKit needs its browser once: `npx playwright install webkit`.
 
 The `browser` job in `.github/workflows/ci.yml` runs the same suite in Chromium and WebKit on every push to `main` and every pull request, then `npm run size`. Dropouts, page errors, the control extremes row and the demo size budget fail the job. noteOn latency is recorded and annotated as a warning above 25 ms, because a shared runner has no audio hardware and its numbers drift; the 15 ms bar stays the local release check on the reference machine (decision 11 after 1.1.0). Raw results are uploaded as the `bench-results` artifact.
 
+### On a phone
+
+Decision 14 on simplicity: once per release from 1.3, by hand, recorded beside the WebKit column. Serve the bench on the LAN and open it on the phone:
+
+```bash
+npx vite --config vite.bench.config.ts --port 5194 --strictPort --host
+```
+
+Open `http://<this machine's LAN address>:5194` in Safari on the phone, tap Unlock, wait ten seconds, and copy the JSON it prints into `docs/SOUND.md` (Phone pass). The Unlock pass measures noteOn to audible and dropouts over ten seconds with the mock visual load. No emulation stands in for this.
+
 ## What is measured
 
 | Measure | How | Bar | Blocks release |

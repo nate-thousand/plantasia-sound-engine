@@ -371,6 +371,20 @@ export class PlantasiaEngine implements PlantasiaEngineApi {
     return this.species.getPolyphony();
   }
 
+  /**
+   * Root tier only (1.3): override the loaded species' control depth
+   * constants live. The lab's tuning knob for the sound pass; the tuned
+   * values are written back into `src/species/<id>/depths.ts`.
+   */
+  setControlDepths(partial: Record<string, number>): void {
+    this.species.setControlDepths(partial);
+  }
+
+  /** Current control depths of the loaded species, or null. */
+  getControlDepths(): Record<string, number> | null {
+    return this.species.getControlDepths();
+  }
+
   // --- modulation (1.1) ---
 
   /**

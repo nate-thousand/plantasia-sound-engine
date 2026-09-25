@@ -74,6 +74,41 @@
         <pre id="portOut" class="out"></pre>
       </section>
 
+      <section id="verdict">
+        <h2>Blind verdict</h2>
+        <p class="hint">Decision 12: one held note and one generative minute per species, eyes closed, in a shuffled order. Name each; then reveal. A species you cannot name blind is not a species yet.</p>
+        <div class="row">
+          <button id="blindStart">Start blind</button>
+          <button id="blindNote">Held note</button>
+          <button id="blindMinute">Generative minute</button>
+          <button id="blindNext">Next</button>
+          <label>Guess <select id="blindGuess"></select></label>
+          <button id="blindReveal">Reveal</button>
+          <span id="blindStatus" class="status">not started</span>
+        </div>
+        <p class="hint">Blind controls: five sweeps in a shuffled order on the held note, each low to high over four seconds. Name what each did; then reveal.</p>
+        <div class="row">
+          <button id="ctlStart">Start blind controls</button>
+          <button id="ctlA">A</button><button id="ctlB">B</button><button id="ctlC">C</button><button id="ctlD">D</button><button id="ctlE">E</button>
+          <button id="ctlReveal">Reveal</button>
+        </div>
+        <div class="row" id="ctlGuesses"></div>
+        <pre id="verdictOut" class="out"></pre>
+      </section>
+
+      <section id="depths">
+        <h2>Control depths</h2>
+        <p class="hint">Every constant in the loaded species' ecology mapping, live (engine.setControlDepths, root tier). Keys read what_control; what_base is the value at every control 0. Copy the JSON into <code>src/species/&lt;id&gt;/depths.ts</code> when it sounds right.</p>
+        <table id="depthTable"></table>
+        <div class="row">
+          <button id="depthDefaults">Reset to defaults</button>
+          <button id="depthCopy">Copy JSON</button>
+          <button id="depthApply">Apply JSON</button>
+          <label>Filter <input type="text" id="depthFilter" placeholder="bloom" /></label>
+        </div>
+        <textarea id="depthJson" rows="6" spellcheck="false"></textarea>
+      </section>
+
       <section id="spans">
         <h2>Target spans</h2>
         <p class="hint">Each row is one <code>MODULATION_TARGET_SPANS</code> entry. Audition puts a 0.5 Hz sine LFO at depth 1 on that target. Edits apply live. Copy the JSON into <code>src/engine/modulation/types.ts</code>.</p>

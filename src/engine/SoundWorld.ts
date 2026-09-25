@@ -84,6 +84,14 @@ export interface SoundWorld {
    */
   setPolyphony?(voices: number | null): void;
 
+  /**
+   * Optional (1.3, lab only). Override the species' control depth constants
+   * live; unknown keys are ignored. `getControlDepths` returns the current
+   * set. The sound pass writes tuned values back into the species source.
+   */
+  setControlDepths?(partial: Record<string, number>): void;
+  getControlDepths?(): Record<string, number>;
+
   dispose(): void;
 }
 

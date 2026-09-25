@@ -15,7 +15,7 @@ h2 { font-size: 13px; margin: 0 0 8px; color: var(--accent); text-transform: upp
 header p { margin: 0 0 12px; color: var(--dim); }
 main { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
 section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }
-section#spans, section#sweep { grid-column: 1 / -1; }
+section#spans, section#sweep, section#depths, section#verdict { grid-column: 1 / -1; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
 label { display: inline-flex; align-items: center; gap: 6px; }
 button { font: inherit; padding: 5px 10px; background: #1c2a20; color: var(--fg); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
@@ -38,3 +38,4 @@ textarea { width: 100%; resize: vertical; }
 #bands .onset i { background: var(--warn); }
 canvas { width: 100%; height: 80px; background: #0e1510; border: 1px solid var(--line); border-radius: 4px; display: block; }
 code { color: var(--accent); }
+tr.changed td:first-child code { color: var(--warn); }

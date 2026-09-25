@@ -41,6 +41,7 @@ import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
 import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
 import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
+import { FLOWERS_DEPTHS, type FlowersDepths } from './depths.js';
 
 type FlowersControlState = Record<EcologicalControl, number>;
 
@@ -64,6 +65,7 @@ export class FlowersSoundWorld implements SoundWorld {
   readonly metadata = FLOWERS_SOUND_WORLD_METADATA;
 
   private polyphonyCap: number | null = null;
+  private depths: FlowersDepths = { ...FLOWERS_DEPTHS };
   private synth: FlowersSynthNodes | null = null;
   private effects: FlowersEffectsNodes | null = null;
   private generator: FlowersGenerator | null = null;
@@ -141,6 +143,20 @@ export class FlowersSoundWorld implements SoundWorld {
   setPolyphony(voices: number | null): void {
     this.polyphonyCap = voices;
     this.applyEcologicalControls();
+  }
+
+  /** Lab only (engine 1.3): override control depths live; unknown keys ignored. */
+  setControlDepths(partial: Record<string, number>): void {
+    for (const [key, value] of Object.entries(partial)) {
+      if (key in this.depths && Number.isFinite(value)) {
+        this.depths[key as keyof FlowersDepths] = value;
+      }
+    }
+    this.applyEcologicalControls();
+  }
+
+  getControlDepths(): Record<string, number> {
+    return { ...this.depths };
   }
 
   applyModulation(frame: SpeciesModulationFrame): void {
@@ -253,14 +269,15 @@ export class FlowersSoundWorld implements SoundWorld {
       this.synth.subPoly.maxPolyphony = polyphony;
     }
 
-    const filterOpen = FLOWERS_FILTER_HZ * (1 + bloom * 0.35 + growth * 0.12);
-    const filterDepth = 0.14 + bloom * 0.12 + mold * 0.06;
-    const subLevel = FLOWERS_SUB_LEVEL * (0.6 + roots * 0.85);
+    const d = this.depths;
+    const filterOpen = FLOWERS_FILTER_HZ * (1 + bloom * d.filter_bloom + growth * d.filter_growth);
+    const filterDepth = d.filterDepth_base + bloom * d.filterDepth_bloom + mold * d.filterDepth_mold;
+    const subLevel = FLOWERS_SUB_LEVEL * (d.sub_base + roots * d.sub_roots);
     setRampParam(this.audioStarted, this.synth.subPoly.volume as unknown as RampParam, Tone.gainToDb(subLevel), rampSec);
 
-    const pwmWidth = 0.85 + mold * 0.22;
-    const detuneSpread = 18 + mold * 14;
-    const noiseGain = 0.008 + bloom * 0.02 + bacteria * 0.015;
+    const pwmWidth = d.pwm_base + mold * d.pwm_mold;
+    const detuneSpread = d.detune_base + mold * d.detune_mold;
+    const noiseGain = d.noise_base + bloom * d.noise_bloom + bacteria * d.noise_bacteria;
 
     this.performanceBase = {
       filterHz: filterOpen,
@@ -269,15 +286,15 @@ export class FlowersSoundWorld implements SoundWorld {
       detuneSpread,
       noiseGain,
       effectLevels: {
-        tapeWet: 0.04 + mold * 0.18,
-        tapeDrive: 0.06 + mold * 0.16,
-        chorusWet: 0.38 + bloom * 0.48,
-        chorusDepth: 0.55 + bloom * 0.38,
-        ensembleWet: 0.28 + bloom * 0.42,
-        reverbWet: 0.32 + bloom * 0.52,
-        delayWet: 0.08 + bloom * 0.14,
-        widenerWidth: 0.45 + bloom * 0.48 + growth * 0.08,
-        releaseScale: 1 + bloom * 0.65 + roots * 0.15,
+        tapeWet: d.tapeWet_base + mold * d.tapeWet_mold,
+        tapeDrive: d.tapeDrive_base + mold * d.tapeDrive_mold,
+        chorusWet: d.chorusWet_base + bloom * d.chorusWet_bloom,
+        chorusDepth: d.chorusDepth_base + bloom * d.chorusDepth_bloom,
+        ensembleWet: d.ensembleWet_base + bloom * d.ensembleWet_bloom,
+        reverbWet: d.reverbWet_base + bloom * d.reverbWet_bloom,
+        delayWet: d.delayWet_base + bloom * d.delayWet_bloom,
+        widenerWidth: d.width_base + bloom * d.width_bloom + growth * d.width_growth,
+        releaseScale: 1 + bloom * d.release_bloom + roots * d.release_roots,
       },
     };
 

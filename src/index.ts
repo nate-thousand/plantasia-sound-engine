@@ -56,6 +56,7 @@ export {
   createFlowersSoundWorld,
   createMoldSoundWorld,
   createBacteriaSoundWorld,
+  CONTROL_DEPTH_DEFAULTS,
 } from './species/index.js';
 
 // --- v1 preset engine (unchanged) ---

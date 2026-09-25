@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Control depths** (1.3 tooling, ROADMAP decision 10 after 1.1.0): every constant in each species' ecology mapping now lives in `src/species/<id>/depths.ts`, named `<what>_<control>`, and the species reads a live copy. Root tier only: `setControlDepths(partial)` and `getControlDepths()`; `CONTROL_DEPTH_DEFAULTS` exports the four tables. Optional `SoundWorld` hooks. Behaviour unchanged at the defaults; gated in `test-facade`
+- **Lab**: Blind verdict (shuffled species, held note, generative minute, guess, reveal) and Blind controls (five sweeps A to E, say what each did, reveal) for decision 12; a Control depths editor with defaults, filter, Copy and Apply JSON, changed keys marked
+- `docs/SOUND.md`: the sound pass record: the bar, blind verdict tables, where 1.2 left the controls, depths and spans tables, the signature port table for the eleven presets, the phone pass table
+- `docs/PERFORMANCE.md` gains "On a phone": the bench served on the LAN for the phone pass by hand (decision 14)
+
 ## [1.2.1] - 2026-09-25
 
 The simplicity release (ROADMAP "Decisions on simplicity"). No engine behaviour changes. The surface is folded so what a host reads first is the seven methods a player feels; the demo opens on them with save and recall; the lab can A/B the v1 chain against the species it maps to; six lines to the first sound is now a gate in Node and a row in the browser harness; the instrument brief describes the tag that exists.

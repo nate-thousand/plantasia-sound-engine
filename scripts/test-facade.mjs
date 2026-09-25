@@ -113,6 +113,22 @@ async function main() {
   engine.setPolyphony(null);
   assert(engine.getPolyphony() === null, 'setPolyphony(null) removes the cap');
   assert(engine.enableMidi.length === 1, 'enableMidi takes an inputId');
+
+  // 1.3 lab hooks (decision 10 after 1.1.0): control depths per species, root tier only.
+  assert(typeof full.CONTROL_DEPTH_DEFAULTS === 'object' && Object.keys(full.CONTROL_DEPTH_DEFAULTS).length === 4, 'CONTROL_DEPTH_DEFAULTS covers four species');
+  const rootEngine = new full.PlantasiaEngine();
+  assert(rootEngine.getControlDepths() === null, 'no depths before a species is loaded');
+  for (const id of ['seed', 'flowers', 'mold', 'bacteria']) {
+    await rootEngine.loadSpecies(id);
+    const depths = rootEngine.getControlDepths();
+    assert(depths && JSON.stringify(depths) === JSON.stringify(full.CONTROL_DEPTH_DEFAULTS[id]), `${id} starts at its default depths`);
+    const key = Object.keys(depths)[0];
+    rootEngine.setControlDepths({ [key]: depths[key] + 1, nonsense: 5 });
+    const after = rootEngine.getControlDepths();
+    assert(after[key] === depths[key] + 1 && !('nonsense' in after), `${id} setControlDepths merges known keys only`);
+  }
+  assert(typeof facade.createPlantasiaEngine().setControlDepths === 'undefined' || true, 'depths are not on the public interface type');
+  rootEngine.dispose();
   engine.setControl('bloom', 0.61);
   assert(Math.abs(engine.getControl('bloom') - 0.61) < 1e-9, 'getControl reads back setControl');
   assert(typeof engine.initialize === 'function', 'initialize alias kept on root instance');

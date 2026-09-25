@@ -4,7 +4,7 @@
  * the species ramp on or off, species A/B, a span editor that emits JSON, and
  * the analyser bands. Runs against the built dist on the root export.
  */
-import { PlantasiaEngine, ECOLOGICAL_CONTROLS, MODULATABLE_TARGETS, MODULATION_TARGET_SPANS, presets, resolvePresetToSpecies } from 'plantasia-sound-engine';
+import { PlantasiaEngine, ECOLOGICAL_CONTROLS, MODULATABLE_TARGETS, MODULATION_TARGET_SPANS, CONTROL_DEPTH_DEFAULTS, presets, resolvePresetToSpecies } from 'plantasia-sound-engine';
 import * as Tone from 'tone';
 
 const $ = (id) => document.getElementById(id);
@@ -68,6 +68,7 @@ async function loadSpecies(id) {
   $('species').value = id;
   setStatus(`${id} running${generative ? ', generative' : ', played'}`);
   rehold();
+  renderDepths();
 }
 
 function rehold() {
@@ -210,6 +211,7 @@ async function playPort(presetId) {
   state.species = res.speciesId;
   $('species').value = res.speciesId;
   setStatus(`${res.speciesId} running, played, from preset ${presetId}`);
+  renderDepths();
   hold(V1_CHORD);
   const c = $('control').value;
   $('controlValue').value = String(engine.getControl(c));
@@ -222,6 +224,165 @@ function stopV1() {
   engine.stop();
   state.species = null;
   setStatus('stopped');
+}
+
+// ---------------------------------------------------------------------------
+// Control depths (decision 10 after 1.1.0): the sound pass knob
+
+function renderDepths() {
+  const table = $('depthTable');
+  const depths = engine.getControlDepths();
+  table.innerHTML = '';
+  if (!depths || !state.species) {
+    table.innerHTML = '<tr><td class="hint">Load a species.</td></tr>';
+    $('depthJson').value = '';
+    return;
+  }
+  const defaults = CONTROL_DEPTH_DEFAULTS[state.species] ?? {};
+  const filter = $('depthFilter').value.trim().toLowerCase();
+  table.innerHTML = '<tr><th>key</th><th>value</th><th>default</th></tr>';
+  for (const [key, value] of Object.entries(depths)) {
+    if (filter && !key.toLowerCase().includes(filter)) continue;
+    const tr = document.createElement('tr');
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = String(Math.abs(defaults[key] ?? value) >= 100 ? 50 : Math.abs(defaults[key] ?? value) >= 1 ? 0.5 : 0.01);
+    input.value = String(value);
+    input.addEventListener('input', () => {
+      const v = Number(input.value);
+      if (Number.isFinite(v)) engine.setControlDepths({ [key]: v });
+      $('depthJson').value = depthJson();
+      tr.classList.toggle('changed', v !== defaults[key]);
+    });
+    tr.innerHTML = `<td><code>${key}</code></td><td></td><td>${defaults[key]}</td>`;
+    tr.children[1].appendChild(input);
+    if (value !== defaults[key]) tr.classList.add('changed');
+    table.appendChild(tr);
+  }
+  $('depthJson').value = depthJson();
+}
+
+function depthJson() {
+  const depths = engine.getControlDepths();
+  return depths ? JSON.stringify(depths, null, 2) : '';
+}
+
+// ---------------------------------------------------------------------------
+// Blind verdict (decision 12) and blind controls (decision 13 rehearsal)
+
+const blind = { order: [], index: -1, guesses: [], running: false, controls: [], ctlGuesses: [] };
+const shuffle = (list) => { const a = list.slice(); for (let i = a.length - 1; i > 0; i -= 1) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const speciesIds = () => engine.getAvailableSpecies().map((m) => m.id);
+
+async function blindLoad(index) {
+  const id = blind.order[index];
+  release();
+  engine.stop();
+  await engine.loadSpecies(id);
+  await engine.start({ generative: false });
+  state.species = id;
+  for (const c of ECOLOGICAL_CONTROLS) engine.setControl(c, 0.5, 0);
+  setStatus('blind');
+  $('species').value = '';
+  $('depthTable').innerHTML = '<tr><td class="hint">hidden while blind</td></tr>';
+  $('depthJson').value = '';
+  $('blindStatus').textContent = `species ${index + 1} of ${blind.order.length}: listen, then guess`;
+}
+
+async function blindStart() {
+  await unlock();
+  blind.order = shuffle(speciesIds());
+  blind.guesses = [];
+  blind.index = 0;
+  blind.running = true;
+  $('verdictOut').textContent = '';
+  await blindLoad(0);
+}
+
+async function blindMinute() {
+  if (!blind.running) return;
+  release();
+  engine.stop();
+  await engine.loadSpecies(blind.order[blind.index]);
+  await engine.start();
+  $('blindStatus').textContent = `species ${blind.index + 1}: generative for 60 s`;
+  await wait(60000);
+  if (!blind.running || blind.order[blind.index] !== engine.getCurrentSpecies()?.id) return;
+  engine.stop();
+  await engine.loadSpecies(blind.order[blind.index]);
+  await engine.start({ generative: false });
+  $('blindStatus').textContent = `species ${blind.index + 1}: minute over, guess`;
+}
+
+async function blindNext() {
+  if (!blind.running) return;
+  blind.guesses[blind.index] = $('blindGuess').value;
+  if (blind.index + 1 >= blind.order.length) {
+    $('blindStatus').textContent = 'all heard; reveal';
+    return;
+  }
+  blind.index += 1;
+  await blindLoad(blind.index);
+}
+
+function blindReveal() {
+  if (!blind.order.length) return;
+  blind.guesses[blind.index] = blind.guesses[blind.index] ?? $('blindGuess').value;
+  blind.running = false;
+  const lines = ['blind verdict', 'heard      guessed    ok'];
+  let ok = 0;
+  blind.order.forEach((id, i) => {
+    const g = blind.guesses[i] ?? '';
+    const hit = g === id;
+    if (hit) ok += 1;
+    lines.push(`${id.padEnd(10)} ${g.padEnd(10)} ${hit ? 'yes' : 'no'}`);
+  });
+  lines.push(`${ok} of ${blind.order.length} named blind`);
+  $('verdictOut').textContent = lines.join('\n');
+  setStatus(`${state.species} running, played`);
+  $('species').value = state.species;
+}
+
+async function ctlStart() {
+  if (!state.species) return;
+  blind.controls = shuffle([...ECOLOGICAL_CONTROLS]);
+  blind.ctlGuesses = [];
+  for (const c of ECOLOGICAL_CONTROLS) engine.setControl(c, 0.5, 0);
+  if (!state.held.length) hold([$('note').value]);
+  const host = $('ctlGuesses');
+  host.innerHTML = '';
+  ['A', 'B', 'C', 'D', 'E'].forEach((letter, i) => {
+    const label = document.createElement('label');
+    label.textContent = `${letter} did `;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'in your words';
+    input.size = 18;
+    input.addEventListener('input', () => { blind.ctlGuesses[i] = input.value; });
+    label.appendChild(input);
+    host.appendChild(label);
+  });
+  $('verdictOut').textContent = 'blind controls ready: press A to E';
+}
+
+async function ctlSweep(i) {
+  const control = blind.controls[i];
+  if (!control || !state.species) return;
+  for (const c of ECOLOGICAL_CONTROLS) engine.setControl(c, 0.5, 0);
+  const steps = 120;
+  for (let s = 0; s <= steps; s += 1) {
+    engine.setControl(control, 0.1 + (0.85 * s) / steps, 0.033);
+    await wait(4000 / steps);
+  }
+  await wait(600);
+  engine.setControl(control, 0.5);
+}
+
+function ctlReveal() {
+  if (!blind.controls.length) return;
+  const lines = ['blind controls', 'key  control    you said'];
+  blind.controls.forEach((c, i) => lines.push(`${'ABCDE'[i]}    ${c.padEnd(10)} ${blind.ctlGuesses[i] ?? ''}`));
+  $('verdictOut').textContent = lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -383,6 +544,29 @@ function init() {
   $('playV1').addEventListener('click', () => playV1($('v1preset').value).catch((e) => setStatus(String(e))));
   $('playPort').addEventListener('click', () => playPort($('v1preset').value).catch((e) => setStatus(String(e))));
   $('stopV1').addEventListener('click', stopV1);
+  fillSelect($('blindGuess'), species, species[0]?.value);
+  $('blindStart').addEventListener('click', () => blindStart().catch((e) => setStatus(String(e))));
+  $('blindNote').addEventListener('click', () => { if (blind.running) hold([$('note').value]); });
+  $('blindMinute').addEventListener('click', () => blindMinute().catch((e) => setStatus(String(e))));
+  $('blindNext').addEventListener('click', () => blindNext().catch((e) => setStatus(String(e))));
+  $('blindReveal').addEventListener('click', blindReveal);
+  $('ctlStart').addEventListener('click', () => ctlStart().catch((e) => setStatus(String(e))));
+  ['A', 'B', 'C', 'D', 'E'].forEach((letter, i) => $(`ctl${letter}`).addEventListener('click', () => ctlSweep(i)));
+  $('ctlReveal').addEventListener('click', ctlReveal);
+  $('depthDefaults').addEventListener('click', () => {
+    if (state.species) engine.setControlDepths({ ...CONTROL_DEPTH_DEFAULTS[state.species] });
+    renderDepths();
+  });
+  $('depthFilter').addEventListener('input', renderDepths);
+  $('depthCopy').addEventListener('click', async () => {
+    const json = depthJson();
+    $('depthJson').value = json;
+    try { await navigator.clipboard.writeText(json); setStatus('depths copied'); } catch { $('depthJson').select(); }
+  });
+  $('depthApply').addEventListener('click', () => {
+    try { engine.setControlDepths(JSON.parse($('depthJson').value)); renderDepths(); setStatus('depths applied'); } catch (e) { setStatus(`bad JSON: ${e.message}`); }
+  });
+  renderDepths();
   $('playA').addEventListener('click', () => loadSpecies($('speciesA').value).catch((e) => setStatus(String(e))));
   $('playB').addEventListener('click', () => loadSpecies($('speciesB').value).catch((e) => setStatus(String(e))));
 
@@ -419,7 +603,7 @@ function init() {
   });
 
   requestAnimationFrame(drawFrame);
-  window.lab = { engine, state, measureControl, loadSpecies, hold, release };
+  window.lab = { engine, state, measureControl, loadSpecies, hold, release, blind, renderDepths };
 }
 
 init();

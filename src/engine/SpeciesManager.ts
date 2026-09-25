@@ -219,6 +219,15 @@ export class SpeciesManager {
     return this.polyphonyCap;
   }
 
+  /** Lab only: forward control depth overrides to the loaded species. */
+  setControlDepths(partial: Record<string, number>): void {
+    this.loader.getCurrent()?.setControlDepths?.(partial);
+  }
+
+  getControlDepths(): Record<string, number> | null {
+    return this.loader.getCurrent()?.getControlDepths?.() ?? null;
+  }
+
   /** Snapshot of every control's base value. */
   getControlState(): EcologyControlState {
     return { ...this.ecologyControls.getState() };

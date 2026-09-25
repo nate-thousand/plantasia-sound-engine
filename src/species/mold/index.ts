@@ -42,6 +42,7 @@ import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
 import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
 import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
+import { MOLD_DEPTHS, type MoldDepths } from './depths.js';
 
 type MoldControlState = Record<EcologicalControl, number>;
 
@@ -65,6 +66,7 @@ export class MoldSoundWorld implements SoundWorld {
   readonly metadata = MOLD_SOUND_WORLD_METADATA;
 
   private polyphonyCap: number | null = null;
+  private depths: MoldDepths = { ...MOLD_DEPTHS };
   private synth: MoldSynthNodes | null = null;
   private effects: MoldEffectsNodes | null = null;
   private generator: MoldGenerator | null = null;
@@ -149,6 +151,20 @@ export class MoldSoundWorld implements SoundWorld {
   setPolyphony(voices: number | null): void {
     this.polyphonyCap = voices;
     this.applyEcologicalControls();
+  }
+
+  /** Lab only (engine 1.3): override control depths live; unknown keys ignored. */
+  setControlDepths(partial: Record<string, number>): void {
+    for (const [key, value] of Object.entries(partial)) {
+      if (key in this.depths && Number.isFinite(value)) {
+        this.depths[key as keyof MoldDepths] = value;
+      }
+    }
+    this.applyEcologicalControls();
+  }
+
+  getControlDepths(): Record<string, number> {
+    return { ...this.depths };
   }
 
   applyModulation(frame: SpeciesModulationFrame): void {
@@ -276,36 +292,37 @@ export class MoldSoundWorld implements SoundWorld {
       this.synth.harmonicPoly.maxPolyphony = polyphony;
     }
 
-    const bandCenter = MOLD_BANDPASS_HZ * (0.75 + roots * 0.35) * (1 + bloom * 0.28);
-    const filterDepth = 0.22 + mold * 0.28 + bacteria * 0.08;
+    const d = this.depths;
+    const bandCenter = MOLD_BANDPASS_HZ * (d.band_base + roots * d.band_roots) * (1 + bloom * d.band_bloom);
+    const filterDepth = d.filterDepth_base + mold * d.filterDepth_mold + bacteria * d.filterDepth_bacteria;
     const layers = this.layerLevels();
     setRampParam(this.audioStarted, this.synth.fmPoly.volume as unknown as RampParam, Tone.gainToDb(layers.fmLevel), rampSec);
     setRampParam(this.audioStarted, this.synth.harmonicPoly.volume as unknown as RampParam, Tone.gainToDb(layers.harmonicLevel), rampSec);
 
-    const preBandCenter = MOLD_PRE_BANDPASS_HZ * (0.7 + bloom * 0.55) * (0.85 + roots * 0.25);
+    const preBandCenter = MOLD_PRE_BANDPASS_HZ * (d.preBand_base + bloom * d.preBand_bloom) * (d.preBandRoots_base + roots * d.preBand_roots);
 
     this.performanceBase = {
       bandCenter,
       filterDepth,
       preBandCenter,
       effectLevels: {
-        tapeWet: 0.12 + mold * 0.48,
-        tapeDrive: 0.08 + mold * 0.38,
-        softDistWet: 0.06 + mold * 0.32,
-        softDistDrive: 0.1 + mold * 0.42,
-        bitCrushWet: 0.02 + mold * 0.22 + bacteria * 0.08,
-        bitCrushBits: Math.max(4, 16 - mold * 10 - bacteria * 2),
-        combResonance: 0.18 + mold * 0.55 + bloom * 0.12,
-        microDelayWet: 0.04 + mold * 0.18 + bacteria * 0.12,
-        microDelayFeedback: 0.28 + mold * 0.45 + bacteria * 0.15,
-        feedbackDelayWet: 0.18 + bloom * 0.38 + mold * 0.22,
-        feedbackDelayFeedback: 0.22 + mold * 0.58,
-        vibratoWet: 0.1 + mold * 0.35,
-        vibratoDepth: 0.02 + mold * 0.08 + bacteria * 0.03,
-        reverbWet: 0.38 + bloom * 0.48 + mold * 0.12,
-        wowDepth: 0.001 + mold * 0.004,
-        flutterDepth: 0.0004 + mold * 0.002 + bacteria * 0.0006,
-        releaseScale: 1 + bloom * 0.35 + mold * 0.55 + roots * 0.25,
+        tapeWet: d.tapeWet_base + mold * d.tapeWet_mold,
+        tapeDrive: d.tapeDrive_base + mold * d.tapeDrive_mold,
+        softDistWet: d.softDistWet_base + mold * d.softDistWet_mold,
+        softDistDrive: d.softDistDrive_base + mold * d.softDistDrive_mold,
+        bitCrushWet: d.bitCrushWet_base + mold * d.bitCrushWet_mold + bacteria * d.bitCrushWet_bacteria,
+        bitCrushBits: Math.max(4, 16 - mold * d.bitCrushBits_mold - bacteria * d.bitCrushBits_bacteria),
+        combResonance: d.combResonance_base + mold * d.combResonance_mold + bloom * d.combResonance_bloom,
+        microDelayWet: d.microDelayWet_base + mold * d.microDelayWet_mold + bacteria * d.microDelayWet_bacteria,
+        microDelayFeedback: d.microDelayFeedback_base + mold * d.microDelayFeedback_mold + bacteria * d.microDelayFeedback_bacteria,
+        feedbackDelayWet: d.feedbackDelayWet_base + bloom * d.feedbackDelayWet_bloom + mold * d.feedbackDelayWet_mold,
+        feedbackDelayFeedback: d.feedbackDelayFeedback_base + mold * d.feedbackDelayFeedback_mold,
+        vibratoWet: d.vibratoWet_base + mold * d.vibratoWet_mold,
+        vibratoDepth: d.vibratoDepth_base + mold * d.vibratoDepth_mold + bacteria * d.vibratoDepth_bacteria,
+        reverbWet: d.reverbWet_base + bloom * d.reverbWet_bloom + mold * d.reverbWet_mold,
+        wowDepth: d.wow_base + mold * d.wow_mold,
+        flutterDepth: d.flutter_base + mold * d.flutter_mold + bacteria * d.flutter_bacteria,
+        releaseScale: 1 + bloom * d.release_bloom + mold * d.release_mold + roots * d.release_roots,
       },
     };
 

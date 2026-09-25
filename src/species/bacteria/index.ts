@@ -40,6 +40,7 @@ import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
 import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
 import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
+import { BACTERIA_DEPTHS, type BacteriaDepths } from './depths.js';
 
 type BacteriaControlState = Record<EcologicalControl, number>;
 
@@ -63,6 +64,7 @@ export class BacteriaSoundWorld implements SoundWorld {
   readonly metadata = BACTERIA_SOUND_WORLD_METADATA;
 
   private polyphonyCap: number | null = null;
+  private depths: BacteriaDepths = { ...BACTERIA_DEPTHS };
   private synth: BacteriaSynthNodes | null = null;
   private effects: BacteriaEffectsNodes | null = null;
   private generator: BacteriaGenerator | null = null;
@@ -157,6 +159,20 @@ export class BacteriaSoundWorld implements SoundWorld {
   setPolyphony(voices: number | null): void {
     this.polyphonyCap = voices;
     this.applyEcologicalControls();
+  }
+
+  /** Lab only (engine 1.3): override control depths live; unknown keys ignored. */
+  setControlDepths(partial: Record<string, number>): void {
+    for (const [key, value] of Object.entries(partial)) {
+      if (key in this.depths && Number.isFinite(value)) {
+        this.depths[key as keyof BacteriaDepths] = value;
+      }
+    }
+    this.applyEcologicalControls();
+  }
+
+  getControlDepths(): Record<string, number> {
+    return { ...this.depths };
   }
 
   applyModulation(frame: SpeciesModulationFrame): void {
@@ -272,38 +288,39 @@ export class BacteriaSoundWorld implements SoundWorld {
       this.synth.sinePoly.maxPolyphony = polyphony;
     }
 
+    const d = this.depths;
     const highpass =
-      BACTERIA_HIGHPASS_HZ * (0.75 + bloom * 0.45) * (1 - roots * 0.18);
-    const filterDepth = 0.18 + bacteria * 0.22 + mold * 0.12;
-    const panRate = 0.06 + bacteria * 0.18 + mold * 0.08;
+      BACTERIA_HIGHPASS_HZ * (d.highpass_base + bloom * d.highpass_bloom) * (1 + roots * d.highpass_roots);
+    const filterDepth = d.filterDepth_base + bacteria * d.filterDepth_bacteria + mold * d.filterDepth_mold;
+    const panRate = d.panRate_base + bacteria * d.panRate_bacteria + mold * d.panRate_mold;
 
-    setRampParam(this.audioStarted, this.synth.fmPoly.volume as unknown as RampParam, Tone.gainToDb(0.12 + growth * 0.18 + bloom * 0.08), rampSec);
-    setRampParam(this.audioStarted, this.synth.sinePoly.volume as unknown as RampParam, Tone.gainToDb(0.14 + growth * 0.12), rampSec);
-    setRampParam(this.audioStarted, this.synth.noiseSynth.volume as unknown as RampParam, -14 + mold * 6 + bacteria * 4, rampSec);
+    setRampParam(this.audioStarted, this.synth.fmPoly.volume as unknown as RampParam, Tone.gainToDb(d.fmLevel_base + growth * d.fmLevel_growth + bloom * d.fmLevel_bloom), rampSec);
+    setRampParam(this.audioStarted, this.synth.sinePoly.volume as unknown as RampParam, Tone.gainToDb(d.sineLevel_base + growth * d.sineLevel_growth), rampSec);
+    setRampParam(this.audioStarted, this.synth.noiseSynth.volume as unknown as RampParam, d.noiseDb_base + mold * d.noiseDb_mold + bacteria * d.noiseDb_bacteria, rampSec);
 
-    const pluckDampening = 4200 + bloom * 2800;
+    const pluckDampening = d.pluckDamp_base + bloom * d.pluckDamp_bloom;
     if (this.gate.changed('pluckDampening', pluckDampening, 20)) {
       this.synth.pluck.set({
         dampening: pluckDampening,
-        resonance: 0.28 + bloom * 0.35,
-        release: 0.05 + bloom * 0.08 + roots * 0.06,
+        resonance: d.pluckRes_base + bloom * d.pluckRes_bloom,
+        release: d.pluckRelease_base + bloom * d.pluckRelease_bloom + roots * d.pluckRelease_roots,
       });
     }
 
     this.performanceBase = {
       highpassHz: highpass,
       filterDepth,
-      panRate: panRate * (1 - roots * 0.35),
+      panRate: panRate * (1 + roots * d.panRate_roots),
       effectLevels: {
-        satWet: 0.06 + mold * 0.2,
-        satDrive: 0.04 + mold * 0.22,
-        pannerDepth: 0.35 + bloom * 0.45 + bacteria * 0.15,
-        pannerRate: 0.14 + bacteria * 0.35 + mold * 0.12,
-        delayWet: 0.08 + bloom * 0.16 + bacteria * 0.08,
-        delayFeedback: 0.12 + mold * 0.28 + bloom * 0.1,
-        roomWet: 0.12 + bloom * 0.28,
-        roomSize: 0.32 + bloom * 0.35,
-        roomDampening: 2800 + bloom * 2200 - roots * 800,
+        satWet: d.satWet_base + mold * d.satWet_mold,
+        satDrive: d.satDrive_base + mold * d.satDrive_mold,
+        pannerDepth: d.pannerDepth_base + bloom * d.pannerDepth_bloom + bacteria * d.pannerDepth_bacteria,
+        pannerRate: d.pannerRate_base + bacteria * d.pannerRate_bacteria + mold * d.pannerRate_mold,
+        delayWet: d.delayWet_base + bloom * d.delayWet_bloom + bacteria * d.delayWet_bacteria,
+        delayFeedback: d.delayFeedback_base + mold * d.delayFeedback_mold + bloom * d.delayFeedback_bloom,
+        roomWet: d.roomWet_base + bloom * d.roomWet_bloom,
+        roomSize: d.roomSize_base + bloom * d.roomSize_bloom,
+        roomDampening: d.roomDamp_base + bloom * d.roomDamp_bloom + roots * d.roomDamp_roots,
       },
     };
 

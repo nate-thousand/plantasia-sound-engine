@@ -36,6 +36,7 @@ import { readSoundWorldContext } from '../../engine/SoundWorldContext.js';
 import type { EngineEventSink } from '../../engine/events/EngineEventBus.js';
 import type { EngineScheduler } from '../../engine/scheduler/EngineScheduler.js';
 import { buildGenerativeCallbacks } from '../../shared/buildGenerativeCallbacks.js';
+import { SEED_DEPTHS, type SeedDepths } from './depths.js';
 
 type SeedControlState = Record<EcologicalControl, number>;
 
@@ -59,6 +60,7 @@ export class SeedSoundWorld implements SoundWorld {
   readonly metadata = SEED_SOUND_WORLD_METADATA;
 
   private polyphonyCap: number | null = null;
+  private depths: SeedDepths = { ...SEED_DEPTHS };
   private synth: SeedSynthNodes | null = null;
   private effects: SeedEffectsNodes | null = null;
   private generator: SeedGenerator | null = null;
@@ -132,6 +134,20 @@ export class SeedSoundWorld implements SoundWorld {
   setPolyphony(voices: number | null): void {
     this.polyphonyCap = voices;
     this.applyEcologicalControls();
+  }
+
+  /** Lab only (engine 1.3): override control depths live; unknown keys ignored. */
+  setControlDepths(partial: Record<string, number>): void {
+    for (const [key, value] of Object.entries(partial)) {
+      if (key in this.depths && Number.isFinite(value)) {
+        this.depths[key as keyof SeedDepths] = value;
+      }
+    }
+    this.applyEcologicalControls();
+  }
+
+  getControlDepths(): Record<string, number> {
+    return { ...this.depths };
   }
 
   applyModulation(frame: SpeciesModulationFrame): void {
@@ -242,26 +258,27 @@ export class SeedSoundWorld implements SoundWorld {
       this.synth.poly.maxPolyphony = polyphony;
     }
 
+    const d = this.depths;
     const filterOpen =
-      SEED_FILTER_HZ * (1 + growth * 0.22 + bloom * 0.12) * (1 - roots * 0.1);
+      SEED_FILTER_HZ * (1 + growth * d.filter_growth + bloom * d.filter_bloom) * (1 + roots * d.filter_roots);
 
-    const driftDepth = 0.1 + mold * 0.08;
+    const driftDepth = d.drift_base + mold * d.drift_mold;
 
     const effectLevels = {
-      tapeWet: 0.1 + mold * 0.22,
-      tapeDrive: 0.1 + mold * 0.2,
-      chorusWet: 0.18 + bloom * 0.35,
-      reverbWet: 0.22 + bloom * 0.42,
-      delayWet: 0.08 + bloom * 0.18,
-      delayFeedback: 0.1 + mold * 0.14,
-      releaseScale: 1 + bloom * 0.45 + roots * 0.2,
+      tapeWet: d.tapeWet_base + mold * d.tapeWet_mold,
+      tapeDrive: d.tapeDrive_base + mold * d.tapeDrive_mold,
+      chorusWet: d.chorusWet_base + bloom * d.chorusWet_bloom,
+      reverbWet: d.reverbWet_base + bloom * d.reverbWet_bloom,
+      delayWet: d.delayWet_base + bloom * d.delayWet_bloom,
+      delayFeedback: d.delayFeedback_base + mold * d.delayFeedback_mold,
+      releaseScale: 1 + bloom * d.release_bloom + roots * d.release_roots,
     };
 
     this.performanceBase = {
       filterHz: filterOpen,
       driftDepth,
       effectLevels,
-      driftLfoRate: bacteria > 0.01 ? 0.04 + bacteria * 0.12 : 0,
+      driftLfoRate: bacteria > 0.01 ? d.driftRate_base + bacteria * d.driftRate_bacteria : 0,
     };
 
     syncGeneratorEcology(this.generator, controls);
