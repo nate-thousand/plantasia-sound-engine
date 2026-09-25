@@ -40,11 +40,18 @@ Decisions table "Decisions after 1.1.0" in ROADMAP.md (21 rows). Done, in decisi
 
 Not done, by design: the sound pass (1.3.0, needs the user's ears, PERFORMANCE.md finding 8 is its input: Mold and Bacteria controls are inaudible on one held note); the signature v1 sound port; the instrument (separate repo and session, starts from `docs/INSTRUMENT_BRIEF.md`). The demo shows no 1.2 feature beyond the Legacy heading; the lab is the 1.2 surface. No iPad pass.
 
+1.2.0 merged, tagged, pushed 2026-09-20; CI browser job green on its first run; sound-engine.xyz and the portfolio case study updated.
+
+## 1.2.1 prepared 2026-09-25 (branch `release/1.2.1`, local commits only)
+
+Decisions table "Decisions on simplicity" in ROADMAP.md (27 rows). All five 1.2.1 items done: README and API.md fold (playing set of seven), demo Playing group with Wheel and Save and recall at the top and a Depth heading over the rest, lab v1 versus species A/B, first sound gate (Node, nineteen gates) and harness row (both browsers pass), instrument brief updated. No engine behaviour change. Verified in the browser: demo Playing group order, wheel route, save and recall with slider sync; lab Play v1 and Play species both audible.
+
 ## Suggested order
 
-1. On the user's ok: merge `release/1.2.0` into `main`, tag `1.2.0`, push. CI runs the browser job for the first time on that push; check it. Deploy follows automatically from `main`.
-2. Start the instrument session from `docs/INSTRUMENT_BRIEF.md`, pinned `#1.2.0`.
-3. The sound pass in the lab with the user: per species control depths, spans, `docs/SOUND.md`; then 1.3.0.
+1. On the user's ok: merge `release/1.2.1` into `main`, tag `1.2.1`, push. CI runs the harness. Deploy follows from `main`.
+2. Start the instrument session from `docs/INSTRUMENT_BRIEF.md`, pinned `#1.2.1`.
+3. 1.3.0: the blind species verdict in the lab (decision 12), then the sound pass with the user, the signature port through the lab's v1 A/B, `docs/SOUND.md`, a phone pass by hand.
+4. 2.0 after the port: v1 removal, the method fold, presets as snapshots, entry points (decisions 11, 17, 20, 27).
 
 ## Rules
 

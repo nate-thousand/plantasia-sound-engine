@@ -57,7 +57,7 @@ export function buildUI(bridge, callbacks) {
     }
   }
 
-  root.appendChild(groupHeading('Public tier (v2)', 'The thirty method surface of plantasia-sound-engine/public: species, ecology, notes, events, analysis, modulation, preferences, MIDI.'));
+  root.appendChild(groupHeading('Depth', 'The rest of the thirty four method surface of plantasia-sound-engine/public: presets, generative preferences, analysis, modulation, MIDI, utilities. Available and additive; not needed for a first instrument.'));
 
   // --- Presets ---
   root.appendChild(createSection('presets', 'Presets', (body) => {
@@ -548,6 +548,129 @@ export function buildUI(bridge, callbacks) {
     bridge.noteOff(mapping.note);
     refs.kbDisplay?.querySelector(`[data-key="${event.key.toLowerCase()}"]`)?.classList.remove('down');
   });
+
+
+  // --- Playing (ROADMAP decisions on simplicity, 8 and 10) ---
+  // The seven a player feels, at the top: species, five sliders, keys, a wheel, save and recall.
+  const SNAPSHOT_KEY = 'plantasia-demo-snapshots';
+  const readSnapshots = () => { try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) ?? '[]'); } catch { return []; } };
+  const writeSnapshots = (list) => localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(list));
+
+  function syncFromEngine() {
+    const engine = bridge.engine;
+    for (const c of ['growth', 'bloom', 'roots', 'mold', 'bacteria']) {
+      const v = engine.getControl(c);
+      bridge.ecology[c] = v;
+      const input = document.getElementById(`eco-${c}`);
+      const out = document.getElementById(`eco-${c}-out`);
+      if (input) input.value = String(Math.round(v * 100));
+      if (out) out.textContent = String(Math.round(v * 100));
+    }
+    const species = engine.getCurrentSpecies();
+    if (species && refs.speciesSelect) refs.speciesSelect.value = species.id;
+    refs.updateSpeciesMeta?.();
+    rebuildLayers();
+    rebuildMacros();
+    bridge.generativeRunning = engine.getState() === 'running';
+  }
+
+  const wheelSection = createSection('wheel', 'Wheel', (body) => {
+    body.appendChild(hint('One route, made once: CC1 to the filter cutoff through engine.modulate(). The slider feeds the engine through feedMidi(); a hardware wheel does the same through Enable MIDI below.'));
+    let routed = false;
+    const r = rangeField('Mod wheel (CC1)', 'wheel-cc1', 0, 127, 1, 0, (v) => {
+      if (!bridge.audioStarted) return;
+      if (!routed) {
+        bridge.engine.modulate({ id: 'wheel', type: 'midi-cc', cc: 1 }, 'target:filterCutoffMult', -0.8);
+        routed = true;
+      }
+      bridge.engine.feedMidi([0xb0, 1, Math.round(v)]);
+    });
+    body.appendChild(r.field);
+  });
+
+  const snapshotsSection = createSection('snapshots', 'Save and recall', (body) => {
+    body.appendChild(hint('engine.getSnapshot() is the whole state as one JSON object: species, controls, tempo, routes, preferences, polyphony. applySnapshot() restores it, with a morph if you give it seconds. Saved in this browser only.'));
+    const row = document.createElement('div');
+    row.className = 'field';
+    const name = document.createElement('input');
+    name.type = 'text'; name.id = 'snap-name'; name.placeholder = 'name'; name.style.marginRight = '8px';
+    const list = document.createElement('select');
+    list.id = 'snap-list'; list.style.marginRight = '8px';
+    const morph = document.createElement('input');
+    morph.type = 'number'; morph.id = 'snap-morph'; morph.min = '0'; morph.max = '30'; morph.step = '0.5'; morph.value = '0'; morph.style.width = '64px';
+    const morphLabel = document.createElement('label');
+    morphLabel.htmlFor = 'snap-morph'; morphLabel.textContent = 'morph s '; morphLabel.style.marginRight = '8px';
+    const json = document.createElement('textarea');
+    json.id = 'snap-json'; json.rows = 4; json.spellcheck = false; json.style.width = '100%'; json.style.marginTop = '8px';
+    const refreshList = () => {
+      list.replaceChildren();
+      for (const snap of readSnapshots()) list.appendChild(new Option(snap.name, snap.name));
+    };
+    refreshList();
+    const status = (msg, kind) => callbacks.onStatus(msg, kind);
+    row.append(name, list, morphLabel, morph);
+    body.appendChild(row);
+    body.appendChild(buttonRow([
+      { label: 'Save', id: 'snap-save', onClick: () => {
+        if (!bridge.audioStarted) { status('Start Audio first', 'error'); return; }
+        try {
+          const snapshot = bridge.engine.getSnapshot();
+          const label = name.value.trim() || `${snapshot.speciesId} ${new Date().toLocaleTimeString()}`;
+          const saved = readSnapshots().filter((s) => s.name !== label);
+          saved.push({ name: label, snapshot });
+          writeSnapshots(saved);
+          refreshList();
+          list.value = label;
+          json.value = JSON.stringify(snapshot, null, 2);
+          status(`Saved "${label}"`);
+        } catch (error) { status(error.message, 'error'); }
+      }},
+      { label: 'Recall', id: 'snap-recall', onClick: async () => {
+        if (!bridge.audioStarted) { status('Start Audio first', 'error'); return; }
+        const entry = readSnapshots().find((s) => s.name === list.value);
+        if (!entry) { status('Nothing saved', 'error'); return; }
+        try {
+          const morphSec = Number(morph.value) || 0;
+          const done = bridge.engine.applySnapshot(entry.snapshot, morphSec > 0 ? { morphSec } : undefined);
+          json.value = JSON.stringify(entry.snapshot, null, 2);
+          status(morphSec > 0 ? `Morphing to "${entry.name}" over ${morphSec} s` : `Recalled "${entry.name}"`);
+          syncFromEngine();
+          await done;
+          syncFromEngine();
+        } catch (error) { status(error.message, 'error'); }
+      }},
+      { label: 'Delete', id: 'snap-delete', onClick: () => {
+        writeSnapshots(readSnapshots().filter((s) => s.name !== list.value));
+        refreshList();
+      }},
+      { label: 'Copy JSON', id: 'snap-copy', onClick: async () => {
+        if (!bridge.audioStarted) { status('Start Audio first', 'error'); return; }
+        try {
+          json.value = JSON.stringify(bridge.engine.getSnapshot(), null, 2);
+          await navigator.clipboard.writeText(json.value);
+          status('Snapshot JSON copied');
+        } catch { json.select(); }
+      }},
+      { label: 'Apply JSON', id: 'snap-apply', onClick: async () => {
+        if (!bridge.audioStarted) { status('Start Audio first', 'error'); return; }
+        try {
+          await bridge.engine.applySnapshot(JSON.parse(json.value));
+          syncFromEngine();
+          status('Snapshot applied');
+        } catch (error) { status(`${error.name}: ${error.message}`, 'error'); }
+      }},
+    ]));
+    body.appendChild(json);
+  });
+
+  const playing = document.createElement('div');
+  playing.id = 'playing';
+  playing.appendChild(groupHeading('Playing', 'An instrument that plays itself and answers you. The seven methods a player feels: loadSpecies, start, noteOn and noteOff, setControl, modulate, applySnapshot. Everything below is depth.'));
+  const byId = (id) => root.querySelector(`section[data-section-id="${id}"]`);
+  for (const section of [byId('sound-worlds'), byId('ecology'), byId('keyboard'), wheelSection, snapshotsSection]) {
+    if (section) playing.appendChild(section);
+  }
+  root.insertBefore(playing, root.firstChild);
 
   return {
     refs,

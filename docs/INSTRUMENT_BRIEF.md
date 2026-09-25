@@ -8,21 +8,21 @@ A played instrument: a keyboard or pad surface, a mod wheel, a species switch, o
 
 ## Where the engine is
 
-Version `1.1.0`, tag `1.1.0` on `github.com/nate-thousand/plantasia-sound-engine`. Pin that tag:
+Version `1.2.1`, tag `1.2.1` on `github.com/nate-thousand/plantasia-sound-engine`. Pin that tag:
 
 ```json
-"plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.1.0"
+"plantasia-sound-engine": "github:nate-thousand/plantasia-sound-engine#1.2.1"
 ```
 
 Installing from git runs the engine's `prepare` build, so TypeScript is installed alongside. Never pin `v2.0.0`; it is a retired architecture tag.
 
 The `create-plantasonic-app` instrument template in plantasonic-platform declares the engine as `workspace:*` together with the platform SDK, design system and visual engine. A standalone repo replaces that one line with the pin above. Whether the SDK and design system come along, and how, is the instrument session's call; the engine has no dependency on either.
 
-Four species ship: Seed, Flowers, Mold, Bacteria. Each has its own graph, its own generator and its own reading of the five ecology controls. All four take played notes.
+Four species ship: Seed, Flowers, Mold, Bacteria. Each has its own graph, its own generator and its own reading of the five ecology controls. All four take played notes. Lead with Seed and Flowers; Mold and Bacteria are under review by ear before the 1.3 sound pass (ROADMAP decisions on simplicity, 6 and 12).
 
 ## The public surface
 
-Import from `plantasia-sound-engine/public`. Thirty methods, documented on one page in [API.md](./API.md). Six of them are the instrument:
+Import from `plantasia-sound-engine/public`. Thirty four methods, documented on one page in [API.md](./API.md). Seven of them are the instrument, the playing set:
 
 | Method | What it does for a player |
 | --- | --- |
@@ -32,8 +32,9 @@ Import from `plantasia-sound-engine/public`. Thirty methods, documented on one p
 | `noteOn(note, velocity)` and `noteOff(note)` | The keys. Scientific pitch (`'E3'`), velocity 0..1. 12 ms to audible in Chromium, 14 ms in WebKit |
 | `setControl(control, value)` | Five ecology sliders, 0..1: `growth`, `bloom`, `roots`, `mold`, `bacteria`. Ramps over about 200 ms |
 | `modulate(source, destination, depth)` | The mod wheel, aftertouch and pitch bend, routed to a control or a performance target |
+| `applySnapshot(snapshot, { morphSec? })` | Save and recall. `getSnapshot()` returns the whole state as one JSON object: species, controls, tempo, routes, preferences, polyphony cap. Apply it back in one call, with a timed morph if you want one. This is how patches work |
 
-The rest of the thirty: `stop`, `dispose`, `getState`, `allNotesOff`, `getControl`, `setTempo`, `loadDefaultSpecies`, `loadPreset`, `getCurrentSpecies`, `getAvailableSpecies`, `registerSpecies`, `on`, `off`, `getAudioFeatures`, `getWaveform`, `getLevel`, `removeModulation`, `getModulationRoutes`, `getModulationState`, `setGenerativePreferences`, `getGenerativePreferences`, `enableMidi`.
+The rest of the thirty four: `stop`, `dispose`, `getState`, `allNotesOff`, `getControl`, `setTempo`, `loadDefaultSpecies`, `loadPreset`, `getCurrentSpecies`, `getAvailableSpecies`, `registerSpecies`, `on`, `off`, `getAudioFeatures`, `getWaveform`, `getLevel`, `getSnapshot`, `removeModulation`, `getModulationRoutes`, `getModulationState`, `setGenerativePreferences`, `getGenerativePreferences`, `setPolyphony`, `getPolyphony`, `enableMidi(inputId?)`.
 
 ## Two stories to build first
 
@@ -52,14 +53,17 @@ Without a MIDI controller the instrument feeds its own wheel through the root ex
 
 `getAudioFeatures()` per frame: `rms`, `peak`, `bass`, `mid`, `high`, `centroid`, `onset`. `getWaveform()` for a scope. Every event carries `time` in AudioContext seconds: `notePlayed`, `noteReleased`, `controlChanged`, `speciesChanged`, `onset`, `modulationChanged`, `midiControl`.
 
-## What is coming in 1.2
+## What is coming
 
-Not there yet; do not wait for it, but do not build around its absence either:
+Do not wait for it, but do not build around its absence either:
 
-- `getSnapshot()` and `applySnapshot(snapshot, { morphSec? })`: the whole engine state as one JSON object, with a timed morph between two. This is how the instrument will save and recall patches.
-- `enableMidi(inputId)` to pick one MIDI input.
-- `setPolyphony(n)` and `getPolyphony()`, the CPU knob for phones.
-- A 1.3.0 sound pass will change how every control sounds on every species. Build the UI on the control names, not on what they do today.
+- 1.3.0 is a sound pass: it will change how every control sounds on every species, and may hold a species back until it passes a blind test. Build the UI on the control names, not on what they do today.
+- 2.0 removes the v1 preset path, folds a few methods (`loadPreset` becomes `applySnapshot(presets.bloom)`), and moves the public tier to the package root. Old names stay one release as aliases.
+- `setPolyphony(n)` exists now and is the CPU knob for phones; use it before optimising anything else.
+
+## The player test
+
+The instrument is accepted by a stranger, not by its author (ROADMAP decisions on simplicity, 13 and 21). On the first build: the first person who is not you, five minutes, nothing explained. Two passes, the sliders unlabelled and then labelled. After each pass, three questions: what did the sliders do, which sound was which, would you keep going. Write the answers down verbatim and file each one that touches the engine as an issue on the engine repo. If the unlabelled pass names a slider better than growth, bloom, roots, mold or bacteria, say so; that is a candidate name for 2.0.
 
 ## Rules
 

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -141,4 +141,19 @@ test('control audibility', async ({ page, browserName }) => {
   mkdirSync(join(process.cwd(), 'bench', 'results'), { recursive: true });
   writeFileSync(join(process.cwd(), 'bench', 'results', `${browserName}-audibility.json`), JSON.stringify(result, null, 2));
   expect(errors, 'no page errors').toEqual([]);
+});
+
+/** Decision 15 on simplicity: the README's first block makes sound, in six lines or fewer. Blocks. */
+test('first sound from the README', async ({ page, browserName }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(String(err)));
+  const readme = readFileSync(join(process.cwd(), 'README.md'), 'utf8');
+  const snippet = readme.match(/```typescript\n([\s\S]*?)```/)[1];
+  await page.goto('/');
+  await page.click('#unlock', { trial: true });
+  const result = await page.evaluate((s) => window.bench.runFirstSound(s), snippet);
+  console.log(`[${browserName}] first sound from the README: ${result.lines} lines, audible after ${result.audibleMs === null ? 'never' : `${result.audibleMs.toFixed(0)} ms`}`);
+  expect(errors, 'no page errors').toEqual([]);
+  expect(result.lines, 'six lines to first sound').toBeLessThanOrEqual(6);
+  expect(result.audibleMs, 'the snippet makes sound').not.toBeNull();
 });

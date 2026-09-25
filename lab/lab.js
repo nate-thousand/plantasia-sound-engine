@@ -4,7 +4,7 @@
  * the species ramp on or off, species A/B, a span editor that emits JSON, and
  * the analyser bands. Runs against the built dist on the root export.
  */
-import { PlantasiaEngine, ECOLOGICAL_CONTROLS, MODULATABLE_TARGETS, MODULATION_TARGET_SPANS } from 'plantasia-sound-engine';
+import { PlantasiaEngine, ECOLOGICAL_CONTROLS, MODULATABLE_TARGETS, MODULATION_TARGET_SPANS, presets, resolvePresetToSpecies } from 'plantasia-sound-engine';
 import * as Tone from 'tone';
 
 const $ = (id) => document.getElementById(id);
@@ -176,6 +176,55 @@ async function runMeasure() {
 }
 
 // ---------------------------------------------------------------------------
+// Signature port: v1 chain against the species it maps to (decision 18)
+
+const V1_CHORD = ['C3', 'G3', 'B3']; // what the v1 chain plays after applying a preset
+
+async function playV1(presetId) {
+  await unlock();
+  const preset = presets.find((p) => p.id === presetId);
+  if (!preset) return;
+  release();
+  if (state.species) {
+    engine.stop();
+    state.species = null;
+    setStatus('v1 chain');
+  }
+  engine.playPreset(preset);
+  const res = safeResolve(presetId);
+  $('portOut').textContent = `v1: ${preset.name} (${preset.id})` + (res ? `\nmaps to ${res.speciesId} at ${JSON.stringify(res.ecology)}` : '\nno species mapping');
+}
+
+function safeResolve(presetId) {
+  try { return resolvePresetToSpecies(presetId); } catch { return null; }
+}
+
+async function playPort(presetId) {
+  await unlock();
+  const res = safeResolve(presetId);
+  if (!res) { $('portOut').textContent = `no species mapping for ${presetId}`; return; }
+  engine.stop();
+  setStatus(`loading ${res.speciesId} from ${presetId}`);
+  await engine.loadPreset(presetId);
+  await engine.start({ generative: false });
+  state.species = res.speciesId;
+  $('species').value = res.speciesId;
+  setStatus(`${res.speciesId} running, played, from preset ${presetId}`);
+  hold(V1_CHORD);
+  const c = $('control').value;
+  $('controlValue').value = String(engine.getControl(c));
+  $('controlReadout').textContent = engine.getControl(c).toFixed(2);
+  $('portOut').textContent = `species: ${res.speciesId} from ${presetId}, ecology ${JSON.stringify(res.ecology)}, chord ${V1_CHORD.join(' ')}`;
+}
+
+function stopV1() {
+  release();
+  engine.stop();
+  state.species = null;
+  setStatus('stopped');
+}
+
+// ---------------------------------------------------------------------------
 // Spans
 
 function renderSpans() {
@@ -330,6 +379,10 @@ function init() {
   });
   $('measure').addEventListener('click', () => runMeasure().catch((e) => ($('measureOut').textContent = String(e))));
 
+  fillSelect($('v1preset'), presets.map((p) => ({ value: p.id, label: `${p.name} (${p.id})` })), presets[0]?.id);
+  $('playV1').addEventListener('click', () => playV1($('v1preset').value).catch((e) => setStatus(String(e))));
+  $('playPort').addEventListener('click', () => playPort($('v1preset').value).catch((e) => setStatus(String(e))));
+  $('stopV1').addEventListener('click', stopV1);
   $('playA').addEventListener('click', () => loadSpecies($('speciesA').value).catch((e) => setStatus(String(e))));
   $('playB').addEventListener('click', () => loadSpecies($('speciesB').value).catch((e) => setStatus(String(e))));
 

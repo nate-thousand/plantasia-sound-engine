@@ -41,6 +41,7 @@ The `browser` job in `.github/workflows/ci.yml` runs the same suite in Chromium 
 | Control extremes | Every species at all controls 0, all controls 1, and each control alone at 0 and at 1 with the rest at 0.5: `loadSpecies`, `start({ generative: false })`, a held note, then every control flipped across its range on the live graph. 48 runs | no throw, no page error | yes |
 | Snapshot morph | Seed generative at bloom 0.2, roots 0.8; `applySnapshot` to a Flowers snapshot at other controls and 96 BPM with `morphSec: 5`; the long run detector counts dropouts for the morph plus one second, under the 8 ms mock load | 0 dropouts, ends on the target species | yes |
 | Snapshot switch | From silence in played mode, `applySnapshot` to the other species, then `noteOn`; time until the promise resolves (ready) and until the first audible sample on the master bus. Three runs alternating Seed and Flowers | recorded | no |
+| First sound from the README | The README's first TypeScript block, rewritten only to replace the import, runs in the bench page; time from its first line to the first audible sample on the master bus, including audio unlock and graph build | six statements or fewer, and it makes sound | yes |
 | Control audibility | `abControls` for every species: each control held at 0.1 twice (A/A) and at 0.95 (A/B) on a held `E3`, 1 s averages of six features after 0.8 s settle. A control clears when some feature's A/B difference is more than twice its A/A noise and above 0.005 | recorded until the sound pass sets the depths; then every control on every species clears on at least one feature | no |
 
 ## Size
@@ -93,6 +94,8 @@ Same machine, release/1.2.0 after snapshot and morph. Full release check, 60 s l
 | --- | --- | --- | --- | --- | --- |
 | Chromium 153 | 48 runs, 0 failures | 0 | 59.5 | 88, 61, 119 ms | 116, 71, 145 ms |
 | WebKit 26.6 | 48 runs, 0 failures | 0 | 59.2 | 52, 58, 94 ms | 80, 68, 123 ms |
+
+First sound from the README (1.2.1): 6 lines, audible after 138 ms in Chromium and 155 ms in WebKit.
 
 Control audibility, A/B over A/A on a held `E3`, features that clear per control:
 

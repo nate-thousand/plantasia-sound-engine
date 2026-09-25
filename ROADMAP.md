@@ -116,7 +116,7 @@ A grill on "what this is and how to make it simpler and better" closed with thes
 
 | Item | Value |
 |------|-------|
-| **Package version (package.json)** | `1.2.0` |
+| **Package version (package.json)** | `1.2.1` |
 | **Honest integration target** | `1.2.0`: snapshots and morph, polyphony cap, MIDI input select, CI harness, size gate, v1 deprecated |
 | **Production branch** | `main` (from 1.0.0; `v2-sound-world-engine` merges in at that tag) |
 | **Development branch until 1.0.0** | `v2-sound-world-engine` |
@@ -145,7 +145,8 @@ Phases 17–21 deliver a host-safe unified facade, lifecycle enforcement, semant
 | `1.0.0-beta.2` | Master bus analysis, Bacteria recursion fix, demo control surface |
 | `1.0.0` | Analysis API, event timing, performance harness, two tier facade, placeholder species removed |
 | `1.1.0` | Modulation engine, MIDI CC, aftertouch and bend, generative preferences, thirty method public tier |
-| `1.2.0` | **Current**: snapshots and morph, polyphony cap, `enableMidi(inputId)`, CI harness, size gate, lab page, v1 deprecated, thirty four method public tier |
+| `1.2.0` | Snapshots and morph, polyphony cap, `enableMidi(inputId)`, CI harness, size gate, lab page, v1 deprecated, thirty four method public tier |
+| `1.2.1` | **Current**: the simplicity release: playing set of seven, docs fold, demo Playing group with save and recall, lab v1 versus species A/B, six line first sound gate, instrument brief for the tag |
 
 **Plantasonic should pin:** `1.1.0`, not `v2.0.0`.
 

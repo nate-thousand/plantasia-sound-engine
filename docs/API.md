@@ -1,8 +1,8 @@
 # Public API
 
-The public tier of Plantasia Sound Engine: what a host builds on. One page, thirty four methods, the shipped presets, the events and features they produce.
+An instrument that plays itself and answers you. This page is the public tier of Plantasia Sound Engine, what a host builds on: seven methods for playing, twenty seven more for depth, the shipped presets, the events and features they produce. One page.
 
-Version `1.2.0`. Pin a tag, not `v2.0.0`.
+Version `1.2.1`. Pin a tag, not `v2.0.0`.
 
 ```typescript
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
@@ -10,7 +10,35 @@ import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
 
 The root export (`plantasia-sound-engine`) returns the same engine instance with the legacy v1 preset methods and engine internals on top. See [Root export](#root-export) and [API_V1.md](./API_V1.md). Species authors: [CREATING_A_SPECIES.md](./CREATING_A_SPECIES.md). Lifecycle detail: [LIFECYCLE.md](./LIFECYCLE.md).
 
-## Quick start
+## Playing
+
+The seven a player feels. Six lines to the first sound; a build gate keeps it at six.
+
+```typescript
+import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
+
+const engine = createPlantasiaEngine();
+await engine.init();               // from a user gesture
+await engine.loadSpecies('seed');
+await engine.start();
+engine.noteOn('C4', 0.8);
+```
+
+| Method | What it does for a player |
+| --- | --- |
+| `init()` | Unlocks audio. Call it from the first touch |
+| `loadSpecies(id)` | Picks the sound: `seed`, `flowers`, `mold`, `bacteria`. The species composes on its own once started |
+| `start(options?)` | Runs it. `{ generative: false }` for a played instrument with the generator off |
+| `noteOn(note, velocity?)` and `noteOff(note)` | The keys. Scientific pitch, velocity 0..1, about 12 ms to sound |
+| `setControl(control, value)` | The five sliders, 0..1: `growth`, `bloom`, `roots`, `mold`, `bacteria` |
+| `modulate(source, destination, depth)` | The wheel: a MIDI CC, aftertouch, bend, LFO or follower to any control or performance target |
+| `applySnapshot(snapshot, options?)` | Save and recall: the whole state as one JSON object from `getSnapshot()`, with an optional morph |
+
+Everything below is depth: available, additive, and not needed for the first instrument.
+
+## Everything else
+
+### Quick start, with visuals
 
 ```typescript
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
@@ -36,9 +64,9 @@ function frame() {
 
 A played instrument with no generator: `await engine.start({ generative: false })`, then `noteOn` and `noteOff` from your keyboard or `enableMidi()`.
 
-## Methods
+### Methods
 
-### Lifecycle
+#### Lifecycle
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -54,7 +82,7 @@ A played instrument with no generator: `await engine.start({ generative: false }
 
 `noteOn` and `start` throw `EngineLifecycleError` (`code`: `NO_SPECIES_LOADED`, `ENGINE_NOT_STARTED`, `ENGINE_DISPOSED`) when called in the wrong state. `stop` and `allNotesOff` never throw.
 
-### Notes
+#### Notes
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -64,7 +92,7 @@ A played instrument with no generator: `await engine.start({ generative: false }
 
 noteOn to audible is measured at 12 ms in Chromium ([PERFORMANCE.md](./PERFORMANCE.md)).
 
-### Ecology
+#### Ecology
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -84,7 +112,7 @@ The five controls, exported as `ECOLOGICAL_CONTROLS`:
 
 Each species interprets them in its own character. Controls ramp over about 200 ms.
 
-### Species
+#### Species
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -92,7 +120,7 @@ Each species interprets them in its own character. Controls ramp over about 200 
 | `getAvailableSpecies` | `() => SoundWorldMetadata[]` | `seed`, `flowers`, `mold`, `bacteria` plus anything registered |
 | `registerSpecies` | `(factory: () => SoundWorld) => void` | Ids must not collide with the built in set (`ReservedSpeciesIdError`). Contract in [CREATING_A_SPECIES.md](./CREATING_A_SPECIES.md) |
 
-### Events and analysis
+#### Events and analysis
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -102,7 +130,7 @@ Each species interprets them in its own character. Controls ramp over about 200 
 | `getWaveform` | `() => Float32Array` | 1024 samples, -1..1 |
 | `getLevel` | `() => number` | 0..1 from a -60 dB floor |
 
-### Modulation (1.1)
+#### Modulation (1.1)
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -124,7 +152,7 @@ Sources are plain descriptors. The same `id` used in two routes is one source.
 
 `beats` rates sync to the transport BPM and reset phase on `transport.play()`; `hz` runs free. Destinations are a control name (`'bloom'`) or `target:<name>` for the thirteen numeric performance targets. Depth is -1..1: a control becomes `clamp01(base + depth × source)`; a target gets `depth × source × span` added, spans in `MODULATION_TARGET_SPANS` (`filterCutoffMult` 0.5 means ×0.5 to ×1.5 at full depth). `legato` is not a destination. Routes tick at 30 Hz while the engine is `running`, survive a species switch, and a route to a target the loaded species ignores is a silent no op. `ModulationRouteError` is thrown for unknown destinations or a source id reused with another type.
 
-### Generative preferences (1.1)
+#### Generative preferences (1.1)
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -133,7 +161,7 @@ Sources are plain descriptors. The same `id` used in two routes is one source.
 
 Fields: `preferredScale`, `alternateScale`, `chordVoicings`, `phraseLength`, `probabilityBias`, `dronePreference`, `harmonyStyle`, `rhythmStyle`, `preferredTempo`, `preferredDensity`. Tempo, density, probability bias and drone preference apply now; the rest land at the next phrase boundary so a phrase in flight is not broken.
 
-### Snapshots (1.2)
+#### Snapshots (1.2)
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -157,7 +185,7 @@ What `applySnapshot` does, in order: replaces every route, replaces the preferen
 
 `SnapshotError.code` is `UNSUPPORTED_VERSION`, `UNKNOWN_SPECIES` or `INVALID` (a control outside 0..1, a tempo at or below 0, a malformed route, a polyphony outside 1..64). A version 1 snapshot from 1.2.0 applies on every later 1.x.
 
-### Voices (1.2)
+#### Voices (1.2)
 
 | Method | Signature | Notes |
 | --- | --- | --- |
@@ -166,7 +194,7 @@ What `applySnapshot` does, in order: replaces every route, replaces the preferen
 
 A host's CPU knob on a phone. The species maxima are Seed 8, Flowers 10, Mold 6, Bacteria 16.
 
-### Input
+#### Input
 
 | Method | Signature | Notes |
 | --- | --- | --- |
