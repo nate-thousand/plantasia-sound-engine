@@ -51,6 +51,32 @@ async function main() {
 
   assert(notes.length >= 0, 'generator runs without error');
 
+  // 1.2.2 (issue #1): a species callback that throws is logged and skipped;
+  // the release still fires so no voice hangs, and nothing reaches the host.
+  let releases = 0;
+  let warnings = 0;
+  const warn = console.warn;
+  console.warn = () => { warnings += 1; };
+  const throwing = new Generator(SEED_GENERATIVE_PREFERENCES, {
+    noteOn: () => { throw new Error('species threw'); },
+    noteOff: () => { releases += 1; },
+  });
+  throwing.setEcology({ growth: 0 });
+  throwing.start(72);
+  let escaped = false;
+  try {
+    throwing.triggerAtNote('E3', 0.9);
+  } catch {
+    escaped = true;
+  }
+  await new Promise((r) => setTimeout(r, 600));
+  throwing.stop();
+  throwing.dispose();
+  console.warn = warn;
+  assert(!escaped, 'a throwing noteOn does not escape dispatch');
+  assert(warnings >= 1, 'the guard logs the throw');
+  assert(releases >= 1, 'noteOff still fires after a guarded noteOn');
+
   console.info('[test-generative-engine] OK — generative ecosystem validated');
 }
 

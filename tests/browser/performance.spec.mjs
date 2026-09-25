@@ -157,3 +157,29 @@ test('first sound from the README', async ({ page, browserName }) => {
   expect(result.lines, 'six lines to first sound').toBeLessThanOrEqual(6);
   expect(result.audibleMs, 'the snippet makes sound').not.toBeNull();
 });
+
+/** 1.2.2: generative mode on every species, swarm controls up, a host burst of five notes in one tick, throws nothing. Blocks. */
+test('generative mode runs clean on every species', async ({ page, browserName }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(String(err)));
+  await page.goto('/');
+  await page.click('#unlock', { trial: true });
+  const result = await page.evaluate(() => window.bench.runGenerative({ seconds: 4 }));
+  for (const r of result) console.log(`[${browserName}] ${r.species} generative ${r.seconds} s: ${r.generated} generated notes`);
+  expect(errors, 'no page errors').toEqual([]);
+  const bacteria = result.find((r) => r.species === 'bacteria');
+  expect(bacteria?.generated ?? 0, 'bacteria generated notes').toBeGreaterThan(0);
+});
+
+/** 1.2.2, issue #1: three noise particles and three impulses in one tick start without a throw. Blocks. */
+test('a burst of bacteria particles in one tick throws nothing', async ({ page, browserName }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(String(err)));
+  await page.goto('/');
+  await page.click('#unlock', { trial: true });
+  const result = await page.evaluate(() => window.bench.probeParticleBurst({ rounds: 5 }));
+  console.log(`[${browserName}] particle burst: ${result.rounds} rounds, ${result.failures.length} failures`);
+  for (const f of result.failures) console.log(`[${browserName}]   round ${f.round} ${f.type} hit ${f.hit}: ${f.error}`);
+  expect(errors, 'no page errors').toEqual([]);
+  expect(result.failures, 'no particle start throws').toEqual([]);
+});
