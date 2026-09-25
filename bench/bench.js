@@ -12,6 +12,7 @@
  */
 import { createPlantasiaEngine, getMasterBus } from 'plantasia-sound-engine';
 import * as Tone from 'tone';
+import { createBacteriaSynth, disposeBacteriaSynth, triggerBacteriaParticle } from '../dist/species/bacteria/synth.js';
 
 const out = document.getElementById('out');
 const log = (line) => {
@@ -786,3 +787,68 @@ async function runFirstSound(snippet) {
   return { audibleMs, lines: body.split('\n').filter((l) => l.replace(/\/\/.*$/, '').trim()).length };
 }
 window.bench.runFirstSound = runFirstSound;
+
+/**
+ * 1.2.2: every species runs generative mode for a few seconds with a host
+ * burst on top (five notes in one tick, twice) and the swarm controls up.
+ * Bacteria's noise particle used to trip Tone's "start time must be strictly
+ * greater" assertion here. Page errors are the harness's to catch; this
+ * returns how many notes each species generated so the row can tell a clean
+ * run from a silent one.
+ */
+async function runGenerative({ species, seconds = 4 } = {}) {
+  await unlockAudio();
+  const engine = createPlantasiaEngine();
+  const ids = species ?? engine.getAvailableSpecies().map((m) => m.id);
+  const BURST = ['C3', 'E3', 'G3', 'B3', 'D4'];
+  const results = [];
+  for (const id of ids) {
+    let generated = 0;
+    const off = engine.on('notePlayed', (e) => {
+      if (e.source !== 'host') generated += 1;
+    });
+    await engine.loadSpecies(id);
+    engine.setControl('bacteria', 1);
+    engine.setControl('mold', 1);
+    await engine.start({ generative: true });
+    for (let i = 0; i < 2; i += 1) {
+      for (const n of BURST) engine.noteOn(n, 0.9);
+      await wait(120);
+      for (const n of BURST) engine.noteOff(n);
+      await wait(seconds * 500 - 120);
+    }
+    engine.stop();
+    off();
+    results.push({ species: id, seconds, generated });
+  }
+  engine.dispose();
+  return results;
+}
+window.bench.runGenerative = runGenerative;
+
+/**
+ * 1.2.2, the mechanism behind issue #1 on its own: three noise particles and
+ * three impulses handed to the same tick, for a few rounds. Before the fix the
+ * second start of each threw Tone's "strictly greater" assertion. Errors come
+ * back as data, not page errors, so the row can name which particle failed.
+ */
+async function probeParticleBurst({ rounds = 5 } = {}) {
+  await unlockAudio();
+  const nodes = createBacteriaSynth();
+  const failures = [];
+  for (let round = 0; round < rounds; round += 1) {
+    for (const type of ['noise', 'impulse']) {
+      for (let hit = 0; hit < 3; hit += 1) {
+        try {
+          triggerBacteriaParticle(nodes, type, 'E5', 0.5);
+        } catch (error) {
+          failures.push({ round, type, hit, error: String(error?.message ?? error) });
+        }
+      }
+    }
+    await wait(50);
+  }
+  disposeBacteriaSynth(nodes);
+  return { rounds, failures };
+}
+window.bench.probeParticleBurst = probeParticleBurst;

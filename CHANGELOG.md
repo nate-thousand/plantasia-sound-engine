@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-09-25
+
+A patch for the first bug the instrument found (issue #1). No API change.
+
+### Fixed
+
+- **Bacteria generative mode threw an uncaught error from the noise particle.** `BacteriaSynthNodes.noiseSynth` is one monophonic `Tone.NoiseSynth`, and `triggerBacteriaParticle` started it at `now()` every time, so when the swarm handed two noise particles to the same tick Tone's `Source.start` assertion fired ("Start time must be strictly greater than previous start time") and escaped the scheduler tick into the host. The noise synth and the pluck (the same shape, one `Noise` inside `PluckSynth`) now remember their last start and space a colliding particle by `BACTERIA_PARTICLE_MIN_GAP` (1 ms)
+- **A species callback that throws no longer reaches the host as an uncaught error.** `Generator` runs `noteOn` and `onGlitch` through a guard that logs `[Plantasia generator] ... threw` and carries on; the release timer still runs so no voice hangs
+
+### Added
+
+- Harness row `generative mode runs clean on every species` (blocks): every species runs generative mode for four seconds with bacteria and mold at 1 and a host burst of five notes in one tick, twice; no page errors, and Bacteria must generate notes. `window.bench.runGenerative` on the bench page
+- Harness row `a burst of bacteria particles in one tick throws nothing` (blocks): three noise particles and three impulses handed to one tick, five rounds, in both browsers. Fails 15 of 30 starts on 1.2.1 and none on 1.2.2. `window.bench.probeParticleBurst` on the bench page
+
 ## [1.2.1] - 2026-09-25
 
 The simplicity release (ROADMAP "Decisions on simplicity"). No engine behaviour changes. The surface is folded so what a host reads first is the seven methods a player feels; the demo opens on them with save and recall; the lab can A/B the v1 chain against the species it maps to; six lines to the first sound is now a gate in Node and a row in the browser harness; the instrument brief describes the tag that exists.
