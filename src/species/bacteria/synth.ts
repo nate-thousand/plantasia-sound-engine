@@ -29,6 +29,13 @@ export const BACTERIA_PAN_DRIFT_RATE = 0.09;
 
 export const BACTERIA_MAX_POLYPHONY = 16;
 
+/**
+ * The noise synth and the pluck each own one Tone source, and a source asserts
+ * that every start is strictly later than the one before. A swarm burst hands
+ * the same tick to several particles, so starts are spaced by this many seconds.
+ */
+export const BACTERIA_PARTICLE_MIN_GAP = 0.001;
+
 export type BacteriaParticleType = 'noise' | 'fm' | 'sine' | 'impulse';
 
 export type BacteriaSynthNodes = {
@@ -41,6 +48,8 @@ export type BacteriaSynthNodes = {
   panner: Tone.Panner;
   filterDriftLfo: Tone.LFO;
   panDriftLfo: Tone.LFO;
+  /** Last start handed to each single source synth, in context seconds. */
+  lastStart: { noise: number; impulse: number };
 };
 
 export function createBacteriaSynth(): BacteriaSynthNodes {
@@ -139,6 +148,7 @@ export function createBacteriaSynth(): BacteriaSynthNodes {
     panner,
     filterDriftLfo,
     panDriftLfo,
+    lastStart: { noise: -1, impulse: -1 },
   };
 }
 
@@ -156,6 +166,12 @@ export function disposeBacteriaSynth(nodes: BacteriaSynthNodes): void {
   nodes.panner.dispose();
 }
 
+/** The requested time, or the next free slot after the source's previous start. */
+function strictlyAfter(last: number, time: number | undefined): number {
+  const wanted = time ?? Tone.now();
+  return wanted > last ? wanted : last + BACTERIA_PARTICLE_MIN_GAP;
+}
+
 export function triggerBacteriaParticle(
   nodes: BacteriaSynthNodes,
   type: BacteriaParticleType,
@@ -165,18 +181,24 @@ export function triggerBacteriaParticle(
 ): void {
   const v = Math.max(0.05, Math.min(1, velocity));
   switch (type) {
-    case 'noise':
-      nodes.noiseSynth.triggerAttackRelease(0.02 + Math.random() * 0.05, time, v * 0.6);
+    case 'noise': {
+      const at = strictlyAfter(nodes.lastStart.noise, time);
+      nodes.lastStart.noise = at;
+      nodes.noiseSynth.triggerAttackRelease(0.02 + Math.random() * 0.05, at, v * 0.6);
       break;
+    }
     case 'fm':
       nodes.fmPoly.triggerAttackRelease(note, 0.04 + Math.random() * 0.06, time, v * 0.55);
       break;
     case 'sine':
       nodes.sinePoly.triggerAttackRelease(note, 0.05 + Math.random() * 0.08, time, v * 0.5);
       break;
-    case 'impulse':
-      nodes.pluck.triggerAttack(note, time);
+    case 'impulse': {
+      const at = strictlyAfter(nodes.lastStart.impulse, time);
+      nodes.lastStart.impulse = at;
+      nodes.pluck.triggerAttack(note, at);
       break;
+    }
     default:
       break;
   }

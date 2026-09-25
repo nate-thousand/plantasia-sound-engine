@@ -216,7 +216,7 @@ export class Generator {
 
     if (probability.roll('glitch', ecology, prefs, memory)) {
       const intensity = ecology.mold * 0.5 + ecology.bacteria * 0.35;
-      this.callbacks.onGlitch?.(intensity);
+      this.guard('onGlitch', () => this.callbacks.onGlitch?.(intensity));
       this.emitGeneratorEvent('glitch', { intensity });
     }
 
@@ -285,13 +285,26 @@ export class Generator {
     this.dispatch(emits);
   }
 
+  /**
+   * A species callback that throws must not become an uncaught error in the
+   * host, thrown from a scheduler tick nobody can catch. The event is logged
+   * and the phrase carries on; the release timer still runs so nothing hangs.
+   */
+  private guard(name: string, fn: () => void): void {
+    try {
+      fn();
+    } catch (error) {
+      console.warn(`[Plantasia generator] ${name} threw; the event is skipped`, error);
+    }
+  }
+
   private dispatch(emits: GenerativeNoteEmit[]): void {
     for (const emit of emits) {
       const play = () => {
         if (!this.running) {
           return;
         }
-        this.callbacks.noteOn(emit.note, emit.velocity);
+        this.guard('noteOn', () => this.callbacks.noteOn(emit.note, emit.velocity));
         this.emitGeneratorEvent(emit.kind, { note: emit.note, velocity: emit.velocity });
         const releaseId = this.scheduler.setTimeout(() => {
           this.releaseTimerIds.delete(releaseId);
