@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-25
+
+The simplicity release (ROADMAP "Decisions on simplicity"). No engine behaviour changes. The surface is folded so what a host reads first is the seven methods a player feels; the demo opens on them with save and recall; the lab can A/B the v1 chain against the species it maps to; six lines to the first sound is now a gate in Node and a row in the browser harness; the instrument brief describes the tag that exists.
+
+### Added
+
+- **Playing set** (decisions 8 and 9): README leads with "an instrument that plays itself and answers you" and the six line snippet; `docs/API.md` folds into Playing (seven methods with the snippet) and Everything else (the same tables as before)
+- **Demo Playing group** (decisions 10 and 19): the control surface opens on Sound Worlds, Ecological Controls, Computer Keyboard, a Wheel section (one CC1 route to the filter through `modulate` and `feedMidi`) and Save and recall (named snapshots in local storage, Recall with a morph time, Delete, Copy JSON, Apply JSON). Everything else sits under a Depth heading; nothing removed
+- **Lab v1 versus species A/B** (decisions 18 and 25): a preset select with Play v1 (the v1 chain and its chord), Play species (the preset's species and ecology holding the same chord) and Stop, for the signature port
+- **First sound gate** (decision 15): `scripts/test-first-sound.mjs` keeps the README's first block at six statements on the public entry naming real methods (nineteen postbuild gates); harness row `first sound from the README` runs the block in Chromium and WebKit and blocks unless it makes sound (audible about 140 ms after the first line, including audio unlock and graph build)
+- `docs/INSTRUMENT_BRIEF.md` (decisions 13, 21, 22): pins the current tag, the playing set of seven, the player test with unlabelled and labelled passes as the instrument's acceptance, what is coming reduced to the sound pass and 2.0
+
 ## [1.2.0] - 2026-09-20
 
 Hardening, snapshots and the tools for the sound pass. `getSnapshot()` and `applySnapshot()` carry the whole host facing state as one JSON object with a timed morph between two; a polyphony cap and MIDI input select land on the public tier, now thirty four methods, all additive. The Playwright harness runs in CI in Chromium and WebKit, bundle size is measured with a demo budget, Tone is pinned to a minor, and the v1 preset path is deprecated for removal at 2.0. A local lab page for tuning by ear found and fixed a Flowers range error on its first A/B. Measured: zero dropouts through a 5 s morph across a species switch, a switch ready in 50 to 120 ms, 48 control extreme loads without a throw, and 9 to 10 of 20 controls audible on one held note, the input to the 1.3 sound pass ([docs/PERFORMANCE.md](./docs/PERFORMANCE.md)).

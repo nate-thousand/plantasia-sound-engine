@@ -1,42 +1,32 @@
 # Plantasia Sound Engine
 
-**Sound World architecture (beta)** — Four live species (Seed, Flowers, Mold, Bacteria), unified facade, semantic events, generative composition, and expressive performance routing.
-
-**Version:** `1.2.0`. The public tier is stable; see [docs/API.md](./docs/API.md).
-
-The v1 preset path (`playPreset()`, JSON presets, Plantasonic / Juno signature graphs) remains available on the root export for legacy hosts.
-
-> Pin **`1.2.0`**. Do **not** use tag `v2.0.0` for integration.
-
-## Quick start (v2 — recommended)
+An instrument that plays itself and answers you. A TypeScript library for the browser: load a species and it composes on its own; touch a key, a slider or a wheel and it responds. Four botanical species, five ecological controls, hosts own the UI.
 
 ```typescript
 import { createPlantasiaEngine } from 'plantasia-sound-engine/public';
 
 const engine = createPlantasiaEngine();
-await engine.init();                    // user gesture required
-await engine.loadPreset('plantasonic'); // or loadSpecies('seed')
-await engine.start();                   // or start({ generative: false }) for a played instrument
-
-engine.setControl('bloom', 0.65);  // 0..1 only
+await engine.init();               // from a user gesture
+await engine.loadSpecies('seed');
+await engine.start();
 engine.noteOn('C4', 0.8);
-
-engine.on('notePlayed', ({ note, velocity, time }) => { /* visuals */ });
-engine.on('onset', ({ strength }) => { /* transients */ });
-const { bass, mid, high } = engine.getAudioFeatures(); // per frame, from the master bus
 ```
 
-Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the thirty four method surface in [docs/API.md](./docs/API.md); the root export adds the legacy v1 preset path and engine internals. Nothing is removed.
+Six lines to the first sound, measured on every build. Then the rest of the playing set: `noteOff`, `setControl('bloom', 0.65)` on 0..1, `modulate` for a wheel, `applySnapshot` for save and recall. Everything else, thirty four methods in all, is on one page: [docs/API.md](./docs/API.md).
+
+**Version:** `1.2.1`. Pin the tag (`github:nate-thousand/plantasia-sound-engine#1.2.1`), never `v2.0.0`.
+
+Two tiers (ROADMAP decision 5): `plantasia-sound-engine/public` is the public surface; the root export adds the deprecated v1 preset path (removed at 2.0) and engine internals for the lab, the harness and species authors.
 
 ```bash
 npm install
-npm run build
-npm run test
-npm run example:basic-engine
+npm run build          # eighteen gates
+npm run test:browser   # Playwright harness, Chromium and WebKit
+npm run demo           # control surface at localhost:5193
+npm run lab            # tuning page at localhost:5195, never deployed
 ```
 
-**Live demo:** https://sound-engine.xyz — full control surface (Vercel, `npm run build:site`).  
-**Local:** `npm run demo` — same UI locally (see [Demo control surface](#demo-control-surface)).
+**Live demo:** https://sound-engine.xyz, the demo control surface (Vercel, `npm run build:site`).
 
 ## Documentation
 

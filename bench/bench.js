@@ -608,6 +608,8 @@ async function probeWheelStages({ runs = 3, note = 'E3' } = {}) {
 }
 
 window.bench = { run, probe, probeControl, abControls, probeModulation, measureWheelResponse, probeWheel, probeWheelStages };
+// The README's first snippet runs against this in the harness (test-first-sound).
+window.plantasia = { createPlantasiaEngine, getMasterBus };
 document.getElementById('unlock').addEventListener('click', () => {
   run({ longRunSeconds: 10 }).then((r) => log(JSON.stringify(r, null, 2)));
 });
@@ -755,3 +757,32 @@ async function measureControlAudibility({ species, ms = 1000, settle = 800 } = {
 window.bench.measureSnapshotMorph = measureSnapshotMorph;
 window.bench.measureSnapshotSwitch = measureSnapshotSwitch;
 window.bench.measureControlAudibility = measureControlAudibility;
+
+/**
+ * Runs the README's first code block, rewritten to use window.plantasia in
+ * place of the import, and reports whether it made sound within a second.
+ */
+async function runFirstSound(snippet) {
+  await unlockAudio();
+  const tap = createTap();
+  const body = snippet
+    .replace(/^import \{([^}]+)\} from 'plantasia-sound-engine\/public';$/m, 'const {$1} = window.plantasia;')
+    .replace(/await engine\.init\(\);/, 'await engine.init(); window.__firstSoundEngine = engine;');
+  const t0 = performance.now();
+  const fn = new Function('return (async () => {' + body + '})()');
+  await fn();
+  let audibleMs = null;
+  const deadline = performance.now() + 1000;
+  while (performance.now() < deadline) {
+    const buffer = tap.read();
+    const idx = firstAudibleIndex(buffer);
+    if (idx !== -1) {
+      audibleMs = Math.max(0, performance.now() - t0 - ((buffer.length - idx) / tap.ctx.sampleRate) * 1000);
+      break;
+    }
+    await wait(1);
+  }
+  window.__firstSoundEngine?.dispose();
+  return { audibleMs, lines: body.split('\n').filter((l) => l.replace(/\/\/.*$/, '').trim()).length };
+}
+window.bench.runFirstSound = runFirstSound;

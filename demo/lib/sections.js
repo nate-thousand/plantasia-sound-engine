@@ -10,7 +10,7 @@ export function createSection(id, title, buildBody) {
   const stored = localStorage.getItem(STORAGE_PREFIX + id);
   if (stored === 'open') {
     section.classList.add('open');
-  } else if (stored === null && ['presets', 'performance', 'debug'].includes(id)) {
+  } else if (stored === null && ['sound-worlds', 'ecology', 'keyboard', 'wheel', 'snapshots', 'presets', 'debug'].includes(id)) {
     section.classList.add('open');
   }
 
