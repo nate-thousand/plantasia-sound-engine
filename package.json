@@ -90,7 +90,7 @@
     "@playwright/test": "^1.63.0",
     "esbuild": "^0.25.12",
     "typescript": "^5.7.2",
-    "vite": "^6.0.3"
+    "vite": "^6.4.4"
   },
   "license": "MIT"
 }
